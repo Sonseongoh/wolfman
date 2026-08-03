@@ -1,0 +1,5 @@
+# Unity Smart Merge — 씬/프리팹/에셋 충돌 시 UnityYAMLMerge로 병합
+# (각자 로컬 설정 필요: Docs/DevSetup.md 참고)
+*.unity merge=unityyamlmerge
+*.prefab merge=unityyamlmerge
+*.asset merge=unityyamlmerge
