@@ -287,6 +287,7 @@ GameObject:
   - component: {fileID: 605944746}
   - component: {fileID: 605944748}
   - component: {fileID: 605944747}
+  - component: {fileID: 605944749}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -424,6 +425,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 3876841378463108900, guid: ebc32df32937b944e90722212b91886b, type: 3}
   fireInterval: 0.8
   range: 8
+  bonusDamage: 0
+  projectilesPerShot: 1
 --- !u!114 &605944746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -497,6 +500,44 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &605944749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605944740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad809a03438703c47b2e6ec599e77f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem
+  pool:
+  - skillName: "\uB0A0\uCE74\uB85C\uC6B4 \uBC1C\uD1B1"
+    description: "\uACF5\uACA9\uB825 +1"
+    effect: 0
+    value: 1
+  - skillName: "\uBE60\uB978 \uC55E\uBC1C"
+    description: "\uACF5\uACA9 \uC18D\uB3C4 +20%"
+    effect: 1
+    value: 0.2
+  - skillName: "\uB291\uB300\uC758 \uC9C8\uC8FC"
+    description: "\uC774\uB3D9 \uC18D\uB3C4 +1"
+    effect: 2
+    value: 1
+  - skillName: "\uC9C8\uAE34 \uAC00\uC8FD"
+    description: "\uCD5C\uB300 \uCCB4\uB825 +1, \uC804\uCCB4 \uD68C\uBCF5"
+    effect: 3
+    value: 1
+  - skillName: "\uC774\uBE68 \uD558\uB098 \uB354"
+    description: "\uD22C\uC0AC\uCCB4 +1\uBC1C"
+    effect: 4
+    value: 1
+  - skillName: "\uC0AC\uB0E5 \uBCF8\uB2A5"
+    description: "\uC0AC\uAC70\uB9AC +2"
+    effect: 5
+    value: 2
+  acquired: []
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0

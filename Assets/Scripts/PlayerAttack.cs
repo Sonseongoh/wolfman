@@ -11,6 +11,13 @@ public class PlayerAttack : MonoBehaviour
     [Tooltip("이 거리 안의 적만 조준")]
     public float range = 8f;
 
+    [Header("스킬로 강화되는 값")]
+    [Tooltip("투사체 기본 데미지에 더해지는 보너스")]
+    public int bonusDamage = 0;
+
+    [Tooltip("한 번에 발사하는 투사체 수 (부채꼴로 퍼짐)")]
+    public int projectilesPerShot = 1;
+
     float timer;
 
     void Update()
@@ -47,7 +54,18 @@ public class PlayerAttack : MonoBehaviour
 
     void Fire(Vector3 targetPos)
     {
-        GameObject go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-        go.GetComponent<Projectile>().SetDirection(targetPos - transform.position);
+        Vector2 baseDir = targetPos - transform.position;
+
+        // 여러 발이면 12도 간격 부채꼴로 퍼뜨림
+        for (int i = 0; i < projectilesPerShot; i++)
+        {
+            float angleOffset = (i - (projectilesPerShot - 1) * 0.5f) * 12f;
+            Vector2 dir = Quaternion.Euler(0f, 0f, angleOffset) * baseDir;
+
+            GameObject go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
+            Projectile proj = go.GetComponent<Projectile>();
+            proj.SetDirection(dir);
+            proj.damage += bonusDamage;
+        }
     }
 }

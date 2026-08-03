@@ -31,7 +31,8 @@ public class Projectile : MonoBehaviour
         EnemyHealth enemy = other.GetComponent<EnemyHealth>();
         if (enemy != null)
         {
-            enemy.TakeDamage(damage);
+            // 총알 진행 방향으로 밀려나게 넉백 방향 전달
+            enemy.TakeDamage(damage, direction);
             Destroy(gameObject);
         }
     }

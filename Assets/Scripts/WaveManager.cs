@@ -103,7 +103,10 @@ public class WaveManager : MonoBehaviour
     {
         resting = true;
         restTimer = timeBetweenWaves;
-        // TODO(#10): 여기서 스킬 3택 선택지를 띄운다
+
+        // 스킬 3택 (#10) — 선택하는 동안 시간 정지, 휴식 타이머는 그 후 진행
+        if (SkillSystem.Instance != null) SkillSystem.Instance.OfferChoices();
+
         // TODO(#7 머지 후): 다음 웨이브 규모·적 스탯에 MoonData 배율 적용
     }
 
