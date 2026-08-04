@@ -65,7 +65,13 @@ public class PlayerAttack : MonoBehaviour
             GameObject go = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
             Projectile proj = go.GetComponent<Projectile>();
             proj.SetDirection(dir);
-            proj.damage += bonusDamage;
+
+            // 달의 플레이어 강화 배율 적용 (슈퍼문·블러드문 등)
+            float power = 1f;
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
+                power = GameManager.Instance.CurrentMoon.playerPowerMultiplier;
+
+            proj.damage = Mathf.Max(1, Mathf.RoundToInt((proj.damage + bonusDamage) * power));
         }
     }
 }

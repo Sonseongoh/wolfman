@@ -22,4 +22,7 @@ MonoBehaviour:
   transformAllowed: 1
   playerPowerMultiplier: 1
   rewardTier: 2
-  description: 수확의 달 — 재화·경험치 드랍 2배 (드랍 2배는 TODO), 난이도 표준
+  description: 수확의 달 — 재화·경험치 드랍 2배, 난이도 표준
+  dropMultiplier: 2
+  ambientColor: {r: 1, g: 0.85, b: 0.6, a: 1}
+  ambientIntensity: 1

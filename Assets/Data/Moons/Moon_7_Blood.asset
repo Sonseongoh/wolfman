@@ -23,3 +23,6 @@ MonoBehaviour:
   playerPowerMultiplier: 1.5
   rewardTier: 4
   description: 피의 밤 — 쌍방 공격력 폭증, 지속 출혈 (TODO). 유리대포전
+  dropMultiplier: 1
+  ambientColor: {r: 1, g: 0.5, b: 0.45, a: 1}
+  ambientIntensity: 0.8

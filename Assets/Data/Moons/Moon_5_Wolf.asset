@@ -23,3 +23,6 @@ MonoBehaviour:
   playerPowerMultiplier: 1.2
   rewardTier: 3
   description: 동족의 밤 — 적 대량 등장, 야수 본능 강화
+  dropMultiplier: 1
+  ambientColor: {r: 0.8, g: 0.85, b: 1, a: 1}
+  ambientIntensity: 0.9

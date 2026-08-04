@@ -26,6 +26,10 @@ public class GameManager : MonoBehaviour
     public RoundPhase Phase { get; private set; }
     public int RoundNumber { get; private set; }
 
+    [Header("디버그")]
+    [Tooltip("테스트용: 여기에 달을 꽂으면 확률 무시하고 그 달만 뜬다. 평소엔 비워둘 것!")]
+    public MoonData debugForceMoon;
+
     /// <summary>라운드 시작, 달이 추첨됐을 때 (UI 연출, 룰셋 적용 등)</summary>
     public event System.Action<MoonData> OnMoonRevealed;
 
@@ -47,7 +51,12 @@ public class GameManager : MonoBehaviour
     public void StartNextRound()
     {
         RoundNumber++;
-        CurrentMoon = moonTable != null ? moonTable.Draw() : null;
+
+        // 디버그 강제 달이 꽂혀 있으면 확률 무시 (테스트용)
+        CurrentMoon = debugForceMoon != null
+            ? debugForceMoon
+            : (moonTable != null ? moonTable.Draw() : null);
+
         SetPhase(RoundPhase.MoonReveal);
         if (CurrentMoon != null) OnMoonRevealed?.Invoke(CurrentMoon);
     }
