@@ -194,8 +194,8 @@ public class WaveManager : MonoBehaviour
     /// <summary>EnemyHealth가 사망 시 호출</summary>
     public void NotifyEnemyDied()
     {
-        AliveCount--;
-        if (AliveCount <= 0 && !spawning) OnWaveCleared();
+        AliveCount = Mathf.Max(0, AliveCount - 1);
+        if (AliveCount <= 0 && !spawning && !resting) OnWaveCleared();
     }
 
     void OnWaveCleared()

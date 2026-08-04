@@ -23,3 +23,6 @@ MonoBehaviour:
   playerPowerMultiplier: 1
   rewardTier: 2
   description: 변신 가능 기본 밤. 적도 활발
+  dropMultiplier: 1
+  ambientColor: {r: 0.95, g: 0.97, b: 1, a: 1}
+  ambientIntensity: 1.05

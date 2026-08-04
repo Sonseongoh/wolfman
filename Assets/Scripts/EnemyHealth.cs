@@ -14,6 +14,7 @@ public class EnemyHealth : MonoBehaviour
     public float knockbackDuration = 0.15f;
 
     int hp;
+    bool isDead; // 같은 프레임에 여러 발 맞아도 사망 처리는 한 번만
     SpriteRenderer sr;
     Color originalColor;
     EnemyChase chase;
@@ -36,6 +37,8 @@ public class EnemyHealth : MonoBehaviour
     /// <summary>hitDirection: 공격이 날아온 방향 (넉백용). 생략 시 넉백 없음.</summary>
     public void TakeDamage(int amount, Vector2 hitDirection = default)
     {
+        if (isDead) return;
+
         hp -= amount;
 
         // 흰색 섬광
@@ -50,8 +53,21 @@ public class EnemyHealth : MonoBehaviour
             chase.ApplyKnockback(hitDirection, knockbackForce, knockbackDuration);
         if (hp <= 0)
         {
+            isDead = true;
+
             if (gemPrefab != null)
-                Instantiate(gemPrefab, transform.position, Quaternion.identity);
+            {
+                // 달의 드랍 배수 적용 (하베스트문 = 2개)
+                int drops = 1;
+                if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
+                    drops = Mathf.Max(1, Mathf.RoundToInt(GameManager.Instance.CurrentMoon.dropMultiplier));
+
+                for (int i = 0; i < drops; i++)
+                {
+                    Vector3 offset = i == 0 ? Vector3.zero : (Vector3)(Random.insideUnitCircle * 0.4f);
+                    Instantiate(gemPrefab, transform.position + offset, Quaternion.identity);
+                }
+            }
 
             if (WaveManager.Instance != null)
                 WaveManager.Instance.NotifyEnemyDied();

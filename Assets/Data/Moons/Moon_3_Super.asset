@@ -23,3 +23,6 @@ MonoBehaviour:
   playerPowerMultiplier: 1.3
   rewardTier: 3
   description: 달빛 과잉 — 변신 대폭 강화, 적도 강화
+  dropMultiplier: 1
+  ambientColor: {r: 0.9, g: 0.95, b: 1, a: 1}
+  ambientIntensity: 1.2

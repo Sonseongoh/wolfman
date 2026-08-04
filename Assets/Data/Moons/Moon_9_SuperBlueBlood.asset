@@ -23,3 +23,6 @@ MonoBehaviour:
   playerPowerMultiplier: 1.5
   rewardTier: 5
   description: 150년의 달 — 특수 보스 / 변칙 스테이지 (TODO)
+  dropMultiplier: 1.5
+  ambientColor: {r: 0.9, g: 0.5, b: 0.8, a: 1}
+  ambientIntensity: 0.75
