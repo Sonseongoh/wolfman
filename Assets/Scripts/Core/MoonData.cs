@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public enum MoonRarity { Common, Rare, Epic, Legendary }
+public enum MoonRarity { Common, Uncommon, Rare, Epic, Legendary }
 
 /// <summary>
 /// 달 1개 = 에셋 1개. Project 우클릭 → Create → Wolfman → Moon Data로 생성.
@@ -12,6 +12,9 @@ public class MoonData : ScriptableObject
     [Header("기본 정보")]
     public string moonName;
     public MoonRarity rarity;
+
+    [Tooltip("달 아이콘 — 에셋 확보 후 연결하면 슬롯 연출·HUD에 자동 표시")]
+    public Sprite icon;
 
     [Tooltip("등장 확률(%). 테이블 전체 합 기준 가중치")]
     [Range(0f, 100f)] public float appearChance = 10f;
