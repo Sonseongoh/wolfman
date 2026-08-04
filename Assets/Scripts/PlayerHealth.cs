@@ -43,10 +43,14 @@ public class PlayerHealth : MonoBehaviour
 
     void OnCollisionStay2D(Collision2D collision)
     {
-        // 적과 닿아 있으면 (무적 시간이 아닐 때) 1 데미지
+        // 적과 닿아 있으면 (무적 시간이 아닐 때) 데미지 — 달의 적 공격력 배율 적용
         if (!isDead && invincibleTimer <= 0f && collision.gameObject.GetComponent<EnemyChase>() != null)
         {
-            TakeDamage(1);
+            int dmg = 1;
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
+                dmg = Mathf.Max(1, Mathf.RoundToInt(GameManager.Instance.CurrentMoon.enemyDamageMultiplier));
+
+            TakeDamage(dmg);
         }
     }
 

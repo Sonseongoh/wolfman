@@ -34,5 +34,15 @@ public class MoonData : ScriptableObject
     [Tooltip("1=일반, 2=고급, 3=희귀, 4=영웅, 5=전설")]
     [Range(1, 5)] public int rewardTier = 1;
 
+    [Tooltip("경험치 보석 드랍 배수 (하베스트문 2)")]
+    public float dropMultiplier = 1f;
+
+    [Header("분위기 (화면 조명)")]
+    [Tooltip("이 달이 뜬 밤의 전체 조명 색")]
+    public Color ambientColor = Color.white;
+
+    [Tooltip("조명 밝기 (1=평범, 낮을수록 어두운 밤)")]
+    [Range(0.1f, 1.5f)] public float ambientIntensity = 1f;
+
     [TextArea] public string description;
 }

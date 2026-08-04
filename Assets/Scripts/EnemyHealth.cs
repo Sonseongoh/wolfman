@@ -56,7 +56,18 @@ public class EnemyHealth : MonoBehaviour
             isDead = true;
 
             if (gemPrefab != null)
-                Instantiate(gemPrefab, transform.position, Quaternion.identity);
+            {
+                // 달의 드랍 배수 적용 (하베스트문 = 2개)
+                int drops = 1;
+                if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
+                    drops = Mathf.Max(1, Mathf.RoundToInt(GameManager.Instance.CurrentMoon.dropMultiplier));
+
+                for (int i = 0; i < drops; i++)
+                {
+                    Vector3 offset = i == 0 ? Vector3.zero : (Vector3)(Random.insideUnitCircle * 0.4f);
+                    Instantiate(gemPrefab, transform.position + offset, Quaternion.identity);
+                }
+            }
 
             if (WaveManager.Instance != null)
                 WaveManager.Instance.NotifyEnemyDied();

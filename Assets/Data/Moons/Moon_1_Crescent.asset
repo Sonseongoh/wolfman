@@ -23,3 +23,6 @@ MonoBehaviour:
   playerPowerMultiplier: 1
   rewardTier: 1
   description: 적 약하고 수 적음. 입문 밤
+  dropMultiplier: 1
+  ambientColor: {r: 0.85, g: 0.88, b: 1, a: 1}
+  ambientIntensity: 0.85
