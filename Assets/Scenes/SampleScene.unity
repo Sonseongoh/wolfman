@@ -683,7 +683,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46bdf0e8724858044b856799f376bfa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
-  enemyPrefab: {fileID: 5769649458394515389, guid: 3b1001ca40480c74298aaedfae693361, type: 3}
+  enemyTypes:
+  - prefab: {fileID: 5769649458394515389, guid: 3b1001ca40480c74298aaedfae693361, type: 3}
+    minWave: 1
+    weight: 3
+  - prefab: {fileID: 5769649458394515389, guid: 4c8e2a17d95b46f3a20d1e4b5c6f7a83, type: 3}
+    minWave: 3
+    weight: 2
+  - prefab: {fileID: 5769649458394515389, guid: 9d3f5b28ea6c47b4a31e2f5c6d7a8b94, type: 3}
+    minWave: 5
+    weight: 1
   spawnRadius: 12
   baseEnemyCount: 6
   enemyCountGrowth: 3
