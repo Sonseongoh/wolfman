@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 427d26820406db24bb28555240d411ad, type: 3}
+  m_Name: Moon_7_Blood
+  m_EditorClassIdentifier:
+  moonName: 블러드문
+  rarity: 3
+  appearChance: 2.5
+  enemyHpMultiplier: 1.2
+  enemyDamageMultiplier: 1.6
+  enemySpeedMultiplier: 1.1
+  enemyCountMultiplier: 1.2
+  transformAllowed: 1
+  playerPowerMultiplier: 1.5
+  rewardTier: 4
+  description: 피의 밤 — 쌍방 공격력 폭증, 지속 출혈 (TODO). 유리대포전

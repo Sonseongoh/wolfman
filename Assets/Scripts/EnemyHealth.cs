@@ -26,6 +26,13 @@ public class EnemyHealth : MonoBehaviour
         chase = GetComponent<EnemyChase>();
     }
 
+    /// <summary>달 배율 등으로 체력 보정 (스폰 직후 호출 — 현재 체력도 함께 재설정)</summary>
+    public void ApplyHpMultiplier(float multiplier)
+    {
+        maxHp = Mathf.Max(1, Mathf.RoundToInt(maxHp * multiplier));
+        hp = maxHp;
+    }
+
     /// <summary>hitDirection: 공격이 날아온 방향 (넉백용). 생략 시 넉백 없음.</summary>
     public void TakeDamage(int amount, Vector2 hitDirection = default)
     {
