@@ -8,10 +8,18 @@ public class EnemyChase : MonoBehaviour
 
     Rigidbody2D rb;
     Transform player;
+    float staggerTimer; // 넉백으로 밀려나는 동안 추적 정지
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+    }
+
+    /// <summary>피격 시 밀려남. duration 동안 추적을 멈추고 넉백 속도를 유지한다.</summary>
+    public void ApplyKnockback(Vector2 direction, float force, float duration)
+    {
+        staggerTimer = duration;
+        rb.linearVelocity = direction.normalized * force;
     }
 
     void Start()
@@ -23,6 +31,13 @@ public class EnemyChase : MonoBehaviour
 
     void FixedUpdate()
     {
+        // 넉백 중에는 추적으로 속도를 덮어쓰지 않는다
+        if (staggerTimer > 0f)
+        {
+            staggerTimer -= Time.fixedDeltaTime;
+            return;
+        }
+
         if (player == null)
         {
             rb.linearVelocity = Vector2.zero;

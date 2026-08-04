@@ -9,6 +9,9 @@ public class PlayerLevel : MonoBehaviour
     int xpToNext = 5;
     bool choosing; // 레벨업 선택창이 떠 있는 상태
 
+    /// <summary>선택창이 떠 있는지 (SkillSystem이 순서 조율에 사용)</summary>
+    public bool IsChoosing => choosing;
+
     PlayerMovement movement;
     PlayerAttack attack;
     PlayerHealth health;
@@ -63,7 +66,10 @@ public class PlayerLevel : MonoBehaviour
         if (xp >= xpToNext) LevelUp();
     }
 
-    // 임시 UI
+    // 임시 UI — 강화 선택은 가로 3장 카드 (ChoiceCardUI 공용)
+    static readonly string[] upgradeNames = { "빠른 공격", "날랜 발", "강인한 육체" };
+    static readonly string[] upgradeDescs = { "공격 속도 +25%", "이동 속도 +1", "최대 체력 +1\n전체 회복" };
+
     void OnGUI()
     {
         GUIStyle style = new GUIStyle { fontSize = 22, normal = { textColor = Color.cyan } };
@@ -71,15 +77,8 @@ public class PlayerLevel : MonoBehaviour
 
         if (choosing)
         {
-            GUIStyle big = new GUIStyle
-            {
-                fontSize = 34,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.yellow }
-            };
-            GUI.Label(new Rect(0, 0, Screen.width, Screen.height),
-                "LEVEL UP!\n\n[1] 공격속도 +25%\n[2] 이동속도 +1\n[3] 최대체력 +1 (전체 회복)",
-                big);
+            int clicked = ChoiceCardUI.Draw($"LEVEL UP!  Lv.{level}", upgradeNames, upgradeDescs);
+            if (clicked >= 0) Choose(clicked + 1);
         }
     }
 }

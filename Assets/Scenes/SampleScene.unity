@@ -285,8 +285,9 @@ GameObject:
   - component: {fileID: 605944741}
   - component: {fileID: 605944745}
   - component: {fileID: 605944746}
-  - component: {fileID: 605944748}
   - component: {fileID: 605944747}
+  - component: {fileID: 605944749}
+  - component: {fileID: 605944750}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -383,7 +384,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3a7c1f92b45d48e2a91c0d3e5f6a7b81, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -424,6 +425,8 @@ MonoBehaviour:
   projectilePrefab: {fileID: 3876841378463108900, guid: ebc32df32937b944e90722212b91886b, type: 3}
   fireInterval: 0.8
   range: 8
+  bonusDamage: 0
+  projectilesPerShot: 1
 --- !u!114 &605944746
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -451,7 +454,45 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHp: 5
   invincibleTime: 1
---- !u!61 &605944748
+--- !u!114 &605944749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605944740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad809a03438703c47b2e6ec599e77f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkillSystem
+  pool:
+  - skillName: "\uB0A0\uCE74\uB85C\uC6B4 \uBC1C\uD1B1"
+    description: "\uACF5\uACA9\uB825 +1"
+    effect: 0
+    value: 1
+  - skillName: "\uBE60\uB978 \uC55E\uBC1C"
+    description: "\uACF5\uACA9 \uC18D\uB3C4 +20%"
+    effect: 1
+    value: 0.2
+  - skillName: "\uB291\uB300\uC758 \uC9C8\uC8FC"
+    description: "\uC774\uB3D9 \uC18D\uB3C4 +1"
+    effect: 2
+    value: 1
+  - skillName: "\uC9C8\uAE34 \uAC00\uC8FD"
+    description: "\uCD5C\uB300 \uCCB4\uB825 +1, \uC804\uCCB4 \uD68C\uBCF5"
+    effect: 3
+    value: 1
+  - skillName: "\uC774\uBE68 \uD558\uB098 \uB354"
+    description: "\uD22C\uC0AC\uCCB4 +1\uBC1C"
+    effect: 4
+    value: 1
+  - skillName: "\uC0AC\uB0E5 \uBCF8\uB2A5"
+    description: "\uC0AC\uAC70\uB9AC +2"
+    effect: 5
+    value: 2
+  acquired: []
+--- !u!61 &605944750
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -489,13 +530,13 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
+    oldSize: {x: 0.640625, y: 1.296875}
     newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.640625, y: 1.296875}
   m_EdgeRadius: 0
 --- !u!1 &619394800
 GameObject:
@@ -642,7 +683,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46bdf0e8724858044b856799f376bfa5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveManager
-  enemyPrefab: {fileID: 5769649458394515389, guid: 3b1001ca40480c74298aaedfae693361, type: 3}
+  enemyTypes:
+  - prefab: {fileID: 5769649458394515389, guid: 3b1001ca40480c74298aaedfae693361, type: 3}
+    minWave: 1
+    weight: 3
+  - prefab: {fileID: 5769649458394515389, guid: 4c8e2a17d95b46f3a20d1e4b5c6f7a83, type: 3}
+    minWave: 3
+    weight: 2
+  - prefab: {fileID: 5769649458394515389, guid: 9d3f5b28ea6c47b4a31e2f5c6d7a8b94, type: 3}
+    minWave: 5
+    weight: 1
   spawnRadius: 12
   baseEnemyCount: 6
   enemyCountGrowth: 3

@@ -13,15 +13,25 @@ public class PlayerHealth : MonoBehaviour
     int hp;
     float invincibleTimer;
     bool isDead;
+    SpriteRenderer sr;
 
     void Awake()
     {
         hp = maxHp;
+        sr = GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
-        if (invincibleTimer > 0f) invincibleTimer -= Time.deltaTime;
+        // 무적 시간 동안 깜빡여서 시각적으로 표시
+        if (invincibleTimer > 0f)
+        {
+            invincibleTimer -= Time.deltaTime;
+            if (sr != null)
+                sr.enabled = Mathf.FloorToInt(invincibleTimer * 10f) % 2 == 0;
+
+            if (invincibleTimer <= 0f && sr != null) sr.enabled = true;
+        }
 
         // 게임오버 상태에서 R 키로 재시작
         if (isDead && Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
@@ -67,13 +77,17 @@ public class PlayerHealth : MonoBehaviour
 
         if (isDead)
         {
+            int wave = WaveManager.Instance != null ? WaveManager.Instance.CurrentWave : 0;
+            int level = GetComponent<PlayerLevel>() != null ? GetComponent<PlayerLevel>().level : 1;
+
             GUIStyle big = new GUIStyle
             {
                 fontSize = 48,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.red }
             };
-            GUI.Label(new Rect(0, 0, Screen.width, Screen.height), "GAME OVER\n\nR 키로 재시작", big);
+            GUI.Label(new Rect(0, 0, Screen.width, Screen.height),
+                $"GAME OVER\n\nWAVE {wave}까지 생존  ·  Lv.{level}\n\nR 키로 재시작", big);
         }
     }
 }

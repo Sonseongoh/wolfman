@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -9,8 +10,20 @@ public class WaveManager : MonoBehaviour
 {
     public static WaveManager Instance { get; private set; }
 
-    [Header("적 구성")]
-    public GameObject enemyPrefab;
+    [System.Serializable]
+    public class EnemyOption
+    {
+        public GameObject prefab;
+
+        [Tooltip("이 웨이브부터 등장")]
+        public int minWave = 1;
+
+        [Tooltip("등장 비중 (높을수록 자주 나옴)")]
+        public float weight = 1f;
+    }
+
+    [Header("적 구성 (타입별 등장 웨이브·비중)")]
+    public List<EnemyOption> enemyTypes = new List<EnemyOption>();
 
     [Tooltip("플레이어로부터 이 거리(화면 밖)에서 스폰")]
     public float spawnRadius = 12f;
@@ -84,12 +97,34 @@ public class WaveManager : MonoBehaviour
 
     void SpawnOne()
     {
-        if (player == null || enemyPrefab == null) return;
+        if (player == null) return;
+
+        GameObject prefab = PickEnemyPrefab();
+        if (prefab == null) return;
 
         float angle = Random.Range(0f, Mathf.PI * 2f);
         Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spawnRadius;
-        Instantiate(enemyPrefab, (Vector2)player.position + offset, Quaternion.identity);
+        Instantiate(prefab, (Vector2)player.position + offset, Quaternion.identity);
         AliveCount++;
+    }
+
+    /// <summary>현재 웨이브에 등장 가능한 타입 중 가중치 추첨</summary>
+    GameObject PickEnemyPrefab()
+    {
+        float total = 0f;
+        foreach (EnemyOption e in enemyTypes)
+            if (e.prefab != null && CurrentWave >= e.minWave) total += e.weight;
+
+        if (total <= 0f) return null;
+
+        float roll = Random.Range(0f, total);
+        foreach (EnemyOption e in enemyTypes)
+        {
+            if (e.prefab == null || CurrentWave < e.minWave) continue;
+            roll -= e.weight;
+            if (roll <= 0f) return e.prefab;
+        }
+        return null;
     }
 
     /// <summary>EnemyHealth가 사망 시 호출</summary>
@@ -103,7 +138,10 @@ public class WaveManager : MonoBehaviour
     {
         resting = true;
         restTimer = timeBetweenWaves;
-        // TODO(#10): 여기서 스킬 3택 선택지를 띄운다
+
+        // 스킬 3택 (#10) — 선택하는 동안 시간 정지, 휴식 타이머는 그 후 진행
+        if (SkillSystem.Instance != null) SkillSystem.Instance.OfferChoices();
+
         // TODO(#7 머지 후): 다음 웨이브 규모·적 스탯에 MoonData 배율 적용
     }
 
