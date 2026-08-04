@@ -23,6 +23,9 @@ public class EnemyHealth : MonoBehaviour
             if (gemPrefab != null)
                 Instantiate(gemPrefab, transform.position, Quaternion.identity);
 
+            if (WaveManager.Instance != null)
+                WaveManager.Instance.NotifyEnemyDied();
+
             Destroy(gameObject);
         }
     }
