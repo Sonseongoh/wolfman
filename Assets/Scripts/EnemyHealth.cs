@@ -14,6 +14,7 @@ public class EnemyHealth : MonoBehaviour
     public float knockbackDuration = 0.15f;
 
     int hp;
+    bool isDead; // 같은 프레임에 여러 발 맞아도 사망 처리는 한 번만
     SpriteRenderer sr;
     Color originalColor;
     EnemyChase chase;
@@ -36,6 +37,8 @@ public class EnemyHealth : MonoBehaviour
     /// <summary>hitDirection: 공격이 날아온 방향 (넉백용). 생략 시 넉백 없음.</summary>
     public void TakeDamage(int amount, Vector2 hitDirection = default)
     {
+        if (isDead) return;
+
         hp -= amount;
 
         // 흰색 섬광
@@ -50,6 +53,8 @@ public class EnemyHealth : MonoBehaviour
             chase.ApplyKnockback(hitDirection, knockbackForce, knockbackDuration);
         if (hp <= 0)
         {
+            isDead = true;
+
             if (gemPrefab != null)
                 Instantiate(gemPrefab, transform.position, Quaternion.identity);
 

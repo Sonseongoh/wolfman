@@ -6,8 +6,8 @@ using UnityEngine;
 /// </summary>
 public class DeathPop : MonoBehaviour
 {
-    public float duration = 0.25f;
-    public float scaleUp = 1.6f;
+    public float duration = 0.2f;
+    public float scaleUp = 1.2f;
 
     SpriteRenderer sr;
     float t;
@@ -24,6 +24,8 @@ public class DeathPop : MonoBehaviour
         SpriteRenderer popSr = go.AddComponent<SpriteRenderer>();
         popSr.sprite = source.sprite;
         popSr.color = source.color;
+        popSr.flipX = source.flipX;
+        popSr.flipY = source.flipY;
         popSr.sortingLayerID = source.sortingLayerID;
         popSr.sortingOrder = source.sortingOrder;
 

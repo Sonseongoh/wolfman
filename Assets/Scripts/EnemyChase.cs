@@ -7,12 +7,17 @@ public class EnemyChase : MonoBehaviour
     public float moveSpeed = 2.5f;
 
     Rigidbody2D rb;
+    SpriteRenderer sr;
     Transform player;
     float staggerTimer; // 넉백으로 밀려나는 동안 추적 정지
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        sr = GetComponent<SpriteRenderer>();
+
+        // 걷기 흔들림 연출 자동 장착
+        if (GetComponent<WalkWobble>() == null) gameObject.AddComponent<WalkWobble>();
     }
 
     /// <summary>피격 시 밀려남. duration 동안 추적을 멈추고 넉백 속도를 유지한다.</summary>
@@ -46,5 +51,9 @@ public class EnemyChase : MonoBehaviour
 
         Vector2 dir = (player.position - transform.position).normalized;
         rb.linearVelocity = dir * moveSpeed;
+
+        // 이동 방향으로 스프라이트 뒤집기 (원본이 오른쪽을 봄)
+        if (sr != null && dir.x != 0f)
+            sr.flipX = dir.x < 0f;
     }
 }
