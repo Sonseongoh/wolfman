@@ -52,8 +52,16 @@ public class PlayerLevel : MonoBehaviour
 
     void Choose(int pick)
     {
-        if (pick == 1 && attack != null)
-            attack.fireInterval = Mathf.Max(0.2f, attack.fireInterval * 0.8f);
+        if (pick == 1)
+        {
+            if (attack != null)
+                attack.fireInterval = Mathf.Max(0.2f, attack.fireInterval * 0.8f);
+
+            // 근거리(늑대인간) 공격 속도에도 적용
+            MeleeAttack melee = GetComponent<MeleeAttack>();
+            if (melee != null)
+                melee.swingInterval = Mathf.Max(0.2f, melee.swingInterval * 0.8f);
+        }
         else if (pick == 2 && movement != null)
             movement.moveSpeed += 1f;
         else if (pick == 3 && health != null)
