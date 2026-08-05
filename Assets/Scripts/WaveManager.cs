@@ -300,16 +300,8 @@ public class WaveManager : MonoBehaviour
         // 사냥/마을 선택 UI (첫 웨이브 달 공개 후)
         if (waitingForAction)
         {
-            GUIStyle center = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = 28,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.white }
-            };
-            GUI.Label(new Rect(0, Screen.height * 0.68f, Screen.width, 40), "어디로 가겠습니까?", center);
-
             float btnW = 200f, btnH = 55f;
-            float btnY = Screen.height * 0.76f;
+            float btnY = Screen.height * 0.82f;
 
             if (GUI.Button(new Rect(Screen.width * 0.5f - btnW - 20, btnY, btnW, btnH), "사냥 나가기"))
                 waitingForAction = false;
