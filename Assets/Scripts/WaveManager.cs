@@ -266,6 +266,7 @@ public class WaveManager : MonoBehaviour
     {
         resting = true;
         restTimer = timeBetweenWaves;
+        SoundManager.Instance?.PlayWaveClear();
 
         // 스킬 3택 (#10) — 선택하는 동안 시간 정지, 휴식 타이머는 그 후 진행
         if (SkillSystem.Instance != null) SkillSystem.Instance.OfferChoices();
@@ -306,10 +307,14 @@ public class WaveManager : MonoBehaviour
             float btnY = Screen.height * 0.82f;
 
             if (GUI.Button(new Rect(Screen.width * 0.5f - btnW - 20, btnY, btnW, btnH), "사냥 나가기"))
+            {
+                SoundManager.Instance?.PlayButton();
                 waitingForAction = false;
+            }
 
             if (GUI.Button(new Rect(Screen.width * 0.5f + 20, btnY, btnW, btnH), "마을 남기"))
             {
+                SoundManager.Instance?.PlayButton();
                 waitingForAction = false;
                 if (GameManager.Instance != null) GameManager.Instance.SetPhase(RoundPhase.Village);
                 SceneManager.LoadScene("VillageScene");

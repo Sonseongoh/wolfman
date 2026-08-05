@@ -53,6 +53,7 @@ public class PlayerLevel : MonoBehaviour
 
     void Choose(int pick)
     {
+        SoundManager.Instance?.PlayButton();
         if (pick == 1)
         {
             if (attack != null)

@@ -15,11 +15,14 @@ public class SoundManager : MonoBehaviour
     public AudioClip sfxDeath;    // 적 처치
     public AudioClip sfxDamaged;  // 플레이어 피격
 
+    public AudioClip sfxButton;   // UI 버튼 선택
+
     [Header("획득 / 성장")]
     public AudioClip sfxPickup;   // 보석 획득
     public AudioClip sfxLevelUp;  // 레벨업 / 스킬 선택
 
     [Header("연출")]
+    public AudioClip sfxWaveClear;             // 웨이브 클리어
     public AudioClip sfxSlot;                  // 달 슬롯머신 플립
     public AudioClip sfxMoonReveal;            // 달 최종 확정
     public AudioClip sfxMoonRevealLegendary;   // 전설 달 최종 확정
@@ -40,6 +43,8 @@ public class SoundManager : MonoBehaviour
         if (clip != null) src.PlayOneShot(clip, volume);
     }
 
+    public void PlayButton()      => Play(sfxButton);
+    public void PlayWaveClear()   => Play(sfxWaveClear);
     public void PlayShoot()       => Play(sfxShoot, 0.7f);
     public void PlaySlash()       => Play(sfxSlash, 0.9f);
     public void PlayMoonReveal(bool legendary = false)
