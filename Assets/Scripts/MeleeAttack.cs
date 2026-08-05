@@ -35,6 +35,9 @@ public class MeleeAttack : MonoBehaviour
     PlayerMovement movement;
     WalkWobble wobble;
 
+    /// <summary>공격 애니메이션 재생 중인지 (PlayerWalkAnim이 양보 판단에 사용)</summary>
+    public bool IsAnimating { get; private set; }
+
     void Awake()
     {
         rangedAttack = GetComponent<PlayerAttack>();
@@ -122,6 +125,8 @@ public class MeleeAttack : MonoBehaviour
 
     System.Collections.IEnumerator PlayAttackAnim(SpriteRenderer sr)
     {
+        IsAnimating = true;
+
         if (attackFrames != null && attackFrames.Length > 0)
         {
             // 프레임 애니메이션 재생
@@ -143,5 +148,7 @@ public class MeleeAttack : MonoBehaviour
         PlayerTransform form = GetComponent<PlayerTransform>();
         if (form != null && form.wolfSprite != null)
             sr.sprite = form.wolfSprite;
+
+        IsAnimating = false;
     }
 }
