@@ -13,6 +13,7 @@ public class PlayerHealth : MonoBehaviour
     int hp;
     float invincibleTimer;
     bool isDead;
+    bool isPaused;
     int lostGoldOnDeath;
     SpriteRenderer sr;
 
@@ -37,11 +38,17 @@ public class PlayerHealth : MonoBehaviour
             if (invincibleTimer <= 0f && sr != null) sr.enabled = true;
         }
 
-        // 게임오버 상태에서 R 키로 재시작
-        if (isDead && Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
+        // ESC 일시정지 토글 (레벨업·스킬 선택 중엔 무시)
+        if (!isDead && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            Time.timeScale = 1f;
-            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            bool levelChoosing = GetComponent<PlayerLevel>()?.IsChoosing ?? false;
+            bool skillChoosing = SkillSystem.Instance?.IsChoosing ?? false;
+            if (!levelChoosing && !skillChoosing)
+            {
+                isPaused = !isPaused;
+                Time.timeScale = isPaused ? 0f : 1f;
+                SoundManager.Instance?.PlayButton();
+            }
         }
     }
 
@@ -84,35 +91,131 @@ public class PlayerHealth : MonoBehaviour
         CameraFollow.Shake(0.22f, 0.25f);
         HitStop.Do(0.06f);
 
-        if (hp <= 0)
+        if (hp > 0)
+        {
+            SoundManager.Instance?.PlayDamaged();
+        }
+        else
         {
             isDead = true;
             lostGoldOnDeath = CurrencyManager.Instance?.TempGold ?? 0;
             CurrencyManager.Instance?.LoseTempGold();
-            Time.timeScale = 0f; // 게임 일시정지
+            SoundManager.Instance?.PlayGameOver();
+            Time.timeScale = 0f;
         }
+    }
+
+    static void Restart()
+    {
+        Time.timeScale = 1f;
+        SoundManager.Instance?.PlayButton();
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     // 임시 UI (나중에 제대로 된 UI로 교체 예정)
     void OnGUI()
     {
-        GUIStyle style = new GUIStyle { fontSize = 28, normal = { textColor = Color.white } };
-        GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {maxHp}", style);
+        GUIStyle hpStyle = new GUIStyle { fontSize = 28, normal = { textColor = Color.white } };
+        GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {maxHp}", hpStyle);
 
+        // 일시정지 오버레이
+        if (isPaused)
+        {
+            GUI.color = new Color(0f, 0f, 0f, 0.65f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            float pw = 320f, ph = 220f;
+            float px = (Screen.width - pw) * 0.5f, py = (Screen.height - ph) * 0.5f;
+
+            // 패널 테두리 + 배경
+            GUI.color = new Color(0.8f, 0.8f, 0.8f, 0.9f);
+            GUI.DrawTexture(new Rect(px - 3, py - 3, pw + 6, ph + 6), Texture2D.whiteTexture);
+            GUI.color = new Color(0.08f, 0.07f, 0.14f, 1f);
+            GUI.DrawTexture(new Rect(px, py, pw, ph), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            GUIStyle title = new GUIStyle
+            {
+                fontSize = 36,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = Color.white }
+            };
+            GUI.Label(new Rect(px, py + 14, pw, 50), "일시정지", title);
+
+            if (GUI.Button(new Rect(px + 40, py + 82, pw - 80, 52), "계속하기"))
+            {
+                isPaused = false;
+                Time.timeScale = 1f;
+                SoundManager.Instance?.PlayButton();
+            }
+            if (GUI.Button(new Rect(px + 40, py + 148, pw - 80, 52), "재시작"))
+                Restart();
+
+            return; // HP 라벨 아래 다른 UI 안 그리도록
+        }
+
+        // 게임오버 화면
         if (isDead)
         {
-            int wave = WaveManager.Instance != null ? WaveManager.Instance.CurrentWave : 0;
-            int level = GetComponent<PlayerLevel>() != null ? GetComponent<PlayerLevel>().level : 1;
+            GUI.color = new Color(0f, 0f, 0f, 0.78f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            int wave  = WaveManager.Instance != null ? WaveManager.Instance.CurrentWave : 0;
+            int kills = WaveManager.Instance != null ? WaveManager.Instance.KillCount   : 0;
+            int lv    = GetComponent<PlayerLevel>() != null ? GetComponent<PlayerLevel>().level : 1;
 
             GUIStyle big = new GUIStyle
             {
-                fontSize = 48,
+                fontSize = 56,
+                fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.red }
             };
-            string lostText = lostGoldOnDeath > 0 ? $"\n임시 골드 {lostGoldOnDeath}G 손실" : "";
-            GUI.Label(new Rect(0, 0, Screen.width, Screen.height),
-                $"GAME OVER\n\nWAVE {wave}까지 생존  ·  Lv.{level}{lostText}\n\nR 키로 재시작", big);
+            GUI.Label(new Rect(0, Screen.height * 0.1f, Screen.width, 70), "GAME OVER", big);
+
+            GUIStyle stat = new GUIStyle
+            {
+                fontSize = 24,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = Color.white }
+            };
+            string lostText = lostGoldOnDeath > 0 ? $"\n잃은 골드: {lostGoldOnDeath} G" : "";
+            GUI.Label(new Rect(0, Screen.height * 0.28f, Screen.width, 120),
+                $"WAVE {wave}까지 생존  ·  Lv.{lv}  ·  처치: {kills}마리{lostText}", stat);
+
+            // 획득한 스킬 목록
+            if (SkillSystem.Instance != null && SkillSystem.Instance.acquired.Count > 0)
+            {
+                GUIStyle skillHeader = new GUIStyle
+                {
+                    fontSize = 20,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(1f, 0.82f, 0.2f) }
+                };
+                GUIStyle skillEntry = new GUIStyle
+                {
+                    fontSize = 19,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(0.9f, 0.9f, 0.9f) }
+                };
+
+                float skillY = Screen.height * 0.48f;
+                GUI.Label(new Rect(0, skillY, Screen.width, 28), "획득한 스킬", skillHeader);
+                skillY += 32f;
+                foreach (var s in SkillSystem.Instance.acquired)
+                {
+                    GUI.Label(new Rect(0, skillY, Screen.width, 26), $"· {s.skillName}  {s.description}", skillEntry);
+                    skillY += 26f;
+                }
+            }
+
+            float btnW = 240f, btnH = 60f;
+            if (GUI.Button(new Rect((Screen.width - btnW) * 0.5f, Screen.height * 0.82f, btnW, btnH), "재시작"))
+                Restart();
         }
     }
 }

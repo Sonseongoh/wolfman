@@ -45,6 +45,7 @@ public class WaveManager : MonoBehaviour
 
     public int CurrentWave { get; private set; }
     public int AliveCount { get; private set; }
+    public int KillCount { get; private set; }
 
     [Header("달 슬롯 연출")]
     [Tooltip("달 이름이 슬롯머신처럼 돌아가는 시간(초)")]
@@ -256,6 +257,7 @@ public class WaveManager : MonoBehaviour
     /// <summary>EnemyHealth가 사망 시 호출</summary>
     public void NotifyEnemyDied()
     {
+        KillCount++;
         AliveCount = Mathf.Max(0, AliveCount - 1);
         if (AliveCount <= 0 && !spawning && !resting) OnWaveCleared();
     }
