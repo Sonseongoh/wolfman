@@ -64,7 +64,7 @@ public class WaveManager : MonoBehaviour
     string promoDecoyName;  // 가짜 공개용 미끼 달 이름 (초승달/보름달)
     Sprite promoDecoyIcon;  // 미끼 달 아이콘
 
-    bool waitingForAction;  // 달 공개 후 사냥/마을 선택 대기 중 (#6)
+    bool waitingForAction;  // 첫 웨이브 달 공개 후 사냥/마을 선택 대기 (#6)
 
     /// <summary>GameManager가 씬에 있으면 현재 달, 없으면 null (달 없이도 동작)</summary>
     MoonData CurrentMoon => GameManager.Instance != null ? GameManager.Instance.CurrentMoon : null;
@@ -85,7 +85,11 @@ public class WaveManager : MonoBehaviour
 
     void Update()
     {
-        if (moonBannerTimer > 0f) moonBannerTimer -= Time.deltaTime;
+        if (moonBannerTimer > 0f)
+        {
+            moonBannerTimer -= Time.deltaTime;
+            if (waitingForAction && moonBannerTimer < 0.01f) moonBannerTimer = 0.01f;
+        }
 
         if (resting)
         {
@@ -116,7 +120,7 @@ public class WaveManager : MonoBehaviour
     {
         MoonTable table = GameManager.Instance != null ? GameManager.Instance.moonTable : null;
 
-        if (table != null && table.moons != null && table.moons.Length > 1 && CurrentMoon != null)
+        if (CurrentWave == 1 && table != null && table.moons != null && table.moons.Length > 1 && CurrentMoon != null)
         {
             moonSpinning = true;
             float elapsed = 0f;
@@ -166,10 +170,13 @@ public class WaveManager : MonoBehaviour
             moonBannerTimer = 1.6f; // 확정된 달 보여주기 (최종 공개가 마지막 땅!)
         }
 
-        // 달 카드 다 보여준 뒤 행동 선택 대기 (#6)
-        yield return new WaitUntil(() => moonBannerTimer <= 0f);
-        waitingForAction = true;
-        yield return new WaitUntil(() => !waitingForAction);
+        // 첫 웨이브에만 사냥/마을 선택 (#6) — 달 카드 뜨자마자 버튼 표시, 선택할 때까지 카드 유지
+        if (CurrentWave == 1)
+        {
+            waitingForAction = true;
+            yield return new WaitUntil(() => !waitingForAction);
+            moonBannerTimer = 0f;
+        }
 
         yield return StartCoroutine(SpawnWave(count));
     }
@@ -288,7 +295,9 @@ public class WaveManager : MonoBehaviour
             normal = { textColor = Color.white }
         };
 
-        // 달 공개 후 행동 선택 UI (#6)
+
+
+        // 사냥/마을 선택 UI (첫 웨이브 달 공개 후)
         if (waitingForAction)
         {
             GUIStyle center = new GUIStyle(GUI.skin.label)
@@ -302,10 +311,10 @@ public class WaveManager : MonoBehaviour
             float btnW = 200f, btnH = 55f;
             float btnY = Screen.height * 0.76f;
 
-            if (GUI.Button(new Rect(Screen.width * 0.5f - btnW - 20, btnY, btnW, btnH), "🏹 사냥 나가기"))
+            if (GUI.Button(new Rect(Screen.width * 0.5f - btnW - 20, btnY, btnW, btnH), "사냥 나가기"))
                 waitingForAction = false;
 
-            if (GUI.Button(new Rect(Screen.width * 0.5f + 20, btnY, btnW, btnH), "🏘 마을 남기"))
+            if (GUI.Button(new Rect(Screen.width * 0.5f + 20, btnY, btnW, btnH), "마을 남기"))
             {
                 waitingForAction = false;
                 if (GameManager.Instance != null) GameManager.Instance.SetPhase(RoundPhase.Village);
@@ -323,7 +332,7 @@ public class WaveManager : MonoBehaviour
 
         // 현재 달 표시 (웨이브 텍스트 아래) — 슬롯 도는 동안엔 스포일러 방지로 숨김
         MoonData moon = CurrentMoon;
-        if (moon != null && !resting && !moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
+        if (moon != null && !resting && !moonSpinning && moonBannerTimer <= 0f)
         {
             GUIStyle moonStyle = new GUIStyle
             {
@@ -388,7 +397,7 @@ public class WaveManager : MonoBehaviour
             for (int i = 0; i < 8; i++)
             {
                 GUI.matrix = saved;
-                GUIUtility.RotateAroundPivot(i * 45f + t * 25f, center);
+                GUIUtility.RotateAroundPivot(i * 45f + Time.unscaledTime * 25f, center);
                 GUI.color = new Color(rc.r, rc.g, rc.b, 0.1f);
                 GUI.DrawTexture(
                     new Rect(center.x - rayLen * 0.035f, center.y - rayLen, rayLen * 0.07f, rayLen),
