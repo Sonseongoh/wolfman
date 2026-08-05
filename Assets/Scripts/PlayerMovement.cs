@@ -10,6 +10,8 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody2D rb;
     SpriteRenderer sr;
     Vector2 moveInput;
+    Vector2 lungeVelocity;
+    float lungeTimer; // 발톱 휘두를 때 짧은 돌진 (#38)
 
     void Awake()
     {
@@ -39,8 +41,27 @@ public class PlayerMovement : MonoBehaviour
             sr.flipX = moveInput.x < 0f;
     }
 
+    /// <summary>지정 방향으로 짧게 돌진. 현재 미사용 — 추후 회피/돌진 스킬용으로 보관</summary>
+    public void Lunge(Vector2 direction, float force, float duration)
+    {
+        lungeVelocity = direction.normalized * force;
+        lungeTimer = duration;
+
+        // 공격 방향 바라보기
+        if (sr != null && direction.x != 0f)
+            sr.flipX = direction.x < 0f;
+    }
+
     void FixedUpdate()
     {
+        // 돌진 중에는 입력보다 돌진이 우선
+        if (lungeTimer > 0f)
+        {
+            lungeTimer -= Time.fixedDeltaTime;
+            rb.linearVelocity = lungeVelocity;
+            return;
+        }
+
         rb.linearVelocity = moveInput * moveSpeed;
     }
 }

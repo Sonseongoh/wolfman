@@ -20,6 +20,8 @@ public class WalkWobble : MonoBehaviour
     Rigidbody2D rb;
     Vector3 baseScale;
     float phase;
+    float punch;      // 공격 순간 몸이 부풀었다 돌아오는 연출 (#38)
+    float attackTilt; // 공격 순간 방향으로 기울었다 돌아오는 연출 (도)
 
     void Awake()
     {
@@ -27,9 +29,26 @@ public class WalkWobble : MonoBehaviour
         baseScale = transform.localScale;
     }
 
+    /// <summary>공격 등 임팩트 순간 호출 — 몸이 순간 부풀었다 빠르게 원래대로</summary>
+    public void Punch(float amount = 0.25f)
+    {
+        punch = Mathf.Max(punch, amount);
+    }
+
+    /// <summary>공격 순간 몸 기울이기 — 지정 각도로 확 기울었다 빠르게 복귀</summary>
+    public void SwingTilt(float degrees)
+    {
+        attackTilt = degrees;
+    }
+
     void Update()
     {
         bool moving = rb != null && rb.linearVelocity.sqrMagnitude > 0.05f;
+
+        // 펀치·기울임 감쇠 (0.15초쯤에 걸쳐 빠르게 복귀)
+        if (punch > 0f) punch = Mathf.Max(0f, punch - Time.deltaTime * 1.8f);
+        attackTilt = Mathf.MoveTowards(attackTilt, 0f, 130f * Time.deltaTime);
+        float punchScale = 1f + punch;
 
         if (moving)
         {
@@ -38,14 +57,21 @@ public class WalkWobble : MonoBehaviour
             float tilt = Mathf.Sin(phase) * tiltAngle;
             float squash = 1f + Mathf.Abs(Mathf.Sin(phase)) * squashAmount;
 
-            transform.rotation = Quaternion.Euler(0f, 0f, tilt);
-            transform.localScale = new Vector3(baseScale.x, baseScale.y * squash, baseScale.z);
+            transform.rotation = Quaternion.Euler(0f, 0f, tilt + attackTilt);
+            transform.localScale = new Vector3(
+                baseScale.x * punchScale,
+                baseScale.y * squash * punchScale,
+                baseScale.z);
         }
         else
         {
-            // 멈추면 부드럽게 원위치
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.identity, 12f * Time.deltaTime);
-            transform.localScale = Vector3.Lerp(transform.localScale, baseScale, 12f * Time.deltaTime);
+            // 멈추면 부드럽게 원위치 (펀치·기울임은 유지)
+            transform.rotation = Quaternion.Lerp(transform.rotation,
+                Quaternion.Euler(0f, 0f, attackTilt), 14f * Time.deltaTime);
+            transform.localScale = Vector3.Lerp(
+                transform.localScale,
+                new Vector3(baseScale.x * punchScale, baseScale.y * punchScale, baseScale.z),
+                12f * Time.deltaTime);
             phase = 0f;
         }
     }
