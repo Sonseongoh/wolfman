@@ -4,13 +4,15 @@ using UnityEngine.SceneManagement;
 /// <summary>
 /// MainScene 흐름 제어 (#6)
 /// - 첫 시작/보상 후: 달 추첨하고 SampleScene으로
-/// - 전투/마을 끝나고 돌아왔을 때: 보상 화면 표시
+/// - 전투/마을 끝나고 돌아왔을 때: 보상 화면 표시 + 재화 뱅킹 (#8)
 /// 달 연출 + 사냥/마을 선택은 SampleScene(WaveManager)에서 첫 웨이브에만 처리
 /// </summary>
 public class RoundController : MonoBehaviour
 {
     bool showingReward;
     float rewardTimer;
+    int rewardTempGold;   // 귀환 시 확정될 임시 골드 (표시용)
+    int rewardClearBonus; // 달 등급 클리어 보너스
 
     void Start()
     {
@@ -20,6 +22,17 @@ public class RoundController : MonoBehaviour
         if (GameManager.Instance.Phase == RoundPhase.Hunt ||
             GameManager.Instance.Phase == RoundPhase.Village)
         {
+            // 귀환 성공 → 재화 확정 (#8)
+            MoonData moon = GameManager.Instance.CurrentMoon;
+            int tier = moon != null ? moon.rewardTier : 1;
+            rewardClearBonus = CurrencyManager.ClearBonus(tier);
+
+            if (CurrencyManager.Instance != null)
+            {
+                rewardTempGold = CurrencyManager.Instance.TempGold;
+                CurrencyManager.Instance.BankGold(rewardClearBonus);
+            }
+
             showingReward = true;
             rewardTimer = 3f;
         }
@@ -54,10 +67,25 @@ public class RoundController : MonoBehaviour
             alignment = TextAnchor.MiddleCenter,
             normal = { textColor = Color.white }
         };
+        GUIStyle gold = new GUIStyle(GUI.skin.label)
+        {
+            fontSize = 24,
+            alignment = TextAnchor.MiddleCenter,
+            normal = { textColor = new Color(1f, 0.85f, 0.2f) }
+        };
 
-        GUI.Label(new Rect(0, Screen.height * 0.35f, Screen.width, 50), "라운드 클리어!", center);
+        GUI.Label(new Rect(0, Screen.height * 0.30f, Screen.width, 50), "라운드 클리어!", center);
         if (moon != null)
-            GUI.Label(new Rect(0, Screen.height * 0.45f, Screen.width, 40),
+            GUI.Label(new Rect(0, Screen.height * 0.40f, Screen.width, 40),
                 $"보상 등급: {moon.rewardTier}성  |  라운드 {GameManager.Instance.RoundNumber}", center);
+
+        // 재화 정산 표시 (#8)
+        if (CurrencyManager.Instance != null)
+        {
+            GUI.Label(new Rect(0, Screen.height * 0.51f, Screen.width, 34),
+                $"사냥 수익  {rewardTempGold}G  +  클리어 보너스  {rewardClearBonus}G", gold);
+            GUI.Label(new Rect(0, Screen.height * 0.57f, Screen.width, 34),
+                $"금고 합계  {CurrencyManager.Instance.ConfirmedGold}G", gold);
+        }
     }
 }

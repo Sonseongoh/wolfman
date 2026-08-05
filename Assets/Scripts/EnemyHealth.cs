@@ -8,6 +8,9 @@ public class EnemyHealth : MonoBehaviour
     [Tooltip("죽을 때 떨어뜨릴 경험치 보석 프리팹")]
     public GameObject gemPrefab;
 
+    [Tooltip("처치 시 지급할 임시 골드 (#8)")]
+    public int goldDrop = 1;
+
     [Tooltip("낮은 확률로 떨어뜨릴 회복 오브 프리팹 (#32)")]
     public GameObject healthDropPrefab;
 
@@ -83,6 +86,8 @@ public class EnemyHealth : MonoBehaviour
                 Instantiate(healthDropPrefab,
                     transform.position + (Vector3)(Random.insideUnitCircle * 0.3f),
                     Quaternion.identity);
+
+            CurrencyManager.Instance?.AddTempGold(goldDrop);
 
             if (WaveManager.Instance != null)
                 WaveManager.Instance.NotifyEnemyDied();
