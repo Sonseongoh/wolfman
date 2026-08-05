@@ -15,6 +15,9 @@ public class PlayerHealth : MonoBehaviour
     bool isDead;
     SpriteRenderer sr;
 
+    /// <summary>게임오버 상태인지 (HitStop 등이 시간 정지 유지 판단에 사용)</summary>
+    public bool IsDead => isDead;
+
     void Awake()
     {
         hp = maxHp;
@@ -61,10 +64,24 @@ public class PlayerHealth : MonoBehaviour
         hp = maxHp;
     }
 
+    /// <summary>회복 오브 등으로 체력 회복 (#32) — 최대치를 넘지 않음</summary>
+    public void Heal(int amount)
+    {
+        if (isDead) return;
+
+        hp = Mathf.Min(maxHp, hp + amount);
+        DamageNumber.Spawn(transform.position, $"+{amount}", new Color(0.4f, 1f, 0.5f), 1.1f);
+    }
+
     void TakeDamage(int amount)
     {
         hp -= amount;
         invincibleTimer = invincibleTime;
+
+        // 피격 피드백 (#31): 붉은 데미지 숫자 + 강한 흔들림 + 히트스톱
+        DamageNumber.Spawn(transform.position, $"-{amount}", new Color(1f, 0.35f, 0.3f), 1.25f);
+        CameraFollow.Shake(0.22f, 0.25f);
+        HitStop.Do(0.06f);
 
         if (hp <= 0)
         {

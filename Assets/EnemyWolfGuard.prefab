@@ -196,5 +196,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHp: 10
   gemPrefab: {fileID: 1867112256589320435, guid: 333c0695553130c4a96fd3c1a572f92b, type: 3}
+  healthDropPrefab: {fileID: 1867112256589320435, guid: f6e5d4c3b2a1908877665544332211a2, type: 3}
+  healthDropChance: 0.15
   knockbackForce: 1.5
   knockbackDuration: 0.06

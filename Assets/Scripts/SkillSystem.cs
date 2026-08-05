@@ -19,7 +19,11 @@ public class SkillSystem : MonoBehaviour
         MaxHp,           // 최대 체력 +value & 전체 회복
         ProjectileCount, // 투사체 개수 +value
         Range,           // 사거리 +value
+        MagnetRange,     // 보석·하트 획득 범위 +value
     }
+
+    /// <summary>스킬로 늘어난 획득(자석) 범위 보너스 — XPGem·HealthPickup이 읽음. 씬 리로드 시 초기화</summary>
+    public float magnetBonus;
 
     [System.Serializable]
     public class SkillOption
@@ -39,12 +43,16 @@ public class SkillSystem : MonoBehaviour
         new SkillOption { skillName = "질긴 가죽", description = "최대 체력 +1, 전체 회복", effect = EffectType.MaxHp, value = 1 },
         new SkillOption { skillName = "이빨 하나 더", description = "투사체 +1발", effect = EffectType.ProjectileCount, value = 1 },
         new SkillOption { skillName = "사냥 본능", description = "사거리 +2", effect = EffectType.Range, value = 2 },
+        new SkillOption { skillName = "달의 인력", description = "보석·하트 획득 범위 +0.5", effect = EffectType.MagnetRange, value = 0.5f },
     };
 
     public List<SkillOption> acquired = new List<SkillOption>(); // 이번 런에 얻은 스킬
 
     SkillOption[] currentChoices;
     bool choosing;
+
+    /// <summary>선택창이 떠 있는지 (HitStop 등이 시간 정지 유지 판단에 사용)</summary>
+    public bool IsChoosing => choosing;
 
     PlayerMovement movement;
     PlayerAttack attack;
@@ -58,6 +66,18 @@ public class SkillSystem : MonoBehaviour
         attack = GetComponent<PlayerAttack>();
         health = GetComponent<PlayerHealth>();
         level = GetComponent<PlayerLevel>();
+
+        // 씬에 저장된 풀(구버전)에 자석 스킬이 없으면 자동 추가
+        if (!pool.Exists(s => s.effect == EffectType.MagnetRange))
+        {
+            pool.Add(new SkillOption
+            {
+                skillName = "달의 인력",
+                description = "보석·하트 획득 범위 +0.5",
+                effect = EffectType.MagnetRange,
+                value = 0.5f,
+            });
+        }
     }
 
     /// <summary>WaveManager가 웨이브 클리어 시 호출</summary>
@@ -126,6 +146,9 @@ public class SkillSystem : MonoBehaviour
                 break;
             case EffectType.Range:
                 if (attack != null) attack.range += s.value;
+                break;
+            case EffectType.MagnetRange:
+                magnetBonus += s.value;
                 break;
         }
     }

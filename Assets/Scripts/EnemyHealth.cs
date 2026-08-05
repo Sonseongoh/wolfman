@@ -8,6 +8,12 @@ public class EnemyHealth : MonoBehaviour
     [Tooltip("죽을 때 떨어뜨릴 경험치 보석 프리팹")]
     public GameObject gemPrefab;
 
+    [Tooltip("낮은 확률로 떨어뜨릴 회복 오브 프리팹 (#32)")]
+    public GameObject healthDropPrefab;
+
+    [Tooltip("회복 오브 드랍 확률 (0.05 = 5%)")]
+    [Range(0f, 1f)] public float healthDropChance = 0.05f;
+
     [Header("타격감")]
     [Tooltip("피격 시 밀려나는 힘")]
     public float knockbackForce = 6f;
@@ -41,6 +47,9 @@ public class EnemyHealth : MonoBehaviour
 
         hp -= amount;
 
+        // 데미지 숫자 (#31)
+        DamageNumber.Spawn(transform.position, amount.ToString(), new Color(1f, 0.9f, 0.4f));
+
         // 흰색 섬광
         if (sr != null)
         {
@@ -68,6 +77,12 @@ public class EnemyHealth : MonoBehaviour
                     Instantiate(gemPrefab, transform.position + offset, Quaternion.identity);
                 }
             }
+
+            // 회복 오브 드랍 (#32)
+            if (healthDropPrefab != null && Random.value < healthDropChance)
+                Instantiate(healthDropPrefab,
+                    transform.position + (Vector3)(Random.insideUnitCircle * 0.3f),
+                    Quaternion.identity);
 
             if (WaveManager.Instance != null)
                 WaveManager.Instance.NotifyEnemyDied();
