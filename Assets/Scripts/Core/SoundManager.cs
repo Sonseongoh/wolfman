@@ -28,7 +28,12 @@ public class SoundManager : MonoBehaviour
     public AudioClip sfxMoonRevealLegendary;   // 전설 달 최종 확정
     public AudioClip sfxGameOver;              // 게임오버
 
+    [Header("BGM")]
+    public AudioClip bgmBattle;    // 전투 배경음
+    [Range(0f, 1f)] public float bgmVolume = 0.4f;
+
     AudioSource src;
+    AudioSource bgmSrc;
 
     void Awake()
     {
@@ -36,7 +41,19 @@ public class SoundManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         src = gameObject.AddComponent<AudioSource>();
+        bgmSrc = gameObject.AddComponent<AudioSource>();
+        bgmSrc.loop = true;
+        bgmSrc.volume = bgmVolume;
     }
+
+    public void PlayBGM(AudioClip clip)
+    {
+        if (clip == null || bgmSrc.clip == clip) return;
+        bgmSrc.clip = clip;
+        bgmSrc.Play();
+    }
+
+    public void StopBGM() => bgmSrc.Stop();
 
     void Play(AudioClip clip, float volume = 1f)
     {

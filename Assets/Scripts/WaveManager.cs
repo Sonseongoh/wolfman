@@ -81,6 +81,8 @@ public class WaveManager : MonoBehaviour
 
         resting = true;
         restTimer = 2f; // 게임 시작 후 첫 웨이브까지 잠깐 여유
+
+        SoundManager.Instance?.PlayBGM(SoundManager.Instance.bgmBattle);
     }
 
     void Update()
