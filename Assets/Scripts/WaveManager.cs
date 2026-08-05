@@ -169,7 +169,7 @@ public class WaveManager : MonoBehaviour
             }
 
             moonBannerTimer = 1.6f; // 확정된 달 보여주기 (최종 공개가 마지막 땅!)
-            SoundManager.Instance?.PlayMoonReveal();
+            SoundManager.Instance?.PlayMoonReveal(CurrentMoon?.rarity == MoonRarity.Legendary);
         }
 
         // 첫 웨이브에만 사냥/마을 선택 (#6) — 달 카드 뜨자마자 버튼 표시, 선택할 때까지 카드 유지
@@ -359,7 +359,7 @@ public class WaveManager : MonoBehaviour
 
         // 현재 달 표시 (웨이브 텍스트 아래) — 슬롯 도는 동안엔 스포일러 방지로 숨김
         MoonData moon = CurrentMoon;
-        if (moon != null && !resting && !moonSpinning && moonBannerTimer <= 0f)
+        if (moon != null && !resting && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f)
         {
             GUIStyle moonStyle = new GUIStyle
             {

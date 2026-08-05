@@ -20,9 +20,10 @@ public class SoundManager : MonoBehaviour
     public AudioClip sfxLevelUp;  // 레벨업 / 스킬 선택
 
     [Header("연출")]
-    public AudioClip sfxSlot;        // 달 슬롯머신 플립
-    public AudioClip sfxMoonReveal;  // 달 최종 확정
-    public AudioClip sfxGameOver;    // 게임오버
+    public AudioClip sfxSlot;                  // 달 슬롯머신 플립
+    public AudioClip sfxMoonReveal;            // 달 최종 확정
+    public AudioClip sfxMoonRevealLegendary;   // 전설 달 최종 확정
+    public AudioClip sfxGameOver;              // 게임오버
 
     AudioSource src;
 
@@ -41,7 +42,8 @@ public class SoundManager : MonoBehaviour
 
     public void PlayShoot()       => Play(sfxShoot, 0.7f);
     public void PlaySlash()       => Play(sfxSlash, 0.9f);
-    public void PlayMoonReveal()  => Play(sfxMoonReveal);
+    public void PlayMoonReveal(bool legendary = false)
+        => Play(legendary && sfxMoonRevealLegendary != null ? sfxMoonRevealLegendary : sfxMoonReveal);
     public void PlayHit()      => Play(sfxHit, 0.8f);
     public void PlayDeath()    => Play(sfxDeath);
     public void PlayDamaged()  => Play(sfxDamaged, 0.9f);
