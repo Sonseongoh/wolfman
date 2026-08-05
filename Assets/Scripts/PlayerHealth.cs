@@ -13,6 +13,7 @@ public class PlayerHealth : MonoBehaviour
     int hp;
     float invincibleTimer;
     bool isDead;
+    int lostGoldOnDeath;
     SpriteRenderer sr;
 
     /// <summary>게임오버 상태인지 (HitStop 등이 시간 정지 유지 판단에 사용)</summary>
@@ -86,6 +87,8 @@ public class PlayerHealth : MonoBehaviour
         if (hp <= 0)
         {
             isDead = true;
+            lostGoldOnDeath = CurrencyManager.Instance?.TempGold ?? 0;
+            CurrencyManager.Instance?.LoseTempGold();
             Time.timeScale = 0f; // 게임 일시정지
         }
     }
@@ -107,8 +110,9 @@ public class PlayerHealth : MonoBehaviour
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.red }
             };
+            string lostText = lostGoldOnDeath > 0 ? $"\n임시 골드 {lostGoldOnDeath}G 손실" : "";
             GUI.Label(new Rect(0, 0, Screen.width, Screen.height),
-                $"GAME OVER\n\nWAVE {wave}까지 생존  ·  Lv.{level}\n\nR 키로 재시작", big);
+                $"GAME OVER\n\nWAVE {wave}까지 생존  ·  Lv.{level}{lostText}\n\nR 키로 재시작", big);
         }
     }
 }
