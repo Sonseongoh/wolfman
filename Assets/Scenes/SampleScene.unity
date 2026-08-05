@@ -290,6 +290,7 @@ GameObject:
   - component: {fileID: 605944750}
   - component: {fileID: 605944752}
   - component: {fileID: 605944751}
+  - component: {fileID: 605944753}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -577,7 +578,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTransform
   humanSprite: {fileID: 21300000, guid: 3a7c1f92b45d48e2a91c0d3e5f6a7b81, type: 3}
-  wolfSprite: {fileID: 21300000, guid: 8b2d4e61c73f49a5b80e1f2a3c4d5e92, type: 3}
+  wolfSprite: {fileID: 21300000, guid: ee88ff99aabbccddeeff001122334a00, type: 3}
+--- !u!114 &605944753
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605944740}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6161c8be8055171449de64861b2506fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerWalkAnim
+  frames:
+  - {fileID: 21300000, guid: ee88ff99aabbccddeeff001122334a02, type: 3}
+  - {fileID: 21300000, guid: ee88ff99aabbccddeeff001122334a03, type: 3}
+  - {fileID: 21300000, guid: ee88ff99aabbccddeeff001122334a01, type: 3}
+  - {fileID: 21300000, guid: ee88ff99aabbccddeeff001122334a00, type: 3}
+  frameTime: 0.1
 --- !u!1 &619394800
 GameObject:
   m_ObjectHideFlags: 0
