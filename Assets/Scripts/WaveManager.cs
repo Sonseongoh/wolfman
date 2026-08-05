@@ -288,10 +288,6 @@ public class WaveManager : MonoBehaviour
             normal = { textColor = Color.white }
         };
 
-        // 마을로 귀환 버튼 (#6)
-        if (!waitingForAction && GUI.Button(new Rect(Screen.width - 160, 10, 140, 40), "마을로 귀환"))
-            SceneManager.LoadScene("MainScene");
-
         // 달 공개 후 행동 선택 UI (#6)
         if (waitingForAction)
         {
