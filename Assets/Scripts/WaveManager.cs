@@ -313,7 +313,7 @@ public class WaveManager : MonoBehaviour
             }
         }
 
-        if (!waitingForAction && !moonSpinning && !moonPromoting)
+        if (!waitingForAction && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f)
         {
             string text = resting
                 ? $"WAVE {CurrentWave} 클리어!  다음 웨이브까지 {Mathf.CeilToInt(restTimer)}초"
@@ -323,7 +323,7 @@ public class WaveManager : MonoBehaviour
 
         // 현재 달 표시 (웨이브 텍스트 아래) — 슬롯 도는 동안엔 스포일러 방지로 숨김
         MoonData moon = CurrentMoon;
-        if (moon != null && !resting && !moonSpinning)
+        if (moon != null && !resting && !moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
         {
             GUIStyle moonStyle = new GUIStyle
             {
