@@ -328,7 +328,7 @@ public class WaveManager : MonoBehaviour
         if (CurrencyManager.Instance != null && !moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
         {
             float pw = 190f, ph = 72f;
-            float px = Screen.width - pw - 16f, py = 12f;
+            float px = Screen.width - pw - 16f, py = Screen.height - ph - 16f;
 
             // 금색 테두리
             GUI.color = new Color(1f, 0.75f, 0.15f, 0.75f);

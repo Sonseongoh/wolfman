@@ -47,7 +47,6 @@ public class PlayerHealth : MonoBehaviour
             {
                 isPaused = !isPaused;
                 Time.timeScale = isPaused ? 0f : 1f;
-                SoundManager.Instance?.PlayButton();
             }
         }
     }
@@ -91,16 +90,11 @@ public class PlayerHealth : MonoBehaviour
         CameraFollow.Shake(0.22f, 0.25f);
         HitStop.Do(0.06f);
 
-        if (hp > 0)
-        {
-            SoundManager.Instance?.PlayDamaged();
-        }
-        else
+        if (hp <= 0)
         {
             isDead = true;
             lostGoldOnDeath = CurrencyManager.Instance?.TempGold ?? 0;
             CurrencyManager.Instance?.LoseTempGold();
-            SoundManager.Instance?.PlayGameOver();
             Time.timeScale = 0f;
         }
     }
@@ -108,7 +102,6 @@ public class PlayerHealth : MonoBehaviour
     static void Restart()
     {
         Time.timeScale = 1f;
-        SoundManager.Instance?.PlayButton();
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
@@ -117,6 +110,24 @@ public class PlayerHealth : MonoBehaviour
     {
         GUIStyle hpStyle = new GUIStyle { fontSize = 28, normal = { textColor = Color.white } };
         GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {maxHp}", hpStyle);
+
+        // 일시정지·설정 버튼 (우상단) — 게임 중, 죽지 않았을 때
+        if (!isDead && !isPaused)
+        {
+            bool levelChoosing = GetComponent<PlayerLevel>()?.IsChoosing ?? false;
+            bool skillChoosing = SkillSystem.Instance?.IsChoosing ?? false;
+            if (!levelChoosing && !skillChoosing)
+            {
+                float bSize = 48f, margin = 8f;
+                // ⏸ 왼쪽, ⚙ 맨 오른쪽
+                if (GUI.Button(new Rect(Screen.width - bSize * 2 - margin * 2, margin, bSize, bSize), "⏸"))
+                {
+                    isPaused = true;
+                    Time.timeScale = 0f;
+                }
+                GUI.Button(new Rect(Screen.width - bSize - margin, margin, bSize, bSize), "⚙");
+            }
+        }
 
         // 일시정지 오버레이
         if (isPaused)
@@ -148,7 +159,6 @@ public class PlayerHealth : MonoBehaviour
             {
                 isPaused = false;
                 Time.timeScale = 1f;
-                SoundManager.Instance?.PlayButton();
             }
             if (GUI.Button(new Rect(px + 40, py + 148, pw - 80, 52), "재시작"))
                 Restart();
