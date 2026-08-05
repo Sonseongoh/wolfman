@@ -39,6 +39,7 @@ public class XPGem : MonoBehaviour
         {
             PlayerLevel lvl = other.GetComponent<PlayerLevel>();
             if (lvl != null) lvl.AddXP(xpValue);
+            SoundManager.Instance?.PlayPickup();
             Destroy(gameObject);
         }
     }

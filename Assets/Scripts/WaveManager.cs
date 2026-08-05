@@ -135,6 +135,7 @@ public class WaveManager : MonoBehaviour
                     idx = (idx + 1) % table.moons.Length;
                     spinDisplayName = table.moons[idx].moonName;
                     spinDisplayIcon = table.moons[idx].icon;
+                    SoundManager.Instance?.PlaySlot();
                     // 처음엔 빠르게(0.05초), 끝으로 갈수록 느리게(0.3초) — 슬롯 감속
                     nextFlipAt = elapsed + Mathf.Lerp(0.05f, 0.3f, elapsed / moonSpinDuration);
                 }
@@ -168,6 +169,7 @@ public class WaveManager : MonoBehaviour
             }
 
             moonBannerTimer = 1.6f; // 확정된 달 보여주기 (최종 공개가 마지막 땅!)
+            SoundManager.Instance?.PlayMoonReveal();
         }
 
         // 첫 웨이브에만 사냥/마을 선택 (#6) — 달 카드 뜨자마자 버튼 표시, 선택할 때까지 카드 유지

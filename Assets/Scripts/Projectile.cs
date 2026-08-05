@@ -18,6 +18,7 @@ public class Projectile : MonoBehaviour
 
     void Start()
     {
+        SoundManager.Instance?.PlayShoot();
         Destroy(gameObject, lifetime);
     }
 

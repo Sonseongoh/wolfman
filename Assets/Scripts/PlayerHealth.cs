@@ -89,7 +89,12 @@ public class PlayerHealth : MonoBehaviour
             isDead = true;
             lostGoldOnDeath = CurrencyManager.Instance?.TempGold ?? 0;
             CurrencyManager.Instance?.LoseTempGold();
+            SoundManager.Instance?.PlayGameOver();
             Time.timeScale = 0f; // 게임 일시정지
+        }
+        else
+        {
+            SoundManager.Instance?.PlayDamaged();
         }
     }
 

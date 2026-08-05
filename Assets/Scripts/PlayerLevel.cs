@@ -35,6 +35,7 @@ public class PlayerLevel : MonoBehaviour
         level++;
         xpToNext = 5 + level * 3; // 레벨이 오를수록 필요 경험치 증가
         choosing = true;
+        SoundManager.Instance?.PlayLevelUp();
         Time.timeScale = 0f; // 선택하는 동안 게임 정지
     }
 
