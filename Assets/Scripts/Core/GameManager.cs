@@ -22,6 +22,10 @@ public class GameManager : MonoBehaviour
     [Header("데이터")]
     public MoonTable moonTable;
 
+    [Header("설정")]
+    [Tooltip("데미지 숫자 표시 여부 — 추후 설정 메뉴(#33)에서 조작")]
+    public bool showDamageNumbers = true;
+
     public MoonData CurrentMoon { get; private set; }
     public RoundPhase Phase { get; private set; }
     public int RoundNumber { get; private set; }

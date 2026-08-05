@@ -143,5 +143,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::XPGem
   xpValue: 1
-  magnetRange: 2.5
+  magnetRange: 1.1
   magnetSpeed: 7
