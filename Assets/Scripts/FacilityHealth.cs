@@ -16,7 +16,10 @@ public class FacilityHealth : MonoBehaviour
     [Tooltip("수리 비용 (금고에서 차감 — 남은 체력과 무관한 고정값)")]
     public int repairCost = 30;
 
-    [Tooltip("플레이어가 이 거리 안에 들어와야 상호작용할 수 있다")]
+    // 시설끼리 이 범위가 겹치지 않게 배치할 것 — 겹치면 E 한 번에 양쪽이 같이 수리되고
+    // 골드도 두 번 나간다. 시설마다 독립적으로 입력을 받는 구조라 그렇다.
+    // 습격(#12)에서 상호작용 주체를 한 곳으로 모을 때 함께 정리한다.
+    [Tooltip("플레이어가 이 거리 안에 들어와야 상호작용할 수 있다 (시설끼리 겹치지 않게 배치할 것)")]
     public float interactRange = 2.5f;
 
     [Tooltip("시작부터 파괴된 상태로 — 파괴·수리 사이클 검증용 임시 옵션")]
@@ -42,8 +45,12 @@ public class FacilityHealth : MonoBehaviour
     void Awake()
     {
         core = new FacilityCore(maxHp);
-        sr = GetComponent<SpriteRenderer>();
+
+        // 자식에 스프라이트를 둔 배치도 받아준다. 그래도 못 찾으면 파괴돼도 색이 안 바뀌는데,
+        // 씬 배치는 사람이 하는 단계라 조용히 넘어가면 원인을 찾기 어렵다 — 반드시 알린다.
+        sr = GetComponentInChildren<SpriteRenderer>();
         if (sr != null) originalColor = sr.color;
+        else Debug.LogWarning($"[{name}] SpriteRenderer 를 찾지 못했다 — 파괴 상태가 외형으로 드러나지 않는다.", this);
     }
 
     void Start()
@@ -100,7 +107,7 @@ public class FacilityHealth : MonoBehaviour
     {
         if (CurrencyManager.Instance == null) return;
 
-        RepairResult result = core.TryRepair(CurrencyManager.Instance.Wallet, repairCost);
+        RepairResult result = core.TryRepair(CurrencyManager.Instance, repairCost);
 
         switch (result)
         {

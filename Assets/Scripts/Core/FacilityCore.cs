@@ -39,13 +39,13 @@ public class FacilityCore
     }
 
     /// <summary>
-    /// 금고에서 cost 만큼 내고 만피로 복구. 실패하면 체력도 지갑도 그대로 둔다.
+    /// 금고에서 cost 만큼 내고 만피로 복구. 실패하면 체력도 금고도 그대로 둔다.
     /// 비용은 남은 체력과 무관한 고정값이다.
     /// </summary>
-    public RepairResult TryRepair(GoldWallet wallet, int cost)
+    public RepairResult TryRepair(IGoldVault vault, int cost)
     {
         if (!IsDamaged) return RepairResult.NotDamaged;
-        if (!wallet.TrySpendConfirmed(cost)) return RepairResult.NotEnoughGold;
+        if (!vault.TrySpendConfirmed(cost)) return RepairResult.NotEnoughGold;
 
         Hp = MaxHp;
         return RepairResult.Success;
