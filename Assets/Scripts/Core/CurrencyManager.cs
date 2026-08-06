@@ -22,8 +22,14 @@ public class CurrencyManager : MonoBehaviour
         }
     }
 
-    public int TempGold { get; private set; }
-    public int ConfirmedGold { get; private set; }
+    // 실제 계산은 순수 C# GoldWallet 이 한다 (#11) — 이쪽은 씬 수명만 관리하는 껍데기
+    readonly GoldWallet wallet = new GoldWallet();
+
+    /// <summary>도메인 로직이 직접 지갑을 다뤄야 할 때 (FacilityCore 수리 등, #11)</summary>
+    public GoldWallet Wallet => wallet;
+
+    public int TempGold => wallet.TempGold;
+    public int ConfirmedGold => wallet.ConfirmedGold;
 
     void Awake()
     {
@@ -34,21 +40,23 @@ public class CurrencyManager : MonoBehaviour
 
     public void AddTempGold(int amount)
     {
-        TempGold += amount;
+        wallet.AddTemp(amount);
     }
 
     /// <summary>사망 시 임시 주머니 손실</summary>
     public void LoseTempGold()
     {
-        TempGold = 0;
+        wallet.LoseTemp();
     }
 
     /// <summary>살아서 귀환 시 임시 주머니 + 클리어 보너스를 금고로 확정</summary>
     public void BankGold(int clearBonus = 0)
     {
-        ConfirmedGold += TempGold + clearBonus;
-        TempGold = 0;
+        wallet.Bank(clearBonus);
     }
+
+    /// <summary>금고에서 차감 — 잔액이 모자라면 아무것도 바꾸지 않고 false (#11 수리, #13 상점)</summary>
+    public bool TrySpendConfirmedGold(int amount) => wallet.TrySpendConfirmed(amount);
 
     /// <summary>달 rewardTier(1~5) 기준 클리어 보너스 골드</summary>
     public static int ClearBonus(int rewardTier) => rewardTier * 20;
