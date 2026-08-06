@@ -58,7 +58,8 @@ public class VillageController : MonoBehaviour
             GUI.Label(new Rect(0, 84, Screen.width, 34), message, msgStyle);
         }
 
-        DrawGoldPanel();
+        // 수리 재원인 금고 잔액이 항상 보여야 한다 (#11)
+        GoldPanelUI.Draw();
 
         // 라운드 종료 → MainScene. Phase는 Village 그대로 둔다 —
         // RoundController(#6)가 그걸 보고 "마을에서 무사히 라운드를 마쳤다"로 인식해
@@ -71,38 +72,4 @@ public class VillageController : MonoBehaviour
         }
     }
 
-    /// <summary>우상단 재화 패널 (#8) — 수리 재원인 금고 잔액을 항상 보여준다</summary>
-    void DrawGoldPanel()
-    {
-        if (CurrencyManager.Instance == null) return;
-
-        float pw = 190f, ph = 72f;
-        float px = Screen.width - pw - 16f, py = 12f;
-
-        // 금색 테두리
-        GUI.color = new Color(1f, 0.75f, 0.15f, 0.75f);
-        GUI.DrawTexture(new Rect(px - 2, py - 2, pw + 4, ph + 4), Texture2D.whiteTexture);
-        // 어두운 배경
-        GUI.color = new Color(0.06f, 0.05f, 0.12f, 0.9f);
-        GUI.DrawTexture(new Rect(px, py, pw, ph), Texture2D.whiteTexture);
-        GUI.color = Color.white;
-
-        GUIStyle lbl = new GUIStyle { fontSize = 17, alignment = TextAnchor.MiddleLeft };
-        GUIStyle val = new GUIStyle { fontSize = 17, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleRight, normal = { textColor = Color.white } };
-
-        // 주머니 (임시 — 금색)
-        lbl.normal.textColor = new Color(1f, 0.82f, 0.2f);
-        GUI.Label(new Rect(px + 10, py + 4, pw - 20, 28), "◈ 주머니", lbl);
-        GUI.Label(new Rect(px + 10, py + 4, pw - 14, 28), $"{CurrencyManager.Instance.TempGold} G", val);
-
-        // 구분선
-        GUI.color = new Color(1f, 0.75f, 0.15f, 0.25f);
-        GUI.DrawTexture(new Rect(px + 8, py + 36, pw - 16, 1), Texture2D.whiteTexture);
-        GUI.color = Color.white;
-
-        // 금고 (확정 — 하늘색). 시설 수리는 이 잔액에서만 나간다 (#11)
-        lbl.normal.textColor = new Color(0.55f, 0.85f, 1f);
-        GUI.Label(new Rect(px + 10, py + 40, pw - 20, 28), "◈ 금고", lbl);
-        GUI.Label(new Rect(px + 10, py + 40, pw - 14, 28), $"{CurrencyManager.Instance.ConfirmedGold} G", val);
-    }
 }
