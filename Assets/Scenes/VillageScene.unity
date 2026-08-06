@@ -642,7 +642,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6bdf0752c421db5373c58d6d050b8e50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FacilityHealth
-  facilityName: "\uC2DC\uC124"
+  facilityName: "\uB300\uC7A5\uAC04"
   maxHp: 10
   repairCost: 50
   interactRange: 2.5
