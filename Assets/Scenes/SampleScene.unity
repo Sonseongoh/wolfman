@@ -226,7 +226,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 5
+  orthographic size: 8
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -817,12 +817,18 @@ MonoBehaviour:
   - prefab: {fileID: 5769649458394515389, guid: 6e2d4f39ab7c58e5b42f3a6d7e8b9c05, type: 3}
     minWave: 7
     weight: 0.7
-  spawnRadius: 12
+  spawnRadius: 18
   baseEnemyCount: 6
   enemyCountGrowth: 3
   timeBetweenWaves: 4
   spawnInterval: 0.25
   moonSpinDuration: 1.8
+  portalPrefab: {fileID: 4601000000000000001, guid: ee66ff778899aabbccddeeff00460001, type: 3}
+  portalChance: 0.1
+  portalMinWave: 2
+  portalDistanceMin: 20
+  portalDistanceMax: 60
+  portalMaxRange: 80
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
