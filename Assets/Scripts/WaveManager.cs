@@ -26,8 +26,8 @@ public class WaveManager : MonoBehaviour
     [Header("적 구성 (타입별 등장 웨이브·비중)")]
     public List<EnemyOption> enemyTypes = new List<EnemyOption>();
 
-    [Tooltip("플레이어로부터 이 거리(화면 밖)에서 스폰")]
-    public float spawnRadius = 12f;
+    [Tooltip("플레이어로부터 이 거리(화면 밖)에서 스폰 — 카메라 시야(ortho size 8, 화면 모서리까지 약 16.3)보다 커야 함")]
+    public float spawnRadius = 18f;
 
     [Header("웨이브 규모")]
     [Tooltip("1웨이브의 적 수")]
@@ -50,6 +50,25 @@ public class WaveManager : MonoBehaviour
     [Tooltip("달 이름이 슬롯머신처럼 돌아가는 시간(초)")]
     public float moonSpinDuration = 1.8f;
 
+    [Header("탈출 포탈 (#46)")]
+    [Tooltip("탈출 포탈 프리팹")]
+    public GameObject portalPrefab;
+
+    [Tooltip("웨이브 시작 시 포탈이 열릴 확률 (0.1 = 10%). 달별 조정은 회의 후 MoonData로 이관 예정")]
+    [Range(0f, 1f)] public float portalChance = 0.1f;
+
+    [Tooltip("이 웨이브부터 판정 (1웨이브는 사냥/마을 선택 직후라 제외)")]
+    public int portalMinWave = 2;
+
+    [Tooltip("포탈이 열리는 최소 거리 (플레이어 기준 — 항상 화면 밖에서 뜬다)")]
+    public float portalDistanceMin = 20f;
+
+    [Tooltip("포탈이 열리는 최대 거리 (플레이어 기준). 화살표 보고 적을 뚫으며 찾아가야 한다")]
+    public float portalDistanceMax = 60f;
+
+    [Tooltip("포탈에서 이 거리 이상 멀어지면 포탈이 닫혀버린다 (무한 맵 대비 최대 범위). 반드시 포탈 최대 거리보다 커야 함 — 아니면 뜨자마자 닫힌다")]
+    public float portalMaxRange = 80f;
+
     Transform player;
     bool spawning;   // 이번 웨이브 스폰이 아직 진행 중인가
     bool resting;    // 웨이브 사이 휴식 중인가
@@ -65,6 +84,10 @@ public class WaveManager : MonoBehaviour
     Sprite promoDecoyIcon;  // 미끼 달 아이콘
 
     bool waitingForAction;  // 첫 웨이브 달 공개 후 사냥/마을 선택 대기 (#6)
+
+    EscapePortal activePortal;  // 이번 웨이브에 열린 탈출 포탈 (#46)
+    float portalBannerTimer;    // "포탈이 열렸다" 안내 표시 시간
+    float portalLostTimer;      // "멀어져서 닫혔다" 안내 표시 시간
 
     /// <summary>GameManager가 씬에 있으면 현재 달, 없으면 null (달 없이도 동작)</summary>
     MoonData CurrentMoon => GameManager.Instance != null ? GameManager.Instance.CurrentMoon : null;
@@ -91,6 +114,19 @@ public class WaveManager : MonoBehaviour
             if (waitingForAction && moonBannerTimer < 0.01f) moonBannerTimer = 0.01f;
         }
 
+        if (portalBannerTimer > 0f) portalBannerTimer -= Time.deltaTime;
+        if (portalLostTimer > 0f) portalLostTimer -= Time.deltaTime;
+
+        // 포탈에서 너무 멀어지면 닫혀버린다 (#46) — 무한 맵에서 밑도 끝도 없이 멀어지는 것 방지
+        if (activePortal != null && player != null &&
+            Vector2.Distance(player.position, activePortal.transform.position) > portalMaxRange)
+        {
+            activePortal.Close();
+            activePortal = null;
+            portalBannerTimer = 0f;
+            portalLostTimer = 2.5f;
+        }
+
         if (resting)
         {
             restTimer -= Time.deltaTime;
@@ -112,6 +148,7 @@ public class WaveManager : MonoBehaviour
         int count = Mathf.Max(1, Mathf.RoundToInt(
             (baseEnemyCount + enemyCountGrowth * (CurrentWave - 1)) * countMult));
 
+        TrySpawnPortal();
         StartCoroutine(MoonRevealThenSpawn(count));
     }
 
@@ -260,10 +297,34 @@ public class WaveManager : MonoBehaviour
         if (AliveCount <= 0 && !spawning && !resting) OnWaveCleared();
     }
 
+    /// <summary>웨이브 시작 시 확률 판정 — 성공하면 플레이어 주변에 탈출 포탈이 열린다 (#46)</summary>
+    void TrySpawnPortal()
+    {
+        if (portalPrefab == null || player == null) return;
+        if (CurrentWave < portalMinWave) return;
+        if (Random.value >= portalChance) return;
+
+        float angle = Random.Range(0f, Mathf.PI * 2f);
+        float distance = Random.Range(portalDistanceMin, portalDistanceMax);
+        Vector2 pos = (Vector2)player.position
+            + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
+
+        GameObject go = Instantiate(portalPrefab, pos, Quaternion.identity);
+        activePortal = go.GetComponent<EscapePortal>();
+        portalBannerTimer = 3f;
+    }
+
     void OnWaveCleared()
     {
         resting = true;
         restTimer = timeBetweenWaves;
+
+        // 탈출 포탈은 그 웨이브 동안만 유지 — 클리어하면 닫힌다 (#46)
+        if (activePortal != null)
+        {
+            activePortal.Close();
+            activePortal = null;
+        }
 
         // 스킬 3택 (#10) — 선택하는 동안 시간 정지, 휴식 타이머는 그 후 진행
         if (SkillSystem.Instance != null) SkillSystem.Instance.OfferChoices();
@@ -320,6 +381,99 @@ public class WaveManager : MonoBehaviour
                 ? $"WAVE {CurrentWave} 클리어!  다음 웨이브까지 {Mathf.CeilToInt(restTimer)}초"
                 : $"WAVE {CurrentWave}   남은 적: {AliveCount}";
             GUI.Label(new Rect(0, 16, Screen.width, 40), text, style);
+        }
+
+        // 탈출 포탈 안내 (#46) — 열린 직후 3초는 큰 깜빡임, 이후엔 작은 상시 표시
+        if (!waitingForAction && !moonSpinning && !moonPromoting)
+        {
+            if (portalBannerTimer > 0f)
+            {
+                float blink = 0.6f + 0.4f * Mathf.Sin(Time.unscaledTime * 6f);
+                GUIStyle portalStyle = new GUIStyle
+                {
+                    fontSize = 26,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.UpperCenter,
+                    normal = { textColor = new Color(0.8f, 0.6f, 1f, blink) }
+                };
+                GUI.Label(new Rect(0, 84, Screen.width, 36),
+                    "탈출 포탈이 열렸다!  이번 웨이브 동안만 유지된다", portalStyle);
+            }
+            else if (activePortal != null)
+            {
+                GUIStyle portalSmall = new GUIStyle
+                {
+                    fontSize = 18,
+                    alignment = TextAnchor.UpperCenter,
+                    normal = { textColor = new Color(0.8f, 0.6f, 1f, 0.85f) }
+                };
+                GUI.Label(new Rect(0, 84, Screen.width, 30), "◈ 탈출 포탈 열림", portalSmall);
+            }
+
+            // 포탈이 화면 밖에 있으면 가장자리에 방향 화살표 + 거리 표시 (#46)
+            // — 무한 맵이라 랜드마크가 없어서, 이게 없으면 포탈을 놓치면 못 찾는다
+            if (activePortal != null && Camera.main != null && player != null)
+            {
+                Vector3 vp = Camera.main.WorldToViewportPoint(activePortal.transform.position);
+                bool offscreen = vp.x < 0.02f || vp.x > 0.98f || vp.y < 0.02f || vp.y > 0.98f;
+
+                if (offscreen)
+                {
+                    // 뷰포트(아래가 0) → GUI 화면 좌표(위가 0)로 변환하며 가장자리에 고정
+                    Vector2 sp = new Vector2(
+                        Mathf.Clamp(vp.x, 0.05f, 0.95f) * Screen.width,
+                        (1f - Mathf.Clamp(vp.y, 0.08f, 0.92f)) * Screen.height);
+
+                    Vector2 center = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+                    float ang = Mathf.Atan2(sp.y - center.y, sp.x - center.x) * Mathf.Rad2Deg;
+
+                    // 한계 거리(portalMaxRange)에 가까워질수록 보라 → 빨강으로 경고
+                    float dist = Vector2.Distance(player.position, activePortal.transform.position);
+                    float danger = Mathf.InverseLerp(portalMaxRange * 0.65f, portalMaxRange, dist);
+                    Color portalPurple = new Color(0.8f, 0.6f, 1f);
+                    Color arrowColor = Color.Lerp(portalPurple, new Color(1f, 0.3f, 0.25f), danger);
+                    if (danger > 0.5f) // 한계 직전엔 깜빡임까지
+                        arrowColor.a = 0.55f + 0.45f * Mathf.Sin(Time.unscaledTime * 10f);
+
+                    GUIStyle arrowStyle = new GUIStyle
+                    {
+                        fontSize = 30,
+                        fontStyle = FontStyle.Bold,
+                        alignment = TextAnchor.MiddleCenter,
+                        normal = { textColor = arrowColor }
+                    };
+
+                    Matrix4x4 saved = GUI.matrix;
+                    GUIUtility.RotateAroundPivot(ang, sp);
+                    GUI.Label(new Rect(sp.x - 20, sp.y - 20, 40, 40), "➤", arrowStyle);
+                    GUI.matrix = saved;
+
+                    // 거리 숫자는 화살표보다 화면 중앙 쪽에 (회전 없이)
+                    Vector2 inward = (center - sp).normalized * 36f;
+                    GUIStyle distStyle = new GUIStyle
+                    {
+                        fontSize = 15,
+                        alignment = TextAnchor.MiddleCenter,
+                        normal = { textColor = arrowColor }
+                    };
+                    GUI.Label(new Rect(sp.x + inward.x - 30, sp.y + inward.y - 12, 60, 24),
+                        $"{dist:0}m", distStyle);
+                }
+            }
+
+            // 너무 멀어져서 포탈이 닫혔을 때 안내 (#46)
+            if (portalLostTimer > 0f)
+            {
+                GUIStyle lostStyle = new GUIStyle
+                {
+                    fontSize = 22,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.UpperCenter,
+                    normal = { textColor = new Color(1f, 0.4f, 0.35f, Mathf.Clamp01(portalLostTimer)) }
+                };
+                GUI.Label(new Rect(0, 84, Screen.width, 34),
+                    "너무 멀어져서 탈출 포탈이 닫혀버렸다...", lostStyle);
+            }
         }
 
         // 임시 골드 HUD (#8)
