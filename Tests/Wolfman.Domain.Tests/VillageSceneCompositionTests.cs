@@ -5,7 +5,11 @@ using NUnit.Framework;
 ///
 /// 코드가 아니라 "사람이 에디터에서 한 씬 배치"를 검사하는 테스트다.
 /// 이게 없으면 컴파일도 도메인 테스트도 전부 초록인데 "마을 남기"를 누르면 빈 화면이 뜬다.
-/// 씬을 엮기 전까지는 빨간 게 정상이며, 그 실패 목록이 그대로 에디터 작업 체크리스트가 된다.
+///
+/// 여기 담긴 기준은 스펙이 문자로 요구한 목록이 아니라, **손으로 돌려서 통과시킨 구성**이다
+/// (이동·파괴 전이·수리 성공/실패·라운드 루프 반복·사냥 귀환 회귀까지 확인한 그 배치).
+/// 그러니 이 테스트가 빨개지면 "규칙 위반"이 아니라 "검증된 구성에서 벗어났다"는 신호로 읽으면 된다 —
+/// 배치를 의도적으로 바꾸는 중이라면 여기 기준도 같이 고치는 게 맞다.
 /// </summary>
 [TestFixture]
 public class VillageSceneCompositionTests
@@ -38,13 +42,15 @@ public class VillageSceneCompositionTests
     [Test]
     public void 마을에는_전투_컴포넌트가_없다()
     {
-        // 마을은 전투가 없는 페이즈다 (습격은 #12). 사냥용 컴포넌트를 그대로 복사해오면
-        // 적도 없는데 자동 발사가 돌고 레벨업 UI 가 뜬다.
+        // 스펙은 전투 컴포넌트를 "빼도 된다"고 허용했을 뿐 금지하진 않았다.
+        // 뺀 구성으로 검증했으니 그 상태를 지킨다 — 마을엔 적이 없어서(습격은 #12)
+        // 사냥용 플레이어를 통째로 복사해오면 아무도 없는데 자동 발사가 돌고 레벨업 UI 가 뜬다.
+        // 마을에서 전투를 하기로 결정이 바뀌면 이 테스트부터 고칠 것.
         Assert.Multiple(() =>
         {
-            Assert.That(scene.ComponentCount("PlayerAttack"), Is.Zero, "마을에 PlayerAttack 이 붙어 있다");
-            Assert.That(scene.ComponentCount("PlayerLevel"), Is.Zero, "마을에 PlayerLevel 이 붙어 있다");
-            Assert.That(scene.ComponentCount("MeleeAttack"), Is.Zero, "마을에 MeleeAttack 이 붙어 있다");
+            Assert.That(scene.ComponentCount("PlayerAttack"), Is.Zero, "검증된 마을 구성에 없던 PlayerAttack 이 붙었다");
+            Assert.That(scene.ComponentCount("PlayerLevel"), Is.Zero, "검증된 마을 구성에 없던 PlayerLevel 이 붙었다");
+            Assert.That(scene.ComponentCount("MeleeAttack"), Is.Zero, "검증된 마을 구성에 없던 MeleeAttack 이 붙었다");
         });
     }
 
@@ -65,6 +71,8 @@ public class VillageSceneCompositionTests
     [Test]
     public void 마을_카메라가_플레이어를_따라간다()
     {
+        // 스펙에 명시된 요구는 아니다 — 다만 이게 없으면 플레이어가 화면 밖으로 걸어나가고,
+        // "마을에서 플레이어를 조작할 수 있다"가 사실상 성립하지 않아 검증 구성에 포함했다.
         Assert.That(scene.ComponentCount("CameraFollow"), Is.EqualTo(1),
             "CameraFollow 가 없으면 플레이어가 화면 밖으로 걸어나간다.");
     }
