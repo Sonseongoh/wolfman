@@ -817,6 +817,12 @@ MonoBehaviour:
   - prefab: {fileID: 5769649458394515389, guid: 6e2d4f39ab7c58e5b42f3a6d7e8b9c05, type: 3}
     minWave: 7
     weight: 0.7
+  - prefab: {fileID: 2802000000000000001, guid: aa28bb28cc28dd28ee28ff2800000004, type: 3}
+    minWave: 4
+    weight: 1.5
+  - prefab: {fileID: 2803000000000000001, guid: aa28bb28cc28dd28ee28ff2800000005, type: 3}
+    minWave: 6
+    weight: 1
   spawnRadius: 18
   baseEnemyCount: 6
   enemyCountGrowth: 3

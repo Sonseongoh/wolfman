@@ -6,6 +6,9 @@ public class EnemyChase : MonoBehaviour
     [Tooltip("추적 속도 (플레이어보다 느리게)")]
     public float moveSpeed = 2.5f;
 
+    [Tooltip("0 = 근접형(끝까지 붙는다). 0보다 크면 이 거리를 유지하는 원거리형 — 너무 가까우면 물러난다 (#28)")]
+    public float keepDistance = 0f;
+
     Rigidbody2D rb;
     SpriteRenderer sr;
     Transform player;
@@ -49,10 +52,23 @@ public class EnemyChase : MonoBehaviour
             return;
         }
 
-        Vector2 dir = (player.position - transform.position).normalized;
-        rb.linearVelocity = dir * moveSpeed;
+        Vector2 toPlayer = player.position - transform.position;
+        Vector2 dir = toPlayer.normalized;
 
-        // 이동 방향으로 스프라이트 뒤집기 (원본이 오른쪽을 봄)
+        if (keepDistance > 0f)
+        {
+            // 원거리형: 멀면 접근, 너무 가까우면 후퇴, 적정 거리면 정지 (#28)
+            float dist = toPlayer.magnitude;
+            if (dist > keepDistance * 1.15f) rb.linearVelocity = dir * moveSpeed;
+            else if (dist < keepDistance * 0.7f) rb.linearVelocity = -dir * moveSpeed;
+            else rb.linearVelocity = Vector2.zero;
+        }
+        else
+        {
+            rb.linearVelocity = dir * moveSpeed;
+        }
+
+        // 항상 플레이어 쪽을 본다 — 후퇴 중에도 (원본이 오른쪽을 봄)
         if (sr != null && dir.x != 0f)
             sr.flipX = dir.x < 0f;
     }
