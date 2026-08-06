@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <Compile Include="../../Assets/Scripts/Core/GoldWallet.cs" Link="Domain/GoldWallet.cs" />
+    <Compile Include="../../Assets/Scripts/Core/FacilityCore.cs" Link="Domain/FacilityCore.cs" />
   </ItemGroup>
 
   <ItemGroup>
