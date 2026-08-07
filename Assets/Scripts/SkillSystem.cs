@@ -21,13 +21,20 @@ public class SkillSystem : MonoBehaviour
         Range,           // (보류) 원거리 사거리
         MagnetRange,     // 보석·하트 획득 범위 +value
         MeleeArea,       // 발톱 판정 반경·감지 거리 +value
+        WeaponRanged,    // 무기 전환: 근접 발톱 → 원거리 석궁 (위력 절반, 1회성)
     }
 
     /// <summary>스킬로 늘어난 획득(자석) 범위 보너스 — XPGem·HealthPickup이 읽음. 씬 리로드 시 초기화</summary>
     public float magnetBonus;
 
-    /// <summary>스킬 공격력 %보너스 합 (0.15 = +15%) — MeleeAttack이 읽음. 합연산 스택</summary>
+    /// <summary>스킬 공격력 %보너스 합 (0.15 = +15%) — MeleeAttack·PlayerAttack이 읽음. 합연산 스택</summary>
     public float damageBonus;
+
+    /// <summary>원거리 모드인지 (달빛 참격 획득 후) — 발톱 스킬을 풀에서 제외하는 데 사용</summary>
+    bool rangedMode;
+
+    [Tooltip("달빛 참격 투사체 프리팹 (ClawWave) — 무기 전환 시 발사체를 이걸로 교체")]
+    public GameObject clawWavePrefab;
 
     /// <summary>스킬 등급 — 높을수록 강하고 드물다. 카드 색도 이 등급을 따른다</summary>
     public enum SkillRarity { Common, Uncommon, Rare, Epic }
@@ -57,22 +64,25 @@ public class SkillSystem : MonoBehaviour
             new SkillOption { skillName = "날카로운 발톱", description = "공격력 +15%", rarity = SkillRarity.Common, effect = EffectType.Damage, value = 0.15f },
             new SkillOption { skillName = "빠른 앞발", description = "공격 속도 +12%", rarity = SkillRarity.Common, effect = EffectType.AttackSpeed, value = 0.12f },
             new SkillOption { skillName = "늑대의 질주", description = "이동 속도 +1", rarity = SkillRarity.Common, effect = EffectType.MoveSpeed, value = 1 },
-            new SkillOption { skillName = "질긴 가죽", description = "최대 체력 +1, 전체 회복", rarity = SkillRarity.Common, effect = EffectType.MaxHp, value = 1 },
+            new SkillOption { skillName = "상처 핥기", description = "체력 전체 회복", rarity = SkillRarity.Common, effect = EffectType.MaxHp, value = 0 },
             new SkillOption { skillName = "달의 인력", description = "보석·하트 획득 범위 +0.5", rarity = SkillRarity.Common, effect = EffectType.MagnetRange, value = 0.5f },
 
             // 고급 (가중치 40)
             new SkillOption { skillName = "사냥꾼의 발톱", description = "공격력 +30%", rarity = SkillRarity.Uncommon, effect = EffectType.Damage, value = 0.3f },
             new SkillOption { skillName = "넓은 휩쓸기", description = "발톱 범위 +0.25, 감지 +0.3", rarity = SkillRarity.Uncommon, effect = EffectType.MeleeArea, value = 0.25f },
-            new SkillOption { skillName = "야생의 활력", description = "최대 체력 +2, 전체 회복", rarity = SkillRarity.Uncommon, effect = EffectType.MaxHp, value = 2 },
+            new SkillOption { skillName = "질긴 가죽", description = "최대 체력 +1, 전체 회복", rarity = SkillRarity.Uncommon, effect = EffectType.MaxHp, value = 1 },
 
             // 희귀 (가중치 12)
             new SkillOption { skillName = "야수의 격노", description = "공격 속도 +25%", rarity = SkillRarity.Rare, effect = EffectType.AttackSpeed, value = 0.25f },
             new SkillOption { skillName = "거대한 발톱", description = "공격력 +50%", rarity = SkillRarity.Rare, effect = EffectType.Damage, value = 0.5f },
             new SkillOption { skillName = "폭풍 휩쓸기", description = "발톱 범위 +0.5, 감지 +0.55", rarity = SkillRarity.Rare, effect = EffectType.MeleeArea, value = 0.5f },
+            new SkillOption { skillName = "야생의 활력", description = "최대 체력 +2, 전체 회복", rarity = SkillRarity.Rare, effect = EffectType.MaxHp, value = 2 },
 
             // 에픽 (가중치 3)
             new SkillOption { skillName = "보름달의 힘", description = "공격력 +100%", rarity = SkillRarity.Epic, effect = EffectType.Damage, value = 1f },
             new SkillOption { skillName = "초승달 베기", description = "발톱 범위 +0.9, 감지 +0.95", rarity = SkillRarity.Epic, effect = EffectType.MeleeArea, value = 0.9f },
+            new SkillOption { skillName = "불굴의 심장", description = "최대 체력 +3, 전체 회복", rarity = SkillRarity.Epic, effect = EffectType.MaxHp, value = 3 },
+            new SkillOption { skillName = "달빛 참격", description = "발톱 참격을 날려 보낸다\n(원거리 전환, 위력 절반)", rarity = SkillRarity.Epic, effect = EffectType.WeaponRanged, value = 0 },
         };
     }
 
@@ -146,7 +156,14 @@ public class SkillSystem : MonoBehaviour
             && GameManager.Instance.CurrentMoon != null
             && GameManager.Instance.CurrentMoon.guaranteeRareSkill;
 
-        List<SkillOption> copy = new List<SkillOption>(pool);
+        // 석궁 모드에선 발톱(근접) 스킬은 후보에서 제외
+        List<SkillOption> copy = new List<SkillOption>();
+        foreach (SkillOption s in pool)
+        {
+            if (rangedMode && s.effect == EffectType.MeleeArea) continue;
+            copy.Add(s);
+        }
+
         currentChoices = new SkillOption[3];
         for (int i = 0; i < 3; i++)
         {
@@ -244,6 +261,18 @@ public class SkillSystem : MonoBehaviour
                     melee.hitRadius += s.value;
                     melee.triggerRange += s.value + 0.05f;
                 }
+                break;
+            case EffectType.WeaponRanged:
+                // 무기 전환: 발톱 끄고 참격 날리기 켜기. 이미 쌓인 공속 스택은
+                // fireInterval에도 같이 적용돼 있었으므로 그대로 계승된다
+                if (melee != null) melee.enabled = false;
+                if (attack != null)
+                {
+                    if (clawWavePrefab != null) attack.projectilePrefab = clawWavePrefab;
+                    attack.enabled = true;
+                }
+                rangedMode = true;
+                pool.RemoveAll(p => p.effect == EffectType.WeaponRanged); // 다시 안 뜨게
                 break;
         }
     }

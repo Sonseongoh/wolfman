@@ -66,12 +66,13 @@ public class PlayerAttack : MonoBehaviour
             Projectile proj = go.GetComponent<Projectile>();
             proj.SetDirection(dir);
 
-            // 달의 플레이어 강화 배율 적용 (슈퍼문·블러드문 등)
+            // 달의 플레이어 강화 배율 + 스킬 공격력 %보너스 적용 (근접과 같은 공식)
             float power = 1f;
             if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
                 power = GameManager.Instance.CurrentMoon.playerPowerMultiplier;
 
-            proj.damage = Mathf.Max(1, Mathf.RoundToInt((proj.damage + bonusDamage) * power));
+            float skillMult = 1f + (SkillSystem.Instance != null ? SkillSystem.Instance.damageBonus : 0f);
+            proj.damage = Mathf.Max(1, Mathf.RoundToInt((proj.damage + bonusDamage) * skillMult * power));
         }
     }
 }

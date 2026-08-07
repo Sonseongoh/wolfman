@@ -470,6 +470,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillSystem
   magnetBonus: 0
+  clawWavePrefab: {fileID: 4602000000000000001, guid: ff778899aabbccddeeff004600000007, type: 3}
   pool:
   - skillName: "\uB0A0\uCE74\uB85C\uC6B4 \uBC1C\uD1B1"
     description: "\uACF5\uACA9\uB825 +1"
