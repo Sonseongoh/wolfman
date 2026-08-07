@@ -100,7 +100,16 @@ public class MeleeAttack : MonoBehaviour
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         SlashEffect.Spawn(slashSprite, hitCenter, angle, dir.x < 0f);
 
-        // 공격 모션 (플레이어 위치는 절대 건드리지 않는다 — 이동 주도권은 항상 플레이어)
+        PlayAttackFeedback(dir);
+    }
+
+    /// <summary>
+    /// 공격 모션(꿀렁임·기울기·프레임 애니·방향 보기). 근접 휘두르기와
+    /// 달빛 참격(PlayerAttack — 이 컴포넌트가 꺼진 상태)이 함께 사용한다.
+    /// 플레이어 위치는 절대 건드리지 않는다 — 이동 주도권은 항상 플레이어.
+    /// </summary>
+    public void PlayAttackFeedback(Vector2 dir)
+    {
         // 은은한 부풀기 + 공격 방향으로 기울었다 복귀
         if (wobble == null) wobble = GetComponent<WalkWobble>();
         if (wobble != null)

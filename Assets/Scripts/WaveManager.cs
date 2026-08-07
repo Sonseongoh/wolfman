@@ -57,8 +57,8 @@ public class WaveManager : MonoBehaviour
     [Tooltip("웨이브 시작 시 포탈이 열릴 확률 (0.1 = 10%). 달별 조정은 회의 후 MoonData로 이관 예정")]
     [Range(0f, 1f)] public float portalChance = 0.1f;
 
-    [Tooltip("이 웨이브부터 판정 (1웨이브는 사냥/마을 선택 직후라 제외)")]
-    public int portalMinWave = 2;
+    [Tooltip("이 웨이브부터 포탈 판정 — 초반엔 못 나가고, 버텨야 탈출 기회가 열린다")]
+    public int portalMinWave = 5;
 
     [Tooltip("포탈이 열리는 최소 거리 (플레이어 기준 — 항상 화면 밖에서 뜬다)")]
     public float portalDistanceMin = 20f;
