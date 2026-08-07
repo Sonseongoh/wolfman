@@ -30,6 +30,7 @@ public class SoundManager : MonoBehaviour
 
     [Header("BGM")]
     public AudioClip bgmBattle;    // 전투 배경음
+    public AudioClip bgmVillage;   // 마을 배경음
     [Range(0f, 1f)] public float bgmVolume = 0.4f;
 
     AudioSource src;

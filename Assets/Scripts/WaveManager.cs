@@ -317,6 +317,7 @@ public class WaveManager : MonoBehaviour
             if (GUI.Button(new Rect(Screen.width * 0.5f + 20, btnY, btnW, btnH), "마을 남기"))
             {
                 SoundManager.Instance?.PlayButton();
+                SoundManager.Instance?.PlayBGM(SoundManager.Instance.bgmVillage);
                 waitingForAction = false;
                 if (GameManager.Instance != null) GameManager.Instance.SetPhase(RoundPhase.Village);
                 SceneManager.LoadScene("VillageScene");
