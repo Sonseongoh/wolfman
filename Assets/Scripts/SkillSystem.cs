@@ -47,6 +47,9 @@ public class SkillSystem : MonoBehaviour
         public SkillRarity rarity;
         public EffectType effect;
         public float value;
+
+        [Tooltip("보조 값 — MaxHp 스킬에서는 최대 체력 증가량 (value = 회복량, -1이면 전체 회복)")]
+        public float value2;
     }
 
     [Header("스킬 풀 — 코드가 기준 (Awake에서 아래 목록으로 재구성됨)")]
@@ -64,24 +67,24 @@ public class SkillSystem : MonoBehaviour
             new SkillOption { skillName = "날카로운 발톱", description = "공격력 +15%", rarity = SkillRarity.Common, effect = EffectType.Damage, value = 0.15f },
             new SkillOption { skillName = "빠른 앞발", description = "공격 속도 +12%", rarity = SkillRarity.Common, effect = EffectType.AttackSpeed, value = 0.12f },
             new SkillOption { skillName = "늑대의 질주", description = "이동 속도 +1", rarity = SkillRarity.Common, effect = EffectType.MoveSpeed, value = 1 },
-            new SkillOption { skillName = "상처 핥기", description = "체력 전체 회복", rarity = SkillRarity.Common, effect = EffectType.MaxHp, value = 0 },
+            new SkillOption { skillName = "상처 핥기", description = "체력 +1 회복", rarity = SkillRarity.Common, effect = EffectType.MaxHp, value = 1, value2 = 0 },
             new SkillOption { skillName = "달의 인력", description = "코인·하트 획득 범위 +0.5", rarity = SkillRarity.Common, effect = EffectType.MagnetRange, value = 0.5f },
 
             // 고급 (가중치 40)
             new SkillOption { skillName = "사냥꾼의 발톱", description = "공격력 +30%", rarity = SkillRarity.Uncommon, effect = EffectType.Damage, value = 0.3f },
             new SkillOption { skillName = "넓은 휩쓸기", description = "발톱 범위 +0.25, 감지 +0.3", rarity = SkillRarity.Uncommon, effect = EffectType.MeleeArea, value = 0.25f },
-            new SkillOption { skillName = "질긴 가죽", description = "최대 체력 +1, 전체 회복", rarity = SkillRarity.Uncommon, effect = EffectType.MaxHp, value = 1 },
+            new SkillOption { skillName = "질긴 가죽", description = "체력 +1 회복, 최대 체력 +1", rarity = SkillRarity.Uncommon, effect = EffectType.MaxHp, value = 1, value2 = 1 },
 
             // 희귀 (가중치 12)
             new SkillOption { skillName = "야수의 격노", description = "공격 속도 +25%", rarity = SkillRarity.Rare, effect = EffectType.AttackSpeed, value = 0.25f },
             new SkillOption { skillName = "거대한 발톱", description = "공격력 +50%", rarity = SkillRarity.Rare, effect = EffectType.Damage, value = 0.5f },
             new SkillOption { skillName = "폭풍 휩쓸기", description = "발톱 범위 +0.5, 감지 +0.55", rarity = SkillRarity.Rare, effect = EffectType.MeleeArea, value = 0.5f },
-            new SkillOption { skillName = "야생의 활력", description = "최대 체력 +2, 전체 회복", rarity = SkillRarity.Rare, effect = EffectType.MaxHp, value = 2 },
+            new SkillOption { skillName = "야생의 활력", description = "체력 +2 회복, 최대 체력 +1", rarity = SkillRarity.Rare, effect = EffectType.MaxHp, value = 2, value2 = 1 },
 
             // 에픽 (가중치 3)
             new SkillOption { skillName = "보름달의 힘", description = "공격력 +100%", rarity = SkillRarity.Epic, effect = EffectType.Damage, value = 1f },
             new SkillOption { skillName = "초승달 베기", description = "발톱 범위 +0.9, 감지 +0.95", rarity = SkillRarity.Epic, effect = EffectType.MeleeArea, value = 0.9f },
-            new SkillOption { skillName = "불굴의 심장", description = "최대 체력 +3, 전체 회복", rarity = SkillRarity.Epic, effect = EffectType.MaxHp, value = 3 },
+            new SkillOption { skillName = "불굴의 심장", description = "체력 전체 회복, 최대 체력 +2", rarity = SkillRarity.Epic, effect = EffectType.MaxHp, value = -1, value2 = 2 },
             new SkillOption { skillName = "달빛 참격", description = "발톱 참격을 날려 보낸다\n(원거리 전환, 위력 절반)", rarity = SkillRarity.Epic, effect = EffectType.WeaponRanged, value = 0 },
         };
     }
@@ -239,7 +242,13 @@ public class SkillSystem : MonoBehaviour
                 if (movement != null) movement.moveSpeed += s.value;
                 break;
             case EffectType.MaxHp:
-                if (health != null) health.IncreaseMaxHp((int)s.value);
+                if (health != null)
+                {
+                    // 최대치를 먼저 늘려야 회복이 새 최대치까지 찰 수 있다
+                    if ((int)s.value2 > 0) health.IncreaseMaxHp((int)s.value2);
+                    if (s.value < 0) health.FullHeal();
+                    else if ((int)s.value > 0) health.Heal((int)s.value);
+                }
                 break;
             case EffectType.ProjectileCount:
                 if (attack != null) attack.projectilesPerShot += (int)s.value;

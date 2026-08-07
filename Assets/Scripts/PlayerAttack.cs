@@ -19,6 +19,12 @@ public class PlayerAttack : MonoBehaviour
     public int projectilesPerShot = 1;
 
     float timer;
+    MeleeAttack meleeAnim; // 공격 모션 재생용 (달빛 참격 — 컴포넌트가 꺼져 있어도 모션은 빌려 쓴다)
+
+    void Awake()
+    {
+        meleeAnim = GetComponent<MeleeAttack>();
+    }
 
     void Update()
     {
@@ -55,6 +61,9 @@ public class PlayerAttack : MonoBehaviour
     void Fire(Vector3 targetPos)
     {
         Vector2 baseDir = targetPos - transform.position;
+
+        // 발사에도 휘두르기 모션 (꿀렁임·기울기·프레임 애니·방향 보기)
+        if (meleeAnim != null) meleeAnim.PlayAttackFeedback(baseDir.normalized);
 
         // 여러 발이면 12도 간격 부채꼴로 퍼뜨림
         for (int i = 0; i < projectilesPerShot; i++)

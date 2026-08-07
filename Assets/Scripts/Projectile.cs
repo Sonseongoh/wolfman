@@ -31,7 +31,8 @@ public class Projectile : MonoBehaviour
 
     void Update()
     {
-        transform.Translate(direction * speed * Time.deltaTime);
+        // Space.World 필수 — 참격처럼 회전된 투사체는 로컬 기준이면 회전이 이중 적용된다
+        transform.Translate(direction * speed * Time.deltaTime, Space.World);
     }
 
     void OnTriggerEnter2D(Collider2D other)

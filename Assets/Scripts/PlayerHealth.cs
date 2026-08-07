@@ -64,11 +64,18 @@ public class PlayerHealth : MonoBehaviour
         TakeDamage(dmg);
     }
 
-    // 레벨업 강화: 최대체력 +amount, 전체 회복
+    /// <summary>최대 체력만 +amount (회복 없음 — 회복은 Heal/FullHeal로 따로)</summary>
     public void IncreaseMaxHp(int amount)
     {
         maxHp += amount;
-        hp = maxHp;
+    }
+
+    /// <summary>전체 회복 (에픽 스킬 등)</summary>
+    public void FullHeal()
+    {
+        if (isDead) return;
+        int missing = maxHp - hp;
+        if (missing > 0) Heal(missing);
     }
 
     /// <summary>회복 오브 등으로 체력 회복 (#32) — 최대치를 넘지 않음</summary>

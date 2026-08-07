@@ -822,7 +822,7 @@ MonoBehaviour:
   moonSpinDuration: 1.8
   portalPrefab: {fileID: 4601000000000000001, guid: ee66ff778899aabbccddeeff00460001, type: 3}
   portalChance: 0.1
-  portalMinWave: 2
+  portalMinWave: 5
   portalDistanceMin: 20
   portalDistanceMax: 60
   portalMaxRange: 80
