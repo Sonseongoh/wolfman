@@ -34,9 +34,6 @@ public class HitStop : MonoBehaviour
 
         if (SkillSystem.Instance != null && SkillSystem.Instance.IsChoosing) keepFrozen = true;
 
-        PlayerLevel level = FindFirstObjectByType<PlayerLevel>();
-        if (level != null && level.IsChoosing) keepFrozen = true;
-
         PlayerHealth health = FindFirstObjectByType<PlayerHealth>();
         if (health != null && health.IsDead) keepFrozen = true;
 

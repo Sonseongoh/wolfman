@@ -284,7 +284,6 @@ GameObject:
   - component: {fileID: 605944742}
   - component: {fileID: 605944741}
   - component: {fileID: 605944745}
-  - component: {fileID: 605944746}
   - component: {fileID: 605944747}
   - component: {fileID: 605944749}
   - component: {fileID: 605944750}
@@ -430,19 +429,6 @@ MonoBehaviour:
   range: 8
   bonusDamage: 0
   projectilesPerShot: 1
---- !u!114 &605944746
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 605944740}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b4b51c0b0732321498243daad088e232, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerLevel
-  level: 1
 --- !u!114 &605944747
 MonoBehaviour:
   m_ObjectHideFlags: 0

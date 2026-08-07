@@ -1,9 +1,14 @@
 using UnityEngine;
 
-public class XPGem : MonoBehaviour
+/// <summary>
+/// 적 처치 시 떨어지는 골드 코인 (#8 연계 — XP 보석을 대체).
+/// 자석 범위 안이면 플레이어에게 끌려오고, 주우면 주머니(TempGold)에 들어간다.
+/// 우상단 주머니 잔액이 굴러 올라가는 연출은 GoldPanelUI가 처리.
+/// </summary>
+public class GoldCoin : MonoBehaviour
 {
-    [Tooltip("주는 경험치")]
-    public int xpValue = 1;
+    [Tooltip("이 코인의 가치 (EnemyHealth가 스폰할 때 goldDrop으로 설정)")]
+    public int value = 1;
 
     [Tooltip("이 거리 안에 오면 플레이어에게 끌려감")]
     public float magnetRange = 1.1f;
@@ -35,11 +40,9 @@ public class XPGem : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
-        {
-            PlayerLevel lvl = other.GetComponent<PlayerLevel>();
-            if (lvl != null) lvl.AddXP(xpValue);
-            Destroy(gameObject);
-        }
+        if (!other.CompareTag("Player")) return;
+
+        CurrencyManager.Instance?.AddTempGold(value);
+        Destroy(gameObject);
     }
 }

@@ -108,7 +108,6 @@ public class PlayerHealth : MonoBehaviour
         if (isDead)
         {
             int wave = WaveManager.Instance != null ? WaveManager.Instance.CurrentWave : 0;
-            int level = GetComponent<PlayerLevel>() != null ? GetComponent<PlayerLevel>().level : 1;
 
             GUIStyle big = new GUIStyle
             {
@@ -118,7 +117,7 @@ public class PlayerHealth : MonoBehaviour
             };
             string lostText = lostGoldOnDeath > 0 ? $"\n임시 골드 {lostGoldOnDeath}G 손실" : "";
             GUI.Label(new Rect(0, 0, Screen.width, Screen.height),
-                $"GAME OVER\n\nWAVE {wave}까지 생존  ·  Lv.{level}{lostText}\n\nR 키로 재시작", big);
+                $"GAME OVER\n\nWAVE {wave}까지 생존{lostText}\n\nR 키로 재시작", big);
         }
     }
 }

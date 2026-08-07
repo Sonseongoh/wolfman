@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3985047877087145723}
   - component: {fileID: 1736165837941934871}
   m_Layer: 0
-  m_Name: Gem
+  m_Name: GoldCoin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -84,7 +84,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
-  m_Color: {r: 0.10849059, g: 1, b: 0.2206912, a: 1}
+  m_Color: {r: 1, g: 0.84, b: 0.25, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -139,9 +139,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1867112256589320435}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ab79402f547eac4418007baa6b859866, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::XPGem
-  xpValue: 1
+  m_Script: {fileID: 11500000, guid: bb28cc28dd28ee28ff28aa2800000011, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::GoldCoin
+  value: 1
   magnetRange: 1.1
   magnetSpeed: 7

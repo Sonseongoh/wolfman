@@ -19,12 +19,12 @@ public class SkillSystem : MonoBehaviour
         MaxHp,           // 최대 체력 +value & 전체 회복
         ProjectileCount, // (보류) 투사체 개수 — 원거리 무기 스킬 부활 시 사용
         Range,           // (보류) 원거리 사거리
-        MagnetRange,     // 보석·하트 획득 범위 +value
+        MagnetRange,     // 코인·하트 획득 범위 +value
         MeleeArea,       // 발톱 판정 반경·감지 거리 +value
         WeaponRanged,    // 무기 전환: 근접 발톱 → 원거리 석궁 (위력 절반, 1회성)
     }
 
-    /// <summary>스킬로 늘어난 획득(자석) 범위 보너스 — XPGem·HealthPickup이 읽음. 씬 리로드 시 초기화</summary>
+    /// <summary>스킬로 늘어난 획득(자석) 범위 보너스 — GoldCoin·HealthPickup이 읽음. 씬 리로드 시 초기화</summary>
     public float magnetBonus;
 
     /// <summary>스킬 공격력 %보너스 합 (0.15 = +15%) — MeleeAttack·PlayerAttack이 읽음. 합연산 스택</summary>
@@ -65,7 +65,7 @@ public class SkillSystem : MonoBehaviour
             new SkillOption { skillName = "빠른 앞발", description = "공격 속도 +12%", rarity = SkillRarity.Common, effect = EffectType.AttackSpeed, value = 0.12f },
             new SkillOption { skillName = "늑대의 질주", description = "이동 속도 +1", rarity = SkillRarity.Common, effect = EffectType.MoveSpeed, value = 1 },
             new SkillOption { skillName = "상처 핥기", description = "체력 전체 회복", rarity = SkillRarity.Common, effect = EffectType.MaxHp, value = 0 },
-            new SkillOption { skillName = "달의 인력", description = "보석·하트 획득 범위 +0.5", rarity = SkillRarity.Common, effect = EffectType.MagnetRange, value = 0.5f },
+            new SkillOption { skillName = "달의 인력", description = "코인·하트 획득 범위 +0.5", rarity = SkillRarity.Common, effect = EffectType.MagnetRange, value = 0.5f },
 
             // 고급 (가중치 40)
             new SkillOption { skillName = "사냥꾼의 발톱", description = "공격력 +30%", rarity = SkillRarity.Uncommon, effect = EffectType.Damage, value = 0.3f },
@@ -131,7 +131,6 @@ public class SkillSystem : MonoBehaviour
     PlayerAttack attack;
     MeleeAttack melee;
     PlayerHealth health;
-    PlayerLevel level;
 
     void Awake()
     {
@@ -140,7 +139,6 @@ public class SkillSystem : MonoBehaviour
         attack = GetComponent<PlayerAttack>();
         melee = GetComponent<MeleeAttack>();
         health = GetComponent<PlayerHealth>();
-        level = GetComponent<PlayerLevel>();
 
         // 씬에 저장된 구버전 풀 무시하고 코드 기준으로 재구성 (근거리 전투 개편)
         pool = BuildDefaultPool();
@@ -205,9 +203,6 @@ public class SkillSystem : MonoBehaviour
     void Update()
     {
         if (!choosing) return;
-
-        // 레벨업 선택창이 떠 있으면 그것부터 처리하게 대기
-        if (level != null && level.IsChoosing) return;
 
         var kb = Keyboard.current;
         if (kb == null) return;
@@ -281,7 +276,6 @@ public class SkillSystem : MonoBehaviour
     void OnGUI()
     {
         if (!choosing || currentChoices == null) return;
-        if (level != null && level.IsChoosing) return;
 
         string[] names = { currentChoices[0].skillName, currentChoices[1].skillName, currentChoices[2].skillName };
         string[] descs = { currentChoices[0].description, currentChoices[1].description, currentChoices[2].description };

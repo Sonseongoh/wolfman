@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 가로 3장 카드 선택 UI 공용 그리기 (임시 OnGUI — 추후 Canvas UI로 교체).
-/// SkillSystem(웨이브 스킬)과 PlayerLevel(레벨업)이 함께 사용.
+/// 현재는 SkillSystem(웨이브 클리어 스킬 3택)이 사용.
 /// </summary>
 public static class ChoiceCardUI
 {
