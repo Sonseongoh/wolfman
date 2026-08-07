@@ -476,38 +476,9 @@ public class WaveManager : MonoBehaviour
             }
         }
 
-        // 임시 골드 HUD (#8)
-        if (CurrencyManager.Instance != null && !moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
-        {
-            float pw = 190f, ph = 72f;
-            float px = Screen.width - pw - 16f, py = 12f;
-
-            // 금색 테두리
-            GUI.color = new Color(1f, 0.75f, 0.15f, 0.75f);
-            GUI.DrawTexture(new Rect(px - 2, py - 2, pw + 4, ph + 4), Texture2D.whiteTexture);
-            // 어두운 배경
-            GUI.color = new Color(0.06f, 0.05f, 0.12f, 0.9f);
-            GUI.DrawTexture(new Rect(px, py, pw, ph), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-
-            GUIStyle lbl = new GUIStyle { fontSize = 17, alignment = TextAnchor.MiddleLeft };
-            GUIStyle val = new GUIStyle { fontSize = 17, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleRight, normal = { textColor = Color.white } };
-
-            // 주머니 (임시 — 금색)
-            lbl.normal.textColor = new Color(1f, 0.82f, 0.2f);
-            GUI.Label(new Rect(px + 10, py + 4, pw - 20, 28), "◈ 주머니", lbl);
-            GUI.Label(new Rect(px + 10, py + 4, pw - 14, 28), $"{CurrencyManager.Instance.TempGold} G", val);
-
-            // 구분선
-            GUI.color = new Color(1f, 0.75f, 0.15f, 0.25f);
-            GUI.DrawTexture(new Rect(px + 8, py + 36, pw - 16, 1), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-
-            // 금고 (확정 — 하늘색)
-            lbl.normal.textColor = new Color(0.55f, 0.85f, 1f);
-            GUI.Label(new Rect(px + 10, py + 40, pw - 20, 28), "◈ 금고", lbl);
-            GUI.Label(new Rect(px + 10, py + 40, pw - 14, 28), $"{CurrencyManager.Instance.ConfirmedGold} G", val);
-        }
+        // 재화 HUD (#8) — 달 연출·행동 선택 중에는 화면을 비운다
+        if (!moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
+            GoldPanelUI.Draw();
 
         // 현재 달 표시 (웨이브 텍스트 아래) — 슬롯 도는 동안엔 스포일러 방지로 숨김
         MoonData moon = CurrentMoon;
