@@ -2,13 +2,13 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
-    [Tooltip("맞을 수 있는 횟수")]
-    public int maxHp = 2;
+    [Tooltip("체력 (플레이어 기본 데미지 10 스케일 기준 — 기본 적 10 = 한 방)")]
+    public int maxHp = 10;
 
-    [Tooltip("죽을 때 떨어뜨릴 경험치 보석 프리팹")]
+    [Tooltip("죽을 때 떨어뜨릴 골드 코인 프리팹 (#8 — XP 보석 대체)")]
     public GameObject gemPrefab;
 
-    [Tooltip("처치 시 지급할 임시 골드 (#8)")]
+    [Tooltip("코인 1개의 가치 (주워야 주머니에 들어감)")]
     public int goldDrop = 1;
 
     [Tooltip("낮은 확률로 떨어뜨릴 회복 오브 프리팹 (#32)")]
@@ -70,7 +70,7 @@ public class EnemyHealth : MonoBehaviour
 
             if (gemPrefab != null)
             {
-                // 달의 드랍 배수 적용 (하베스트문 = 2개)
+                // 달의 드랍 배수 적용 (하베스트문 = 코인 2개)
                 int drops = 1;
                 if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
                     drops = Mathf.Max(1, Mathf.RoundToInt(GameManager.Instance.CurrentMoon.dropMultiplier));
@@ -78,7 +78,10 @@ public class EnemyHealth : MonoBehaviour
                 for (int i = 0; i < drops; i++)
                 {
                     Vector3 offset = i == 0 ? Vector3.zero : (Vector3)(Random.insideUnitCircle * 0.4f);
-                    Instantiate(gemPrefab, transform.position + offset, Quaternion.identity);
+                    GameObject c = Instantiate(gemPrefab, transform.position + offset, Quaternion.identity);
+
+                    GoldCoin coin = c.GetComponent<GoldCoin>();
+                    if (coin != null) coin.value = goldDrop;
                 }
             }
 

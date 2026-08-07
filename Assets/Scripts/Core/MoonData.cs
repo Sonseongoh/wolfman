@@ -30,6 +30,9 @@ public class MoonData : ScriptableObject
     public bool transformAllowed = true;
     public float playerPowerMultiplier = 1f;
 
+    [Tooltip("true면 웨이브 스킬 3택에 희귀 이상 스킬 1장 확정 등장 (블루문 효과)")]
+    public bool guaranteeRareSkill = false;
+
     [Header("보상 (모듈 C가 정산에 사용)")]
     [Tooltip("1=일반, 2=고급, 3=희귀, 4=영웅, 5=전설")]
     [Range(1, 5)] public int rewardTier = 1;

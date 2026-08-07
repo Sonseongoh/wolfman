@@ -27,3 +27,8 @@ Thumbs.db
 sysinfo.txt
 *.stackdump
 crashlytics-build.properties
+
+# 순수 도메인 테스트 (Tests/ — Unity 밖, WSL dotnet으로 실행) (#11)
+!/Tests/**/*.csproj
+Tests/**/bin/
+Tests/**/obj/

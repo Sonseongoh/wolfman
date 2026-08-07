@@ -47,22 +47,35 @@ public class PlayerHealth : MonoBehaviour
 
     void OnCollisionStay2D(Collision2D collision)
     {
-        // 적과 닿아 있으면 (무적 시간이 아닐 때) 데미지 — 달의 적 공격력 배율 적용
-        if (!isDead && invincibleTimer <= 0f && collision.gameObject.GetComponent<EnemyChase>() != null)
-        {
-            int dmg = 1;
-            if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
-                dmg = Mathf.Max(1, Mathf.RoundToInt(GameManager.Instance.CurrentMoon.enemyDamageMultiplier));
-
-            TakeDamage(dmg);
-        }
+        // 적과 닿아 있으면 데미지
+        if (collision.gameObject.GetComponent<EnemyChase>() != null)
+            TakeEnemyHit(1);
     }
 
-    // 레벨업 강화: 최대체력 +amount, 전체 회복
+    /// <summary>적 공격 공통 진입점 (접촉·투사체 #28) — 무적/사망 체크 + 달의 적 공격력 배율 적용</summary>
+    public void TakeEnemyHit(int baseDamage)
+    {
+        if (isDead || invincibleTimer > 0f) return;
+
+        int dmg = baseDamage;
+        if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
+            dmg = Mathf.Max(1, Mathf.RoundToInt(baseDamage * GameManager.Instance.CurrentMoon.enemyDamageMultiplier));
+
+        TakeDamage(dmg);
+    }
+
+    /// <summary>최대 체력만 +amount (회복 없음 — 회복은 Heal/FullHeal로 따로)</summary>
     public void IncreaseMaxHp(int amount)
     {
         maxHp += amount;
-        hp = maxHp;
+    }
+
+    /// <summary>전체 회복 (에픽 스킬 등)</summary>
+    public void FullHeal()
+    {
+        if (isDead) return;
+        int missing = maxHp - hp;
+        if (missing > 0) Heal(missing);
     }
 
     /// <summary>회복 오브 등으로 체력 회복 (#32) — 최대치를 넘지 않음</summary>
@@ -107,7 +120,6 @@ public class PlayerHealth : MonoBehaviour
         if (isDead)
         {
             int wave = WaveManager.Instance != null ? WaveManager.Instance.CurrentWave : 0;
-            int level = GetComponent<PlayerLevel>() != null ? GetComponent<PlayerLevel>().level : 1;
 
             GUIStyle big = new GUIStyle
             {
@@ -117,7 +129,7 @@ public class PlayerHealth : MonoBehaviour
             };
             string lostText = lostGoldOnDeath > 0 ? $"\n임시 골드 {lostGoldOnDeath}G 손실" : "";
             GUI.Label(new Rect(0, 0, Screen.width, Screen.height),
-                $"GAME OVER\n\nWAVE {wave}까지 생존  ·  Lv.{level}{lostText}\n\nR 키로 재시작", big);
+                $"GAME OVER\n\nWAVE {wave}까지 생존{lostText}\n\nR 키로 재시작", big);
         }
     }
 }

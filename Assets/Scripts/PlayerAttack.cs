@@ -19,6 +19,12 @@ public class PlayerAttack : MonoBehaviour
     public int projectilesPerShot = 1;
 
     float timer;
+    MeleeAttack meleeAnim; // 공격 모션 재생용 (달빛 참격 — 컴포넌트가 꺼져 있어도 모션은 빌려 쓴다)
+
+    void Awake()
+    {
+        meleeAnim = GetComponent<MeleeAttack>();
+    }
 
     void Update()
     {
@@ -56,6 +62,9 @@ public class PlayerAttack : MonoBehaviour
     {
         Vector2 baseDir = targetPos - transform.position;
 
+        // 발사에도 휘두르기 모션 (꿀렁임·기울기·프레임 애니·방향 보기)
+        if (meleeAnim != null) meleeAnim.PlayAttackFeedback(baseDir.normalized);
+
         // 여러 발이면 12도 간격 부채꼴로 퍼뜨림
         for (int i = 0; i < projectilesPerShot; i++)
         {
@@ -66,12 +75,13 @@ public class PlayerAttack : MonoBehaviour
             Projectile proj = go.GetComponent<Projectile>();
             proj.SetDirection(dir);
 
-            // 달의 플레이어 강화 배율 적용 (슈퍼문·블러드문 등)
+            // 달의 플레이어 강화 배율 + 스킬 공격력 %보너스 적용 (근접과 같은 공식)
             float power = 1f;
             if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
                 power = GameManager.Instance.CurrentMoon.playerPowerMultiplier;
 
-            proj.damage = Mathf.Max(1, Mathf.RoundToInt((proj.damage + bonusDamage) * power));
+            float skillMult = 1f + (SkillSystem.Instance != null ? SkillSystem.Instance.damageBonus : 0f);
+            proj.damage = Mathf.Max(1, Mathf.RoundToInt((proj.damage + bonusDamage) * skillMult * power));
         }
     }
 }
