@@ -2,8 +2,8 @@ using UnityEngine;
 
 public class EnemyHealth : MonoBehaviour
 {
-    [Tooltip("맞을 수 있는 횟수")]
-    public int maxHp = 2;
+    [Tooltip("체력 (플레이어 기본 데미지 10 스케일 기준 — 기본 적 10 = 한 방)")]
+    public int maxHp = 10;
 
     [Tooltip("죽을 때 떨어뜨릴 경험치 보석 프리팹")]
     public GameObject gemPrefab;

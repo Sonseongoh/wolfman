@@ -13,7 +13,7 @@ public class SkillSystem : MonoBehaviour
 
     public enum EffectType
     {
-        Damage,          // 공격력 +value (근거리·원거리 공용)
+        Damage,          // 공격력 +value% (0.15 = +15%, 합연산 스택)
         AttackSpeed,     // 공격 간격 -value% (0.2 = 20% 빨라짐, 근거리·원거리 공용)
         MoveSpeed,       // 이동 속도 +value
         MaxHp,           // 최대 체력 +value & 전체 회복
@@ -26,11 +26,18 @@ public class SkillSystem : MonoBehaviour
     /// <summary>스킬로 늘어난 획득(자석) 범위 보너스 — XPGem·HealthPickup이 읽음. 씬 리로드 시 초기화</summary>
     public float magnetBonus;
 
+    /// <summary>스킬 공격력 %보너스 합 (0.15 = +15%) — MeleeAttack이 읽음. 합연산 스택</summary>
+    public float damageBonus;
+
+    /// <summary>스킬 등급 — 높을수록 강하고 드물다. 카드 색도 이 등급을 따른다</summary>
+    public enum SkillRarity { Common, Uncommon, Rare, Epic }
+
     [System.Serializable]
     public class SkillOption
     {
         public string skillName;
         public string description;
+        public SkillRarity rarity;
         public EffectType effect;
         public float value;
     }
@@ -46,13 +53,60 @@ public class SkillSystem : MonoBehaviour
     {
         return new List<SkillOption>
         {
-            new SkillOption { skillName = "날카로운 발톱", description = "공격력 +1", effect = EffectType.Damage, value = 1 },
-            new SkillOption { skillName = "빠른 앞발", description = "공격 속도 +20%", effect = EffectType.AttackSpeed, value = 0.2f },
-            new SkillOption { skillName = "늑대의 질주", description = "이동 속도 +1", effect = EffectType.MoveSpeed, value = 1 },
-            new SkillOption { skillName = "질긴 가죽", description = "최대 체력 +1, 전체 회복", effect = EffectType.MaxHp, value = 1 },
-            new SkillOption { skillName = "넓은 휩쓸기", description = "발톱 범위 +0.25, 감지 +0.3", effect = EffectType.MeleeArea, value = 0.25f },
-            new SkillOption { skillName = "달의 인력", description = "보석·하트 획득 범위 +0.5", effect = EffectType.MagnetRange, value = 0.5f },
+            // 일반 (가중치 100)
+            new SkillOption { skillName = "날카로운 발톱", description = "공격력 +15%", rarity = SkillRarity.Common, effect = EffectType.Damage, value = 0.15f },
+            new SkillOption { skillName = "빠른 앞발", description = "공격 속도 +12%", rarity = SkillRarity.Common, effect = EffectType.AttackSpeed, value = 0.12f },
+            new SkillOption { skillName = "늑대의 질주", description = "이동 속도 +1", rarity = SkillRarity.Common, effect = EffectType.MoveSpeed, value = 1 },
+            new SkillOption { skillName = "질긴 가죽", description = "최대 체력 +1, 전체 회복", rarity = SkillRarity.Common, effect = EffectType.MaxHp, value = 1 },
+            new SkillOption { skillName = "달의 인력", description = "보석·하트 획득 범위 +0.5", rarity = SkillRarity.Common, effect = EffectType.MagnetRange, value = 0.5f },
+
+            // 고급 (가중치 40)
+            new SkillOption { skillName = "사냥꾼의 발톱", description = "공격력 +30%", rarity = SkillRarity.Uncommon, effect = EffectType.Damage, value = 0.3f },
+            new SkillOption { skillName = "넓은 휩쓸기", description = "발톱 범위 +0.25, 감지 +0.3", rarity = SkillRarity.Uncommon, effect = EffectType.MeleeArea, value = 0.25f },
+            new SkillOption { skillName = "야생의 활력", description = "최대 체력 +2, 전체 회복", rarity = SkillRarity.Uncommon, effect = EffectType.MaxHp, value = 2 },
+
+            // 희귀 (가중치 12)
+            new SkillOption { skillName = "야수의 격노", description = "공격 속도 +25%", rarity = SkillRarity.Rare, effect = EffectType.AttackSpeed, value = 0.25f },
+            new SkillOption { skillName = "거대한 발톱", description = "공격력 +50%", rarity = SkillRarity.Rare, effect = EffectType.Damage, value = 0.5f },
+            new SkillOption { skillName = "폭풍 휩쓸기", description = "발톱 범위 +0.5, 감지 +0.55", rarity = SkillRarity.Rare, effect = EffectType.MeleeArea, value = 0.5f },
+
+            // 에픽 (가중치 3)
+            new SkillOption { skillName = "보름달의 힘", description = "공격력 +100%", rarity = SkillRarity.Epic, effect = EffectType.Damage, value = 1f },
+            new SkillOption { skillName = "초승달 베기", description = "발톱 범위 +0.9, 감지 +0.95", rarity = SkillRarity.Epic, effect = EffectType.MeleeArea, value = 0.9f },
         };
+    }
+
+    static float RarityWeight(SkillRarity r)
+    {
+        switch (r)
+        {
+            case SkillRarity.Uncommon: return 40f;
+            case SkillRarity.Rare: return 12f;
+            case SkillRarity.Epic: return 3f;
+            default: return 100f;
+        }
+    }
+
+    static Color RarityColor(SkillRarity r)
+    {
+        switch (r)
+        {
+            case SkillRarity.Uncommon: return new Color(0.4f, 1f, 0.4f);
+            case SkillRarity.Rare: return new Color(0.4f, 0.7f, 1f);
+            case SkillRarity.Epic: return new Color(0.8f, 0.4f, 1f);
+            default: return new Color(0.75f, 0.75f, 0.75f);
+        }
+    }
+
+    static string RarityLabel(SkillRarity r)
+    {
+        switch (r)
+        {
+            case SkillRarity.Uncommon: return "고급";
+            case SkillRarity.Rare: return "희귀";
+            case SkillRarity.Epic: return "에픽";
+            default: return "일반";
+        }
     }
 
     public List<SkillOption> acquired = new List<SkillOption>(); // 이번 런에 얻은 스킬
@@ -82,23 +136,53 @@ public class SkillSystem : MonoBehaviour
         pool = BuildDefaultPool();
     }
 
-    /// <summary>WaveManager가 웨이브 클리어 시 호출</summary>
+    /// <summary>WaveManager가 웨이브 클리어 시 호출 — 등급 가중치 추첨으로 서로 다른 3개</summary>
     public void OfferChoices()
     {
         if (choosing || pool.Count < 3) return;
 
-        // 풀에서 서로 다른 3개 뽑기
+        // 블루문: 3장 중 1장은 희귀 이상 확정
+        bool guaranteeRare = GameManager.Instance != null
+            && GameManager.Instance.CurrentMoon != null
+            && GameManager.Instance.CurrentMoon.guaranteeRareSkill;
+
         List<SkillOption> copy = new List<SkillOption>(pool);
         currentChoices = new SkillOption[3];
         for (int i = 0; i < 3; i++)
         {
-            int idx = Random.Range(0, copy.Count);
-            currentChoices[i] = copy[idx];
-            copy.RemoveAt(idx);
+            SkillOption pick = null;
+            if (i == 0 && guaranteeRare)
+                pick = WeightedDraw(copy, SkillRarity.Rare);
+            if (pick == null)
+                pick = WeightedDraw(copy, SkillRarity.Common);
+
+            currentChoices[i] = pick;
+            copy.Remove(pick);
         }
 
         choosing = true;
         Time.timeScale = 0f;
+    }
+
+    /// <summary>등급 가중치로 1개 추첨 (minRarity 미만은 후보 제외). 후보가 없으면 null</summary>
+    static SkillOption WeightedDraw(List<SkillOption> from, SkillRarity minRarity)
+    {
+        float total = 0f;
+        foreach (SkillOption s in from)
+            if (s.rarity >= minRarity) total += RarityWeight(s.rarity);
+
+        if (total <= 0f) return null;
+
+        float roll = Random.Range(0f, total);
+        SkillOption last = null;
+        foreach (SkillOption s in from)
+        {
+            if (s.rarity < minRarity) continue;
+            last = s;
+            roll -= RarityWeight(s.rarity);
+            if (roll <= 0f) return s;
+        }
+        return last;
     }
 
     void Update()
@@ -132,11 +216,12 @@ public class SkillSystem : MonoBehaviour
         switch (s.effect)
         {
             case EffectType.Damage:
-                if (attack != null) attack.bonusDamage += (int)s.value;
+                damageBonus += s.value; // 합연산: +15% 둘 = +30%
                 break;
             case EffectType.AttackSpeed:
-                if (attack != null) attack.fireInterval = Mathf.Max(0.15f, attack.fireInterval * (1f - s.value));
-                if (melee != null) melee.swingInterval = Mathf.Max(0.2f, melee.swingInterval * (1f - s.value));
+                // 하한 0.25초: 공속 스택이 쌓여도 초당 4회를 넘지 않게 (밸런스)
+                if (attack != null) attack.fireInterval = Mathf.Max(0.25f, attack.fireInterval * (1f - s.value));
+                if (melee != null) melee.swingInterval = Mathf.Max(0.25f, melee.swingInterval * (1f - s.value));
                 break;
             case EffectType.MoveSpeed:
                 if (movement != null) movement.moveSpeed += s.value;
@@ -171,8 +256,10 @@ public class SkillSystem : MonoBehaviour
 
         string[] names = { currentChoices[0].skillName, currentChoices[1].skillName, currentChoices[2].skillName };
         string[] descs = { currentChoices[0].description, currentChoices[1].description, currentChoices[2].description };
+        Color[] accents = { RarityColor(currentChoices[0].rarity), RarityColor(currentChoices[1].rarity), RarityColor(currentChoices[2].rarity) };
+        string[] tags = { RarityLabel(currentChoices[0].rarity), RarityLabel(currentChoices[1].rarity), RarityLabel(currentChoices[2].rarity) };
 
-        int clicked = ChoiceCardUI.Draw("웨이브 클리어!  스킬을 선택하세요", names, descs);
+        int clicked = ChoiceCardUI.Draw("웨이브 클리어!  스킬을 선택하세요", names, descs, accents, tags);
         if (clicked >= 0) Choose(clicked);
     }
 }

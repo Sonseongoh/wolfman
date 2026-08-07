@@ -150,7 +150,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e22399162b7f1b745903c557ff45fb05, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHp: 4
+  maxHp: 20
   gemPrefab: {fileID: 1867112256589320435, guid: 333c0695553130c4a96fd3c1a572f92b, type: 3}
   goldDrop: 3
   healthDropPrefab: {fileID: 1867112256589320435, guid: f6e5d4c3b2a1908877665544332211a2, type: 3}

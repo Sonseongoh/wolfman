@@ -54,13 +54,14 @@ public class PlayerLevel : MonoBehaviour
     {
         if (pick == 1)
         {
+            // 12%씩, 하한 0.25초 — 스킬(빠른 앞발)과 같은 폭 (밸런스)
             if (attack != null)
-                attack.fireInterval = Mathf.Max(0.2f, attack.fireInterval * 0.8f);
+                attack.fireInterval = Mathf.Max(0.25f, attack.fireInterval * 0.88f);
 
             // 근거리(늑대인간) 공격 속도에도 적용
             MeleeAttack melee = GetComponent<MeleeAttack>();
             if (melee != null)
-                melee.swingInterval = Mathf.Max(0.2f, melee.swingInterval * 0.8f);
+                melee.swingInterval = Mathf.Max(0.25f, melee.swingInterval * 0.88f);
         }
         else if (pick == 2 && movement != null)
             movement.moveSpeed += 1f;
@@ -76,7 +77,7 @@ public class PlayerLevel : MonoBehaviour
 
     // 임시 UI — 강화 선택은 가로 3장 카드 (ChoiceCardUI 공용)
     static readonly string[] upgradeNames = { "빠른 공격", "날랜 발", "강인한 육체" };
-    static readonly string[] upgradeDescs = { "공격 속도 +25%", "이동 속도 +1", "최대 체력 +1\n전체 회복" };
+    static readonly string[] upgradeDescs = { "공격 속도 +12%", "이동 속도 +1", "최대 체력 +1\n전체 회복" };
 
     void OnGUI()
     {
