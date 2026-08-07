@@ -2,15 +2,17 @@ using UnityEngine;
 
 /// <summary>
 /// 가로 3장 카드 선택 UI 공용 그리기 (임시 OnGUI — 추후 Canvas UI로 교체).
-/// SkillSystem(웨이브 스킬)과 PlayerLevel(레벨업)이 함께 사용.
+/// 현재는 SkillSystem(웨이브 클리어 스킬 3택)이 사용.
 /// </summary>
 public static class ChoiceCardUI
 {
     /// <summary>
     /// 어두운 배경 + 제목 + 카드 3장을 그린다.
     /// 마우스로 카드를 클릭하면 해당 인덱스(0~2), 아니면 -1 반환.
+    /// accents/tags를 주면 카드별 테두리 색·등급 라벨 표시 (스킬 등급용, 없으면 기존 금색).
     /// </summary>
-    public static int Draw(string title, string[] names, string[] descriptions)
+    public static int Draw(string title, string[] names, string[] descriptions,
+        Color[] accents = null, string[] tags = null)
     {
         // 배경 어둡게
         GUI.color = new Color(0f, 0f, 0f, 0.75f);
@@ -40,15 +42,36 @@ public static class ChoiceCardUI
             Rect card = new Rect(x0 + i * (cardW + gap), y, cardW, cardH);
             bool hover = card.Contains(Event.current.mousePosition);
 
-            // 테두리 (호버 시 밝게)
+            // 테두리 (호버 시 밝게) — 등급 색이 있으면 그 색으로
             Rect border = new Rect(card.x - 3, card.y - 3, card.width + 6, card.height + 6);
-            GUI.color = hover ? Color.yellow : new Color(0.7f, 0.6f, 0.3f);
+            if (accents != null && i < accents.Length)
+            {
+                Color a = accents[i];
+                GUI.color = hover ? Color.Lerp(a, Color.white, 0.4f) : a;
+            }
+            else
+            {
+                GUI.color = hover ? Color.yellow : new Color(0.7f, 0.6f, 0.3f);
+            }
             GUI.DrawTexture(border, Texture2D.whiteTexture);
 
             // 카드 배경
             GUI.color = hover ? new Color(0.22f, 0.2f, 0.28f) : new Color(0.13f, 0.12f, 0.18f);
             GUI.DrawTexture(card, Texture2D.whiteTexture);
             GUI.color = Color.white;
+
+            // 등급 라벨 (카드 안 최상단)
+            if (tags != null && i < tags.Length && !string.IsNullOrEmpty(tags[i]))
+            {
+                GUIStyle tagStyle = new GUIStyle
+                {
+                    fontSize = 15,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = accents != null && i < accents.Length ? accents[i] : Color.yellow }
+                };
+                GUI.Label(new Rect(card.x, card.y + 8, cardW, 22), $"— {tags[i]} —", tagStyle);
+            }
 
             GUIStyle nameStyle = new GUIStyle
             {

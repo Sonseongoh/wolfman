@@ -378,9 +378,28 @@ public class WaveManager : MonoBehaviour
         if (!waitingForAction && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f)
         {
             string text = resting
-                ? $"WAVE {CurrentWave} 클리어!  다음 웨이브까지 {Mathf.CeilToInt(restTimer)}초"
+                ? $"WAVE {CurrentWave} 클리어!"
                 : $"WAVE {CurrentWave}   남은 적: {AliveCount}";
             GUI.Label(new Rect(0, 16, Screen.width, 40), text, style);
+
+            // 웨이브 사이 카운트다운 — 화면 가운데 큰 숫자 3, 2, 1이 천천히 가라앉으며 사라진다
+            if (resting && restTimer > 0f && restTimer <= 3f)
+            {
+                int sec = Mathf.CeilToInt(restTimer);
+                float frac = restTimer - (sec - 1); // 이 숫자의 남은 비율: 1 → 0
+
+                float alpha = 0.2f + 0.8f * Mathf.SmoothStep(0f, 1f, frac); // 서서히 흐려짐
+
+                GUIStyle countStyle = new GUIStyle
+                {
+                    fontSize = 170,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(1f, 1f, 1f, alpha) }
+                };
+                GUI.Label(new Rect(0, Screen.height * 0.5f - 110, Screen.width, 220),
+                    sec.ToString(), countStyle);
+            }
         }
 
         // 탈출 포탈 안내 (#46) — 열린 직후 3초는 큰 깜빡임, 이후엔 작은 상시 표시
@@ -480,17 +499,39 @@ public class WaveManager : MonoBehaviour
         if (!moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
             GoldPanelUI.Draw();
 
-        // 현재 달 표시 (웨이브 텍스트 아래) — 슬롯 도는 동안엔 스포일러 방지로 숨김
+        // 현재 달 표시 — 우측 상단 골드 패널 아래에 아이콘 + 이름 (슬롯·연출 중엔 스포일러 방지로 숨김)
         MoonData moon = CurrentMoon;
-        if (moon != null && !resting && !moonSpinning && moonBannerTimer <= 0f)
+        if (moon != null && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f && !waitingForAction)
         {
+            float mw = 190f, mh = 46f;
+            float mx = Screen.width - mw - 16f, my = 92f; // 골드 패널(y12, 높이72) 바로 아래
+
+            Color rc = RarityColor(moon.rarity);
+
+            // 등급색 테두리 + 어두운 배경 (골드 패널과 같은 스타일)
+            GUI.color = new Color(rc.r, rc.g, rc.b, 0.75f);
+            GUI.DrawTexture(new Rect(mx - 2, my - 2, mw + 4, mh + 4), Texture2D.whiteTexture);
+            GUI.color = new Color(0.06f, 0.05f, 0.12f, 0.9f);
+            GUI.DrawTexture(new Rect(mx, my, mw, mh), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // 달 아이콘 (작게)
+            float isz = 34f;
+            if (moon.icon != null)
+                GUI.DrawTexture(new Rect(mx + 8, my + (mh - isz) * 0.5f, isz, isz),
+                    moon.icon.texture, ScaleMode.ScaleToFit, true);
+
+            // 달 이름 (등급색)
             GUIStyle moonStyle = new GUIStyle
             {
-                fontSize = 20,
-                alignment = TextAnchor.UpperCenter,
-                normal = { textColor = RarityColor(moon.rarity) }
+                fontSize = 16,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleLeft,
+                wordWrap = true,
+                normal = { textColor = rc }
             };
-            GUI.Label(new Rect(0, 48, Screen.width, 30), $"{moon.moonName}  [{moon.rarity}]", moonStyle);
+            GUI.Label(new Rect(mx + 8 + isz + 8, my + 2, mw - isz - 26, mh - 4),
+                moon.moonName, moonStyle);
         }
 
         // 달 슬롯머신 연출: 카드 안에서 달이 돌아가고, 카드가 반짝인다

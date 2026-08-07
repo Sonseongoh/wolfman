@@ -22,8 +22,9 @@ MonoBehaviour:
   enemyCountMultiplier: 1
   transformAllowed: 1
   playerPowerMultiplier: 1
+  guaranteeRareSkill: 1
   rewardTier: 3
-  description: 행운의 밤 — 희귀 스킬 확정 등장 (TODO), 선택지 확대
+  description: 행운의 밤 — 스킬 3택에 희귀 이상 1장 확정 등장
   dropMultiplier: 1
   ambientColor: {r: 0.7, g: 0.8, b: 1, a: 1}
   ambientIntensity: 0.95
