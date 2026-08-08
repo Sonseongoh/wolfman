@@ -52,6 +52,7 @@ public class EnemyHealth : MonoBehaviour
 
         // 데미지 숫자 (#31)
         DamageNumber.Spawn(transform.position, amount.ToString(), new Color(1f, 0.9f, 0.4f));
+        SoundManager.Instance?.PlayHit();
 
         // 흰색 섬광
         if (sr != null)
@@ -89,6 +90,9 @@ public class EnemyHealth : MonoBehaviour
                 Instantiate(healthDropPrefab,
                     transform.position + (Vector3)(Random.insideUnitCircle * 0.3f),
                     Quaternion.identity);
+
+            CurrencyManager.Instance?.AddTempGold(goldDrop);
+            SoundManager.Instance?.PlayDeath();
 
             if (WaveManager.Instance != null)
                 WaveManager.Instance.NotifyEnemyDied();

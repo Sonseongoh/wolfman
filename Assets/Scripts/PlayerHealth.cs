@@ -112,7 +112,12 @@ public class PlayerHealth : MonoBehaviour
             lostGoldOnDeath = CurrencyManager.Instance?.TempGold ?? 0;
             earnedGoldOnDeath = CurrencyManager.Instance?.ConfirmedGold ?? 0;
             CurrencyManager.Instance?.LoseTempGold();
+            SoundManager.Instance?.PlayGameOver();
             Time.timeScale = 0f;
+        }
+        else
+        {
+            SoundManager.Instance?.PlayDamaged();
         }
     }
 

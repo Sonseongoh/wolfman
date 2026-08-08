@@ -96,6 +96,8 @@ public class MeleeAttack : MonoBehaviour
             if (enemy != null) enemy.TakeDamage(damage, dir);
         }
 
+        SoundManager.Instance?.PlaySlash();
+
         // 참격 연출 (아래로 휘두를 땐 뒤집어서 자연스럽게)
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         SlashEffect.Spawn(slashSprite, hitCenter, angle, dir.x < 0f);

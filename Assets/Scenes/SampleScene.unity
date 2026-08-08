@@ -700,6 +700,7 @@ GameObject:
   - component: {fileID: 979627979}
   - component: {fileID: 979627978}
   - component: {fileID: 979627980}
+  - component: {fileID: 979627981}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -751,6 +752,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoonEffects
   globalLight: {fileID: 619394801}
   transitionTime: 1.5
+--- !u!114 &979627981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979627977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b97c6638e6d844b81a636ee8f9dc9d57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  sfxShoot: {fileID: 8300000, guid: ea027af5d69d74f74972a6ae4bd0b5ae, type: 3}
+  sfxHit: {fileID: 8300000, guid: 51375f78178d145b29827a69846e8534, type: 3}
+  sfxDeath: {fileID: 8300000, guid: 61186ab4884854b4387835567e73b224, type: 3}
+  sfxDamaged: {fileID: 8300000, guid: 9f7716e078f2846f69bd4730e5ccf466, type: 3}
+  sfxPickup: {fileID: 8300000, guid: d09a02b826b234172bfc16f82863b0b7, type: 3}
+  sfxLevelUp: {fileID: 8300000, guid: 0fb8c97ef86cf4717bd5f9a8d763e72d, type: 3}
+  sfxSlot: {fileID: 8300000, guid: 8d18e08c1a6e148948a7064fd0a61e07, type: 3}
+  sfxGameOver: {fileID: 8300000, guid: 1d2ae07c76a2642029e34e2152292123, type: 3}
 --- !u!1 &1064584541
 GameObject:
   m_ObjectHideFlags: 0
