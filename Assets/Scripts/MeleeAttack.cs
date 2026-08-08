@@ -19,7 +19,7 @@ public class MeleeAttack : MonoBehaviour
     public float attackFrameTime = 0.05f;
 
     [Tooltip("몇 초마다 휘두를지")]
-    public float swingInterval = 0.5f;
+    public float swingInterval = 0.6f;
 
     [Tooltip("이 거리 안에 적이 있으면 휘두름")]
     public float triggerRange = 2.2f;
@@ -27,8 +27,8 @@ public class MeleeAttack : MonoBehaviour
     [Tooltip("참격 판정 반경 (플레이어 앞쪽 지점 기준)")]
     public float hitRadius = 1.3f;
 
-    [Tooltip("기본 데미지 (스킬 공격력 보너스와 달 배율이 더해짐)")]
-    public int baseDamage = 2;
+    [Tooltip("기본 데미지 (스킬 공격력 %보너스와 달 배율이 곱해짐)")]
+    public int baseDamage = 10;
 
     float timer;
     PlayerAttack rangedAttack; // 공격력 보너스 공유용
@@ -80,13 +80,13 @@ public class MeleeAttack : MonoBehaviour
         Vector2 dir = ((Vector2)(targetPos - transform.position)).normalized;
         Vector2 hitCenter = (Vector2)transform.position + dir * 1.1f;
 
-        // 데미지: 기본 + 스킬 공격력 보너스, 달의 플레이어 강화 배율 적용
+        // 데미지 = 기본 × (1 + 스킬 공격력 %합) × 달의 플레이어 강화 배율
         float power = 1f;
         if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
             power = GameManager.Instance.CurrentMoon.playerPowerMultiplier;
 
-        int bonus = rangedAttack != null ? rangedAttack.bonusDamage : 0;
-        int damage = Mathf.Max(1, Mathf.RoundToInt((baseDamage + bonus) * power));
+        float skillMult = 1f + (SkillSystem.Instance != null ? SkillSystem.Instance.damageBonus : 0f);
+        int damage = Mathf.Max(1, Mathf.RoundToInt(baseDamage * skillMult * power));
 
         // 원형 판정 광역 — 닿은 적 전부 타격 + 넉백
         Collider2D[] hits = Physics2D.OverlapCircleAll(hitCenter, hitRadius);
@@ -100,7 +100,16 @@ public class MeleeAttack : MonoBehaviour
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         SlashEffect.Spawn(slashSprite, hitCenter, angle, dir.x < 0f);
 
-        // 공격 모션 (플레이어 위치는 절대 건드리지 않는다 — 이동 주도권은 항상 플레이어)
+        PlayAttackFeedback(dir);
+    }
+
+    /// <summary>
+    /// 공격 모션(꿀렁임·기울기·프레임 애니·방향 보기). 근접 휘두르기와
+    /// 달빛 참격(PlayerAttack — 이 컴포넌트가 꺼진 상태)이 함께 사용한다.
+    /// 플레이어 위치는 절대 건드리지 않는다 — 이동 주도권은 항상 플레이어.
+    /// </summary>
+    public void PlayAttackFeedback(Vector2 dir)
+    {
         // 은은한 부풀기 + 공격 방향으로 기울었다 복귀
         if (wobble == null) wobble = GetComponent<WalkWobble>();
         if (wobble != null)

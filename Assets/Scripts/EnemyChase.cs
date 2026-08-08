@@ -6,10 +6,17 @@ public class EnemyChase : MonoBehaviour
     [Tooltip("추적 속도 (플레이어보다 느리게)")]
     public float moveSpeed = 2.5f;
 
+    [Tooltip("0 = 근접형(끝까지 붙는다). 0보다 크면 이 거리를 유지하는 원거리형 — 너무 가까우면 물러난다 (#28)")]
+    public float keepDistance = 0f;
+
+    [Tooltip("넉백 면역 시간(초) — 한 번 밀린 뒤 이 시간 동안은 다시 안 밀린다. 공속 스택으로 무한 밀어내기(스턴락) 방지")]
+    public float knockbackImmunity = 0.5f;
+
     Rigidbody2D rb;
     SpriteRenderer sr;
     Transform player;
-    float staggerTimer; // 넉백으로 밀려나는 동안 추적 정지
+    float staggerTimer;  // 넉백으로 밀려나는 동안 추적 정지
+    float immunityTimer; // 넉백 면역 남은 시간
 
     void Awake()
     {
@@ -20,9 +27,13 @@ public class EnemyChase : MonoBehaviour
         if (GetComponent<WalkWobble>() == null) gameObject.AddComponent<WalkWobble>();
     }
 
-    /// <summary>피격 시 밀려남. duration 동안 추적을 멈추고 넉백 속도를 유지한다.</summary>
+    /// <summary>피격 시 밀려남. duration 동안 추적을 멈추고 넉백 속도를 유지한다.
+    /// 면역 시간 중이면 무시 — 데미지는 그대로 들어가되 밀리지만 않는다.</summary>
     public void ApplyKnockback(Vector2 direction, float force, float duration)
     {
+        if (immunityTimer > 0f) return;
+
+        immunityTimer = knockbackImmunity;
         staggerTimer = duration;
         rb.linearVelocity = direction.normalized * force;
     }
@@ -36,6 +47,8 @@ public class EnemyChase : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (immunityTimer > 0f) immunityTimer -= Time.fixedDeltaTime;
+
         // 넉백 중에는 추적으로 속도를 덮어쓰지 않는다
         if (staggerTimer > 0f)
         {
@@ -49,10 +62,23 @@ public class EnemyChase : MonoBehaviour
             return;
         }
 
-        Vector2 dir = (player.position - transform.position).normalized;
-        rb.linearVelocity = dir * moveSpeed;
+        Vector2 toPlayer = player.position - transform.position;
+        Vector2 dir = toPlayer.normalized;
 
-        // 이동 방향으로 스프라이트 뒤집기 (원본이 오른쪽을 봄)
+        if (keepDistance > 0f)
+        {
+            // 원거리형: 멀면 접근, 너무 가까우면 후퇴, 적정 거리면 정지 (#28)
+            float dist = toPlayer.magnitude;
+            if (dist > keepDistance * 1.15f) rb.linearVelocity = dir * moveSpeed;
+            else if (dist < keepDistance * 0.7f) rb.linearVelocity = -dir * moveSpeed;
+            else rb.linearVelocity = Vector2.zero;
+        }
+        else
+        {
+            rb.linearVelocity = dir * moveSpeed;
+        }
+
+        // 항상 플레이어 쪽을 본다 — 후퇴 중에도 (원본이 오른쪽을 봄)
         if (sr != null && dir.x != 0f)
             sr.flipX = dir.x < 0f;
     }

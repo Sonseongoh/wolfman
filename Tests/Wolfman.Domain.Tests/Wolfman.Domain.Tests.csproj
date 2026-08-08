@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    순수 C# 도메인 로직 테스트 (#11).
+    Unity 밖(repo 루트 Tests/)에 두고 WSL의 ~/.dotnet/dotnet 으로 돌린다.
+    도메인 소스는 복사하지 않고 Assets/Scripts/Core/ 에서 링크로 가져온다 —
+    UnityEngine 에 의존하지 않는 파일만 넣을 것.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Assets/Scripts/Core/GoldWallet.cs" Link="Domain/GoldWallet.cs" />
+    <Compile Include="../../Assets/Scripts/Core/FacilityCore.cs" Link="Domain/FacilityCore.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="NUnit" Version="4.2.2" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+  </ItemGroup>
+
+</Project>

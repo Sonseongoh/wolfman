@@ -26,8 +26,8 @@ public class WaveManager : MonoBehaviour
     [Header("적 구성 (타입별 등장 웨이브·비중)")]
     public List<EnemyOption> enemyTypes = new List<EnemyOption>();
 
-    [Tooltip("플레이어로부터 이 거리(화면 밖)에서 스폰")]
-    public float spawnRadius = 12f;
+    [Tooltip("플레이어로부터 이 거리(화면 밖)에서 스폰 — 카메라 시야(ortho size 8, 화면 모서리까지 약 16.3)보다 커야 함")]
+    public float spawnRadius = 18f;
 
     [Header("웨이브 규모")]
     [Tooltip("1웨이브의 적 수")]
@@ -51,6 +51,25 @@ public class WaveManager : MonoBehaviour
     [Tooltip("달 이름이 슬롯머신처럼 돌아가는 시간(초)")]
     public float moonSpinDuration = 1.8f;
 
+    [Header("탈출 포탈 (#46)")]
+    [Tooltip("탈출 포탈 프리팹")]
+    public GameObject portalPrefab;
+
+    [Tooltip("웨이브 시작 시 포탈이 열릴 확률 (0.1 = 10%). 달별 조정은 회의 후 MoonData로 이관 예정")]
+    [Range(0f, 1f)] public float portalChance = 0.1f;
+
+    [Tooltip("이 웨이브부터 포탈 판정 — 초반엔 못 나가고, 버텨야 탈출 기회가 열린다")]
+    public int portalMinWave = 5;
+
+    [Tooltip("포탈이 열리는 최소 거리 (플레이어 기준 — 항상 화면 밖에서 뜬다)")]
+    public float portalDistanceMin = 20f;
+
+    [Tooltip("포탈이 열리는 최대 거리 (플레이어 기준). 화살표 보고 적을 뚫으며 찾아가야 한다")]
+    public float portalDistanceMax = 60f;
+
+    [Tooltip("포탈에서 이 거리 이상 멀어지면 포탈이 닫혀버린다 (무한 맵 대비 최대 범위). 반드시 포탈 최대 거리보다 커야 함 — 아니면 뜨자마자 닫힌다")]
+    public float portalMaxRange = 80f;
+
     Transform player;
     bool spawning;   // 이번 웨이브 스폰이 아직 진행 중인가
     bool resting;    // 웨이브 사이 휴식 중인가
@@ -66,6 +85,10 @@ public class WaveManager : MonoBehaviour
     Sprite promoDecoyIcon;  // 미끼 달 아이콘
 
     bool waitingForAction;  // 첫 웨이브 달 공개 후 사냥/마을 선택 대기 (#6)
+
+    EscapePortal activePortal;  // 이번 웨이브에 열린 탈출 포탈 (#46)
+    float portalBannerTimer;    // "포탈이 열렸다" 안내 표시 시간
+    float portalLostTimer;      // "멀어져서 닫혔다" 안내 표시 시간
 
     /// <summary>GameManager가 씬에 있으면 현재 달, 없으면 null (달 없이도 동작)</summary>
     MoonData CurrentMoon => GameManager.Instance != null ? GameManager.Instance.CurrentMoon : null;
@@ -92,6 +115,19 @@ public class WaveManager : MonoBehaviour
             if (waitingForAction && moonBannerTimer < 0.01f) moonBannerTimer = 0.01f;
         }
 
+        if (portalBannerTimer > 0f) portalBannerTimer -= Time.deltaTime;
+        if (portalLostTimer > 0f) portalLostTimer -= Time.deltaTime;
+
+        // 포탈에서 너무 멀어지면 닫혀버린다 (#46) — 무한 맵에서 밑도 끝도 없이 멀어지는 것 방지
+        if (activePortal != null && player != null &&
+            Vector2.Distance(player.position, activePortal.transform.position) > portalMaxRange)
+        {
+            activePortal.Close();
+            activePortal = null;
+            portalBannerTimer = 0f;
+            portalLostTimer = 2.5f;
+        }
+
         if (resting)
         {
             restTimer -= Time.deltaTime;
@@ -113,6 +149,7 @@ public class WaveManager : MonoBehaviour
         int count = Mathf.Max(1, Mathf.RoundToInt(
             (baseEnemyCount + enemyCountGrowth * (CurrentWave - 1)) * countMult));
 
+        TrySpawnPortal();
         StartCoroutine(MoonRevealThenSpawn(count));
     }
 
@@ -262,10 +299,34 @@ public class WaveManager : MonoBehaviour
         if (AliveCount <= 0 && !spawning && !resting) OnWaveCleared();
     }
 
+    /// <summary>웨이브 시작 시 확률 판정 — 성공하면 플레이어 주변에 탈출 포탈이 열린다 (#46)</summary>
+    void TrySpawnPortal()
+    {
+        if (portalPrefab == null || player == null) return;
+        if (CurrentWave < portalMinWave) return;
+        if (Random.value >= portalChance) return;
+
+        float angle = Random.Range(0f, Mathf.PI * 2f);
+        float distance = Random.Range(portalDistanceMin, portalDistanceMax);
+        Vector2 pos = (Vector2)player.position
+            + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * distance;
+
+        GameObject go = Instantiate(portalPrefab, pos, Quaternion.identity);
+        activePortal = go.GetComponent<EscapePortal>();
+        portalBannerTimer = 3f;
+    }
+
     void OnWaveCleared()
     {
         resting = true;
         restTimer = timeBetweenWaves;
+
+        // 탈출 포탈은 그 웨이브 동안만 유지 — 클리어하면 닫힌다 (#46)
+        if (activePortal != null)
+        {
+            activePortal.Close();
+            activePortal = null;
+        }
 
         // 스킬 3택 (#10) — 선택하는 동안 시간 정지, 휴식 타이머는 그 후 진행
         if (SkillSystem.Instance != null) SkillSystem.Instance.OfferChoices();
@@ -319,55 +380,160 @@ public class WaveManager : MonoBehaviour
         if (!waitingForAction && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f)
         {
             string text = resting
-                ? $"WAVE {CurrentWave} 클리어!  다음 웨이브까지 {Mathf.CeilToInt(restTimer)}초"
+                ? $"WAVE {CurrentWave} 클리어!"
                 : $"WAVE {CurrentWave}   남은 적: {AliveCount}";
             GUI.Label(new Rect(0, 16, Screen.width, 40), text, style);
+
+            // 웨이브 사이 카운트다운 — 화면 가운데 큰 숫자 3, 2, 1이 천천히 가라앉으며 사라진다
+            if (resting && restTimer > 0f && restTimer <= 3f)
+            {
+                int sec = Mathf.CeilToInt(restTimer);
+                float frac = restTimer - (sec - 1); // 이 숫자의 남은 비율: 1 → 0
+
+                float alpha = 0.2f + 0.8f * Mathf.SmoothStep(0f, 1f, frac); // 서서히 흐려짐
+
+                GUIStyle countStyle = new GUIStyle
+                {
+                    fontSize = 170,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = new Color(1f, 1f, 1f, alpha) }
+                };
+                GUI.Label(new Rect(0, Screen.height * 0.5f - 110, Screen.width, 220),
+                    sec.ToString(), countStyle);
+            }
         }
 
-        // 임시 골드 HUD (#8)
-        if (CurrencyManager.Instance != null && !moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
+        // 탈출 포탈 안내 (#46) — 열린 직후 3초는 큰 깜빡임, 이후엔 작은 상시 표시
+        if (!waitingForAction && !moonSpinning && !moonPromoting)
         {
-            float pw = 190f, ph = 72f;
-            float px = Screen.width - pw - 16f, py = Screen.height - ph - 16f;
+            if (portalBannerTimer > 0f)
+            {
+                float blink = 0.6f + 0.4f * Mathf.Sin(Time.unscaledTime * 6f);
+                GUIStyle portalStyle = new GUIStyle
+                {
+                    fontSize = 26,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.UpperCenter,
+                    normal = { textColor = new Color(0.8f, 0.6f, 1f, blink) }
+                };
+                GUI.Label(new Rect(0, 84, Screen.width, 36),
+                    "탈출 포탈이 열렸다!  이번 웨이브 동안만 유지된다", portalStyle);
+            }
+            else if (activePortal != null)
+            {
+                GUIStyle portalSmall = new GUIStyle
+                {
+                    fontSize = 18,
+                    alignment = TextAnchor.UpperCenter,
+                    normal = { textColor = new Color(0.8f, 0.6f, 1f, 0.85f) }
+                };
+                GUI.Label(new Rect(0, 84, Screen.width, 30), "◈ 탈출 포탈 열림", portalSmall);
+            }
 
-            // 금색 테두리
-            GUI.color = new Color(1f, 0.75f, 0.15f, 0.75f);
-            GUI.DrawTexture(new Rect(px - 2, py - 2, pw + 4, ph + 4), Texture2D.whiteTexture);
-            // 어두운 배경
-            GUI.color = new Color(0.06f, 0.05f, 0.12f, 0.9f);
-            GUI.DrawTexture(new Rect(px, py, pw, ph), Texture2D.whiteTexture);
-            GUI.color = Color.white;
+            // 포탈이 화면 밖에 있으면 가장자리에 방향 화살표 + 거리 표시 (#46)
+            // — 무한 맵이라 랜드마크가 없어서, 이게 없으면 포탈을 놓치면 못 찾는다
+            if (activePortal != null && Camera.main != null && player != null)
+            {
+                Vector3 vp = Camera.main.WorldToViewportPoint(activePortal.transform.position);
+                bool offscreen = vp.x < 0.02f || vp.x > 0.98f || vp.y < 0.02f || vp.y > 0.98f;
 
-            GUIStyle lbl = new GUIStyle { fontSize = 17, alignment = TextAnchor.MiddleLeft };
-            GUIStyle val = new GUIStyle { fontSize = 17, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleRight, normal = { textColor = Color.white } };
+                if (offscreen)
+                {
+                    // 뷰포트(아래가 0) → GUI 화면 좌표(위가 0)로 변환하며 가장자리에 고정
+                    Vector2 sp = new Vector2(
+                        Mathf.Clamp(vp.x, 0.05f, 0.95f) * Screen.width,
+                        (1f - Mathf.Clamp(vp.y, 0.08f, 0.92f)) * Screen.height);
 
-            // 주머니 (임시 — 금색)
-            lbl.normal.textColor = new Color(1f, 0.82f, 0.2f);
-            GUI.Label(new Rect(px + 10, py + 4, pw - 20, 28), "◈ 주머니", lbl);
-            GUI.Label(new Rect(px + 10, py + 4, pw - 14, 28), $"{CurrencyManager.Instance.TempGold} G", val);
+                    Vector2 center = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+                    float ang = Mathf.Atan2(sp.y - center.y, sp.x - center.x) * Mathf.Rad2Deg;
 
-            // 구분선
-            GUI.color = new Color(1f, 0.75f, 0.15f, 0.25f);
-            GUI.DrawTexture(new Rect(px + 8, py + 36, pw - 16, 1), Texture2D.whiteTexture);
-            GUI.color = Color.white;
+                    // 한계 거리(portalMaxRange)에 가까워질수록 보라 → 빨강으로 경고
+                    float dist = Vector2.Distance(player.position, activePortal.transform.position);
+                    float danger = Mathf.InverseLerp(portalMaxRange * 0.65f, portalMaxRange, dist);
+                    Color portalPurple = new Color(0.8f, 0.6f, 1f);
+                    Color arrowColor = Color.Lerp(portalPurple, new Color(1f, 0.3f, 0.25f), danger);
+                    if (danger > 0.5f) // 한계 직전엔 깜빡임까지
+                        arrowColor.a = 0.55f + 0.45f * Mathf.Sin(Time.unscaledTime * 10f);
 
-            // 금고 (확정 — 하늘색)
-            lbl.normal.textColor = new Color(0.55f, 0.85f, 1f);
-            GUI.Label(new Rect(px + 10, py + 40, pw - 20, 28), "◈ 금고", lbl);
-            GUI.Label(new Rect(px + 10, py + 40, pw - 14, 28), $"{CurrencyManager.Instance.ConfirmedGold} G", val);
+                    GUIStyle arrowStyle = new GUIStyle
+                    {
+                        fontSize = 30,
+                        fontStyle = FontStyle.Bold,
+                        alignment = TextAnchor.MiddleCenter,
+                        normal = { textColor = arrowColor }
+                    };
+
+                    Matrix4x4 saved = GUI.matrix;
+                    GUIUtility.RotateAroundPivot(ang, sp);
+                    GUI.Label(new Rect(sp.x - 20, sp.y - 20, 40, 40), "➤", arrowStyle);
+                    GUI.matrix = saved;
+
+                    // 거리 숫자는 화살표보다 화면 중앙 쪽에 (회전 없이)
+                    Vector2 inward = (center - sp).normalized * 36f;
+                    GUIStyle distStyle = new GUIStyle
+                    {
+                        fontSize = 15,
+                        alignment = TextAnchor.MiddleCenter,
+                        normal = { textColor = arrowColor }
+                    };
+                    GUI.Label(new Rect(sp.x + inward.x - 30, sp.y + inward.y - 12, 60, 24),
+                        $"{dist:0}m", distStyle);
+                }
+            }
+
+            // 너무 멀어져서 포탈이 닫혔을 때 안내 (#46)
+            if (portalLostTimer > 0f)
+            {
+                GUIStyle lostStyle = new GUIStyle
+                {
+                    fontSize = 22,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.UpperCenter,
+                    normal = { textColor = new Color(1f, 0.4f, 0.35f, Mathf.Clamp01(portalLostTimer)) }
+                };
+                GUI.Label(new Rect(0, 84, Screen.width, 34),
+                    "너무 멀어져서 탈출 포탈이 닫혀버렸다...", lostStyle);
+            }
         }
 
-        // 현재 달 표시 (웨이브 텍스트 아래) — 슬롯 도는 동안엔 스포일러 방지로 숨김
+        // 재화 HUD (#8) — 달 연출·행동 선택 중에는 화면을 비운다
+        if (!moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
+            GoldPanelUI.Draw();
+
+        // 현재 달 표시 — 우측 상단 골드 패널 아래에 아이콘 + 이름 (슬롯·연출 중엔 스포일러 방지로 숨김)
         MoonData moon = CurrentMoon;
-        if (moon != null && !resting && !moonSpinning && moonBannerTimer <= 0f)
+        if (moon != null && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f && !waitingForAction)
         {
+            float mw = 190f, mh = 46f;
+            float mx = Screen.width - mw - 16f, my = 92f; // 골드 패널(y12, 높이72) 바로 아래
+
+            Color rc = RarityColor(moon.rarity);
+
+            // 등급색 테두리 + 어두운 배경 (골드 패널과 같은 스타일)
+            GUI.color = new Color(rc.r, rc.g, rc.b, 0.75f);
+            GUI.DrawTexture(new Rect(mx - 2, my - 2, mw + 4, mh + 4), Texture2D.whiteTexture);
+            GUI.color = new Color(0.06f, 0.05f, 0.12f, 0.9f);
+            GUI.DrawTexture(new Rect(mx, my, mw, mh), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // 달 아이콘 (작게)
+            float isz = 34f;
+            if (moon.icon != null)
+                GUI.DrawTexture(new Rect(mx + 8, my + (mh - isz) * 0.5f, isz, isz),
+                    moon.icon.texture, ScaleMode.ScaleToFit, true);
+
+            // 달 이름 (등급색)
             GUIStyle moonStyle = new GUIStyle
             {
-                fontSize = 20,
-                alignment = TextAnchor.UpperCenter,
-                normal = { textColor = RarityColor(moon.rarity) }
+                fontSize = 16,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleLeft,
+                wordWrap = true,
+                normal = { textColor = rc }
             };
-            GUI.Label(new Rect(0, 48, Screen.width, 30), $"{moon.moonName}  [{moon.rarity}]", moonStyle);
+            GUI.Label(new Rect(mx + 8 + isz + 8, my + 2, mw - isz - 26, mh - 4),
+                moon.moonName, moonStyle);
         }
 
         // 달 슬롯머신 연출: 카드 안에서 달이 돌아가고, 카드가 반짝인다

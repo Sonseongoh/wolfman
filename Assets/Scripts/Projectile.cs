@@ -14,6 +14,14 @@ public class Projectile : MonoBehaviour
     public void SetDirection(Vector2 dir)
     {
         direction = dir.normalized;
+
+        // 진행 방향으로 회전 (참격 등 방향 있는 스프라이트용).
+        // 왼쪽으로 갈 땐 위아래가 뒤집혀 보이므로 flipY로 호 방향을 되살린다
+        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+        transform.rotation = Quaternion.Euler(0f, 0f, angle);
+
+        SpriteRenderer sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.flipY = direction.x < 0f;
     }
 
     void Start()
@@ -23,7 +31,8 @@ public class Projectile : MonoBehaviour
 
     void Update()
     {
-        transform.Translate(direction * speed * Time.deltaTime);
+        // Space.World 필수 — 참격처럼 회전된 투사체는 로컬 기준이면 회전이 이중 적용된다
+        transform.Translate(direction * speed * Time.deltaTime, Space.World);
     }
 
     void OnTriggerEnter2D(Collider2D other)
