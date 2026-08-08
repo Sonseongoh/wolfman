@@ -192,12 +192,12 @@ public class PlayerHealth : MonoBehaviour
         // 게임오버 화면
         if (isDead)
         {
-            // 짙은 붉은 보라 오버레이
-            GUI.color = new Color(0.07f, 0f, 0.04f, 0.93f);
+            // 거의 검정에 가까운 짙은 오버레이
+            GUI.color = new Color(0.04f, 0.03f, 0.06f, 0.93f);
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
 
-            // 상하 혈색 라인
-            GUI.color = new Color(0.72f, 0.04f, 0.1f, 0.7f);
+            // 상하 라인 (붉은기 줄임)
+            GUI.color = new Color(0.45f, 0.04f, 0.08f, 0.6f);
             GUI.DrawTexture(new Rect(0, 0, Screen.width, 5), Texture2D.whiteTexture);
             GUI.DrawTexture(new Rect(0, Screen.height - 5, Screen.width, 5), Texture2D.whiteTexture);
             GUI.color = Color.white;
