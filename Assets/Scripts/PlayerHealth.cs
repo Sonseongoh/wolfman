@@ -10,6 +10,9 @@ public class PlayerHealth : MonoBehaviour
     [Tooltip("피격 후 무적 시간(초) — 닿아있는 동안 연속으로 깎이는 것 방지")]
     public float invincibleTime = 1f;
 
+    [Tooltip("일시정지 버튼 아이콘 (Assets/Art/PauseBtn.png 할당)")]
+    public Texture2D pauseButtonIcon;
+
     int hp;
     float invincibleTimer;
     bool isDead;
@@ -140,7 +143,10 @@ public class PlayerHealth : MonoBehaviour
                 float bSize = 36f;
                 float bx = Screen.width - 190f - 16f - bSize - 8f;
                 float by = 12f;
-                if (GUI.Button(new Rect(bx, by, bSize, bSize), "⏸"))
+                GUIContent pauseContent = pauseButtonIcon != null
+                    ? new GUIContent(pauseButtonIcon)
+                    : new GUIContent("⏸");
+                if (GUI.Button(new Rect(bx, by, bSize, bSize), pauseContent, GUIStyle.none))
                 {
                     isPaused = true;
                     Time.timeScale = 0f;
