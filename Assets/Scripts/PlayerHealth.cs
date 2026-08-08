@@ -42,10 +42,6 @@ public class PlayerHealth : MonoBehaviour
             if (invincibleTimer <= 0f && sr != null) sr.enabled = true;
         }
 
-        // 테스트용: K 키로 즉시 게임오버
-        if (!isDead && Keyboard.current != null && Keyboard.current.kKey.wasPressedThisFrame)
-            TakeDamage(9999);
-
         // ESC 일시정지 토글 (레벨업·스킬 선택 중엔 무시)
         if (!isDead && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
