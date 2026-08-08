@@ -17,6 +17,8 @@
   <ItemGroup>
     <Compile Include="../../Assets/Scripts/Core/GoldWallet.cs" Link="Domain/GoldWallet.cs" />
     <Compile Include="../../Assets/Scripts/Core/FacilityCore.cs" Link="Domain/FacilityCore.cs" />
+    <Compile Include="../../Assets/Scripts/Core/RoundPhase.cs" Link="Domain/RoundPhase.cs" />
+    <Compile Include="../../Assets/Scripts/Core/PlayerFormRule.cs" Link="Domain/PlayerFormRule.cs" />
   </ItemGroup>
 
   <ItemGroup>

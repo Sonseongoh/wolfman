@@ -438,6 +438,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
+  - component: {fileID: 939903675}
   - component: {fileID: 939903674}
   - component: {fileID: 939903673}
   - component: {fileID: 939903672}
@@ -494,7 +495,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 0.640625, y: 1.296875}
   m_EdgeRadius: 0
 --- !u!114 &939903671
 MonoBehaviour:
@@ -585,7 +586,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 3a7c1f92b45d48e2a91c0d3e5f6a7b81, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -611,6 +612,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &939903675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939903669}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8018ebdc619c90548bb0598333ca14b5, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerTransform
+  humanSprite: {fileID: 21300000, guid: 3a7c1f92b45d48e2a91c0d3e5f6a7b81, type: 3}
+  wolfSprite: {fileID: 21300000, guid: ee88ff99aabbccddeeff001122334a00, type: 3}
 --- !u!1 &1448195648
 GameObject:
   m_ObjectHideFlags: 0
