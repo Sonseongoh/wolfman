@@ -41,9 +41,8 @@ public class PlayerHealth : MonoBehaviour
         // ESC 일시정지 토글 (레벨업·스킬 선택 중엔 무시)
         if (!isDead && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            bool levelChoosing = GetComponent<PlayerLevel>()?.IsChoosing ?? false;
             bool skillChoosing = SkillSystem.Instance?.IsChoosing ?? false;
-            if (!levelChoosing && !skillChoosing)
+            if (!skillChoosing)
             {
                 isPaused = !isPaused;
                 Time.timeScale = isPaused ? 0f : 1f;
@@ -124,59 +123,55 @@ public class PlayerHealth : MonoBehaviour
         GUIStyle hpStyle = new GUIStyle { fontSize = 28, normal = { textColor = Color.white } };
         GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {maxHp}", hpStyle);
 
-        // 일시정지·설정 버튼 (우상단) — 게임 중, 죽지 않았을 때
+        // ⏸ 버튼 — 우상단 작게, 사냥 중에만 (달 선택·스킬 선택 중엔 숨김)
         if (!isDead && !isPaused)
         {
-            bool levelChoosing = GetComponent<PlayerLevel>()?.IsChoosing ?? false;
             bool skillChoosing = SkillSystem.Instance?.IsChoosing ?? false;
-            if (!levelChoosing && !skillChoosing)
+            bool inReveal = WaveManager.Instance?.IsInMoonReveal ?? true;
+            if (!skillChoosing && !inReveal)
             {
-                float bSize = 48f, margin = 8f;
-                // ⏸ 왼쪽, ⚙ 맨 오른쪽
-                if (GUI.Button(new Rect(Screen.width - bSize * 2 - margin * 2, margin, bSize, bSize), "⏸"))
+                // 금고 패널(width=190, x=Screen.width-206, y=56, height=72) 바로 왼쪽에 정렬
+                float bSize = 36f;
+                float bx = Screen.width - 190f - 16f - bSize - 8f;
+                float by = 12f;
+                if (GUI.Button(new Rect(bx, by, bSize, bSize), "⏸"))
                 {
                     isPaused = true;
                     Time.timeScale = 0f;
                 }
-                GUI.Button(new Rect(Screen.width - bSize - margin, margin, bSize, bSize), "⚙");
             }
         }
 
         // 일시정지 오버레이
         if (isPaused)
         {
-            GUI.color = new Color(0f, 0f, 0f, 0.65f);
+            GUI.color = new Color(0f, 0f, 0f, 0.7f);
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-
-            float pw = 320f, ph = 220f;
-            float px = (Screen.width - pw) * 0.5f, py = (Screen.height - ph) * 0.5f;
-
-            // 패널 테두리 + 배경
-            GUI.color = new Color(0.8f, 0.8f, 0.8f, 0.9f);
-            GUI.DrawTexture(new Rect(px - 3, py - 3, pw + 6, ph + 6), Texture2D.whiteTexture);
-            GUI.color = new Color(0.08f, 0.07f, 0.14f, 1f);
-            GUI.DrawTexture(new Rect(px, py, pw, ph), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
             GUIStyle title = new GUIStyle
             {
-                fontSize = 36,
+                fontSize = 32,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = Color.white }
             };
-            GUI.Label(new Rect(px, py + 14, pw, 50), "일시정지", title);
+            GUI.Label(new Rect(0, Screen.height * 0.38f, Screen.width, 48), "일시정지", title);
 
-            if (GUI.Button(new Rect(px + 40, py + 82, pw - 80, 52), "계속하기"))
+            // 옵션 | 계속하기 — 화면 중앙
+            float btnW = 140f, btnH = 52f, gap = 16f;
+            float totalW = btnW * 2 + gap;
+            float bx = (Screen.width - totalW) * 0.5f;
+            float by = Screen.height * 0.52f;
+
+            GUI.Button(new Rect(bx, by, btnW, btnH), "옵션");
+            if (GUI.Button(new Rect(bx + btnW + gap, by, btnW, btnH), "계속하기"))
             {
                 isPaused = false;
                 Time.timeScale = 1f;
             }
-            if (GUI.Button(new Rect(px + 40, py + 148, pw - 80, 52), "재시작"))
-                Restart();
 
-            return; // HP 라벨 아래 다른 UI 안 그리도록
+            return;
         }
 
         // 게임오버 화면
