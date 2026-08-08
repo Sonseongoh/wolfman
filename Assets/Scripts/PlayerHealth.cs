@@ -140,7 +140,7 @@ public class PlayerHealth : MonoBehaviour
             if (!skillChoosing && !inReveal)
             {
                 // 금고 패널(width=190, x=Screen.width-206, y=56, height=72) 바로 왼쪽에 정렬
-                float bSize = 36f;
+                float bSize = 26f;
                 float bx = Screen.width - 190f - 16f - bSize - 24f;
                 float by = 12f;
                 GUIContent pauseContent = pauseButtonIcon != null
@@ -157,27 +157,30 @@ public class PlayerHealth : MonoBehaviour
         // 일시정지 오버레이
         if (isPaused)
         {
-            GUI.color = new Color(0f, 0f, 0f, 0.7f);
+            // 거의 검정 오버레이
+            GUI.color = new Color(0.04f, 0.04f, 0.06f, 0.9f);
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+
+            // 상하 차가운 회색 라인
+            GUI.color = new Color(0.5f, 0.5f, 0.55f, 0.5f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, 3), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(0, Screen.height - 3, Screen.width, 3), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
-            GUIStyle title = new GUIStyle
-            {
-                fontSize = 32,
-                fontStyle = FontStyle.Bold,
-                alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.white }
-            };
-            GUI.Label(new Rect(0, Screen.height * 0.38f, Screen.width, 48), "일시정지", title);
-
-            // 옵션 | 계속하기 — 화면 중앙
-            float btnW = 140f, btnH = 52f, gap = 16f;
+            // 버튼 — 옵션 | 계속하기 (화면 비례로 모바일 대응)
+            float btnW = Screen.width * 0.28f, btnH = Screen.height * 0.1f, gap = Screen.width * 0.04f;
             float totalW = btnW * 2 + gap;
             float bx = (Screen.width - totalW) * 0.5f;
-            float by = Screen.height * 0.52f;
+            float by = (Screen.height - btnH) * 0.5f;
 
-            GUI.Button(new Rect(bx, by, btnW, btnH), "옵션");
-            if (GUI.Button(new Rect(bx + btnW + gap, by, btnW, btnH), "계속하기"))
+            GUIStyle btnStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = Mathf.RoundToInt(btnH * 0.38f),
+                fontStyle = FontStyle.Bold
+            };
+
+            GUI.Button(new Rect(bx, by, btnW, btnH), "옵션", btnStyle);
+            if (GUI.Button(new Rect(bx + btnW + gap, by, btnW, btnH), "계속하기", btnStyle))
             {
                 isPaused = false;
                 Time.timeScale = 1f;
