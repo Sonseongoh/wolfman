@@ -141,7 +141,7 @@ public class PlayerHealth : MonoBehaviour
             {
                 // 금고 패널(width=190, x=Screen.width-206, y=56, height=72) 바로 왼쪽에 정렬
                 float bSize = 36f;
-                float bx = Screen.width - 190f - 16f - bSize - 8f;
+                float bx = Screen.width - 190f - 16f - bSize - 24f;
                 float by = 12f;
                 GUIContent pauseContent = pauseButtonIcon != null
                     ? new GUIContent(pauseButtonIcon)
