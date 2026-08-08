@@ -45,6 +45,7 @@ public class WaveManager : MonoBehaviour
 
     public int CurrentWave { get; private set; }
     public int AliveCount { get; private set; }
+    public int KillCount { get; private set; }
 
     [Header("달 슬롯 연출")]
     [Tooltip("달 이름이 슬롯머신처럼 돌아가는 시간(초)")]
@@ -84,6 +85,9 @@ public class WaveManager : MonoBehaviour
     Sprite promoDecoyIcon;  // 미끼 달 아이콘
 
     bool waitingForAction;  // 첫 웨이브 달 공개 후 사냥/마을 선택 대기 (#6)
+    public bool IsWaitingForAction => waitingForAction;
+    /// <summary>달 연출(슬롯·승급·배너·행동선택) 중이거나 첫 웨이브 전인지 — 이 때는 일시정지 버튼 숨김</summary>
+    public bool IsInMoonReveal => CurrentWave == 0 || moonSpinning || moonPromoting || moonBannerTimer > 0f || waitingForAction;
 
     EscapePortal activePortal;  // 이번 웨이브에 열린 탈출 포탈 (#46)
     float portalBannerTimer;    // "포탈이 열렸다" 안내 표시 시간
@@ -293,6 +297,7 @@ public class WaveManager : MonoBehaviour
     /// <summary>EnemyHealth가 사망 시 호출</summary>
     public void NotifyEnemyDied()
     {
+        KillCount++;
         AliveCount = Mathf.Max(0, AliveCount - 1);
         if (AliveCount <= 0 && !spawning && !resting) OnWaveCleared();
     }
