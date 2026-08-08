@@ -15,6 +15,7 @@ public class PlayerHealth : MonoBehaviour
     bool isDead;
     bool isPaused;
     int lostGoldOnDeath;
+    int earnedGoldOnDeath;
     SpriteRenderer sr;
 
     /// <summary>게임오버 상태인지 (HitStop 등이 시간 정지 유지 판단에 사용)</summary>
@@ -37,6 +38,10 @@ public class PlayerHealth : MonoBehaviour
 
             if (invincibleTimer <= 0f && sr != null) sr.enabled = true;
         }
+
+        // 테스트용: K 키로 즉시 게임오버
+        if (!isDead && Keyboard.current != null && Keyboard.current.kKey.wasPressedThisFrame)
+            TakeDamage(9999);
 
         // ESC 일시정지 토글 (레벨업·스킬 선택 중엔 무시)
         if (!isDead && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
@@ -106,6 +111,7 @@ public class PlayerHealth : MonoBehaviour
         {
             isDead = true;
             lostGoldOnDeath = CurrencyManager.Instance?.TempGold ?? 0;
+            earnedGoldOnDeath = CurrencyManager.Instance?.ConfirmedGold ?? 0;
             CurrencyManager.Instance?.LoseTempGold();
             Time.timeScale = 0f;
         }
@@ -177,61 +183,124 @@ public class PlayerHealth : MonoBehaviour
         // 게임오버 화면
         if (isDead)
         {
-            GUI.color = new Color(0f, 0f, 0f, 0.78f);
+            // 짙은 붉은 보라 오버레이
+            GUI.color = new Color(0.07f, 0f, 0.04f, 0.93f);
             GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
+
+            // 상하 혈색 라인
+            GUI.color = new Color(0.72f, 0.04f, 0.1f, 0.7f);
+            GUI.DrawTexture(new Rect(0, 0, Screen.width, 5), Texture2D.whiteTexture);
+            GUI.DrawTexture(new Rect(0, Screen.height - 5, Screen.width, 5), Texture2D.whiteTexture);
             GUI.color = Color.white;
 
             int wave  = WaveManager.Instance != null ? WaveManager.Instance.CurrentWave : 0;
             int kills = WaveManager.Instance != null ? WaveManager.Instance.KillCount   : 0;
 
-            GUIStyle big = new GUIStyle
+            // 달 장식
+            GUIStyle deco = new GUIStyle
             {
-                fontSize = 56,
+                fontSize = 32,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(1f, 0.88f, 0.38f, 0.85f) }
+            };
+            GUI.Label(new Rect(0, Screen.height * 0.05f, Screen.width, 44), "◐  ✦  ◑", deco);
+
+            // GAME OVER
+            GUIStyle bigRed = new GUIStyle
+            {
+                fontSize = 62,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.red }
+                normal = { textColor = new Color(0.92f, 0.07f, 0.07f) }
             };
-            GUI.Label(new Rect(0, Screen.height * 0.1f, Screen.width, 70), "GAME OVER", big);
+            GUI.Label(new Rect(0, Screen.height * 0.13f, Screen.width, 78), "GAME OVER", bigRed);
 
+            // 귀여운 부제목
+            GUIStyle sub = new GUIStyle
+            {
+                fontSize = 19,
+                fontStyle = FontStyle.Italic,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = new Color(0.88f, 0.62f, 0.72f) }
+            };
+            GUI.Label(new Rect(0, Screen.height * 0.24f, Screen.width, 28), "오늘 밤의 사냥은 여기까지...", sub);
+
+            // 구분선
+            float lw = Screen.width * 0.55f;
+            GUI.color = new Color(0.65f, 0.08f, 0.12f, 0.5f);
+            GUI.DrawTexture(new Rect((Screen.width - lw) * 0.5f, Screen.height * 0.305f, lw, 2), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            // 통계
             GUIStyle stat = new GUIStyle
             {
-                fontSize = 24,
+                fontSize = 22,
                 alignment = TextAnchor.MiddleCenter,
-                normal = { textColor = Color.white }
+                normal = { textColor = new Color(0.95f, 0.88f, 0.88f) }
             };
-            string lostText = lostGoldOnDeath > 0 ? $"\n잃은 골드: {lostGoldOnDeath} G" : "";
-            GUI.Label(new Rect(0, Screen.height * 0.28f, Screen.width, 120),
-                $"WAVE {wave}까지 생존  ·  처치: {kills}마리{lostText}", stat);
+            float sy = Screen.height * 0.33f;
+            GUI.Label(new Rect(0, sy, Screen.width, 30),
+                $"WAVE {wave} 생존   ✦   처치 {kills} 마리", stat);
+            sy += 32f;
+
+            if (earnedGoldOnDeath > 0)
+            {
+                GUIStyle goldEarned = new GUIStyle(stat)
+                    { normal = { textColor = new Color(1f, 0.82f, 0.22f) } };
+                GUI.Label(new Rect(0, sy, Screen.width, 28), $"◈ 금고 획득  {earnedGoldOnDeath} G", goldEarned);
+                sy += 30f;
+            }
+
+            if (lostGoldOnDeath > 0)
+            {
+                GUIStyle goldLost = new GUIStyle(stat)
+                    { normal = { textColor = new Color(1f, 0.45f, 0.25f) } };
+                GUI.Label(new Rect(0, sy, Screen.width, 28), $"◈ 잃은 골드  {lostGoldOnDeath} G", goldLost);
+                sy += 30f;
+            }
+
+            // 구분선
+            GUI.color = new Color(0.65f, 0.08f, 0.12f, 0.35f);
+            GUI.DrawTexture(new Rect((Screen.width - lw) * 0.5f, sy + 8f, lw, 1), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            sy += 22f;
 
             // 획득한 스킬 목록
             if (SkillSystem.Instance != null && SkillSystem.Instance.acquired.Count > 0)
             {
                 GUIStyle skillHeader = new GUIStyle
                 {
-                    fontSize = 20,
+                    fontSize = 17,
                     fontStyle = FontStyle.Bold,
                     alignment = TextAnchor.MiddleCenter,
-                    normal = { textColor = new Color(1f, 0.82f, 0.2f) }
+                    normal = { textColor = new Color(1f, 0.82f, 0.22f) }
                 };
                 GUIStyle skillEntry = new GUIStyle
                 {
-                    fontSize = 19,
+                    fontSize = 16,
                     alignment = TextAnchor.MiddleCenter,
-                    normal = { textColor = new Color(0.9f, 0.9f, 0.9f) }
+                    normal = { textColor = new Color(0.86f, 0.80f, 0.88f) }
                 };
 
-                float skillY = Screen.height * 0.48f;
-                GUI.Label(new Rect(0, skillY, Screen.width, 28), "획득한 스킬", skillHeader);
-                skillY += 32f;
+                GUI.Label(new Rect(0, sy, Screen.width, 24), "✦  이번 런 획득 스킬  ✦", skillHeader);
+                sy += 28f;
                 foreach (var s in SkillSystem.Instance.acquired)
                 {
-                    GUI.Label(new Rect(0, skillY, Screen.width, 26), $"· {s.skillName}  {s.description}", skillEntry);
-                    skillY += 26f;
+                    GUI.Label(new Rect(0, sy, Screen.width, 22), $"◈ {s.skillName}  —  {s.description}", skillEntry);
+                    sy += 22f;
                 }
             }
 
-            float btnW = 240f, btnH = 60f;
-            if (GUI.Button(new Rect((Screen.width - btnW) * 0.5f, Screen.height * 0.82f, btnW, btnH), "재시작"))
+            // 재시작 버튼
+            float btnW = 220f, btnH = 56f;
+            float bx = (Screen.width - btnW) * 0.5f;
+            float by = Screen.height * 0.84f;
+
+            GUI.color = new Color(0.65f, 0.05f, 0.08f, 0.85f);
+            GUI.DrawTexture(new Rect(bx - 3, by - 3, btnW + 6, btnH + 6), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+
+            if (GUI.Button(new Rect(bx, by, btnW, btnH), "마을로 돌아가기"))
                 Restart();
         }
     }
