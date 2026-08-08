@@ -40,6 +40,15 @@ public class VillageSceneCompositionTests
     }
 
     [Test]
+    public void 마을_플레이어는_형태를_결정하는_컴포넌트를_가진다()
+    {
+        // 이게 없으면 마을 플레이어는 씬에 직렬화된 스프라이트 그대로 남는다 — #53 이전엔 그래서
+        // 인간도 늑대도 아닌 기본 네모가 보였다. 형태는 페이즈에서 오지, 씬에 굳어있지 않다.
+        Assert.That(scene.ComponentCount("PlayerTransform"), Is.EqualTo(1),
+            "마을 플레이어에 PlayerTransform 이 하나 붙어 있어야 마을 페이즈에서 인간으로 보인다.");
+    }
+
+    [Test]
     public void 마을에는_전투_컴포넌트가_없다()
     {
         // 스펙은 전투 컴포넌트를 "빼도 된다"고 허용했을 뿐 금지하진 않았다.

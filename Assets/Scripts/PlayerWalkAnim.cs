@@ -50,8 +50,9 @@ public class PlayerWalkAnim : MonoBehaviour
         {
             timer = 0f;
             index = 0;
-            if (form != null && form.wolfSprite != null)
-                sr.sprite = form.wolfSprite;
+
+            // 늑대로 돌아가는 게 아니라 "지금 형태의 유휴 모습"으로 돌아간다 (#53)
+            if (form != null) form.RestoreIdleSprite();
         }
     }
 }
