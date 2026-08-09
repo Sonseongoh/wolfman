@@ -42,7 +42,7 @@ public class RoundController : MonoBehaviour
         else
         {
             GameManager.Instance.StartNextRound();
-            SceneManager.LoadScene("SampleScene");
+            SceneManager.LoadScene("HuntScene");
         }
     }
 
@@ -54,7 +54,7 @@ public class RoundController : MonoBehaviour
         {
             showingReward = false;
             GameManager.Instance.StartNextRound();
-            SceneManager.LoadScene("SampleScene");
+            SceneManager.LoadScene("HuntScene");
         }
     }
 

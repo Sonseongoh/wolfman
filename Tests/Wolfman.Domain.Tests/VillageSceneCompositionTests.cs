@@ -102,7 +102,7 @@ public class VillageSceneCompositionTests
 [TestFixture]
 public class HuntSceneRegressionTests
 {
-    const string Hunt = "SampleScene";
+    const string Hunt = "HuntScene";
 
     [Test]
     public void 전투_씬은_여전히_플레이어를_가진다()
