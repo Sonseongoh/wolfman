@@ -26,7 +26,7 @@ public class TitleScreen : MonoBehaviour
         {
             fadeAlpha = Mathf.MoveTowards(fadeAlpha, 1f, Time.unscaledDeltaTime * 1.2f);
             if (fadeAlpha >= 1f)
-                SceneManager.LoadScene("SampleScene");
+                SceneManager.LoadScene("VillageScene");
         }
     }
 
@@ -104,7 +104,10 @@ public class TitleScreen : MonoBehaviour
             {
                 starting = true;
                 if (GameManager.Instance != null)
+                {
                     GameManager.Instance.StartNextRound();
+                    GameManager.Instance.SetPhase(RoundPhase.Village);
+                }
             }
         }
 
