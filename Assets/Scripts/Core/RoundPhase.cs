@@ -6,6 +6,7 @@
 /// </summary>
 public enum RoundPhase
 {
+    Title,        // 타이틀 화면 (첫 실행)
     MoonReveal,   // 달 공개 (C)
     ActionSelect, // 마을에 남기 vs 사냥 나가기 선택 (C)
     Village,      // 마을 디펜스/운영 (B)
