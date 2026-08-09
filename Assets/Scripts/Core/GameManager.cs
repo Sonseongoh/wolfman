@@ -39,6 +39,7 @@ public class GameManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        Phase = RoundPhase.Title;
     }
 
     /// <summary>다음 라운드 시작: 달 추첨 → MoonReveal 페이즈로</summary>
