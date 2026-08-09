@@ -124,7 +124,7 @@ public class PlayerHealth : MonoBehaviour
     static void Restart()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        SceneTransition.Go(SceneManager.GetActiveScene().name);
     }
 
     // 임시 UI (나중에 제대로 된 UI로 교체 예정)

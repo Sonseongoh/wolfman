@@ -386,7 +386,7 @@ public class WaveManager : MonoBehaviour
                 SoundManager.Instance?.PlayBGM(SoundManager.Instance.bgmVillage);
                 waitingForAction = false;
                 if (GameManager.Instance != null) GameManager.Instance.SetPhase(RoundPhase.Village);
-                SceneManager.LoadScene("VillageScene");
+                SceneTransition.Go("VillageScene");
             }
         }
 

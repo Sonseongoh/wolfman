@@ -68,7 +68,7 @@ public class VillageController : MonoBehaviour
         if (GUI.Button(new Rect(Screen.width * 0.5f - btnW * 0.5f, Screen.height * 0.82f, btnW, btnH), "라운드 종료"))
         {
             Time.timeScale = 1f;
-            SceneManager.LoadScene("MainScene");
+            SceneTransition.Go("MainScene");
         }
     }
 

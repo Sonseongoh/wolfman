@@ -38,7 +38,7 @@ public class TitleScreen : MonoBehaviour
         {
             fadeAlpha = Mathf.MoveTowards(fadeAlpha, 1f, Time.unscaledDeltaTime * 1.2f);
             if (fadeAlpha >= 1f)
-                SceneManager.LoadScene("VillageScene");
+                SceneTransition.Go("VillageScene");
         }
     }
 

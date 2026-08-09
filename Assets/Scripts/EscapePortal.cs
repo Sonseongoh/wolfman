@@ -75,6 +75,6 @@ public class EscapePortal : MonoBehaviour
         // Phase가 Hunt인 채로 MainScene에 도착하면 RoundController(#6)가
         // "살아서 귀환"으로 인식해 임시 골드를 금고로 확정(#8)하고 정산 화면을 띄운다
         Time.timeScale = 1f;
-        SceneManager.LoadScene("MainScene");
+        SceneTransition.Go("MainScene");
     }
 }
