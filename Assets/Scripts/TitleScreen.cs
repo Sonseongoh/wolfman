@@ -7,15 +7,27 @@ public class TitleScreen : MonoBehaviour
     Texture2D texWolf;
     Font fontCinzel;
 
+    AudioSource audioSrc;
+
     float elapsed;
     bool starting;
     float fadeAlpha;
 
     void Awake()
     {
-        texBg     = Resources.Load<Texture2D>("TitleBg");
-        texWolf   = Resources.Load<Texture2D>("TitleWolf");
+        texBg      = Resources.Load<Texture2D>("TitleBg");
+        texWolf    = Resources.Load<Texture2D>("TitleWolf");
         fontCinzel = Resources.Load<Font>("CinzelBold");
+
+        var clip = Resources.Load<AudioClip>("bgmTitle");
+        if (clip != null)
+        {
+            audioSrc = gameObject.AddComponent<AudioSource>();
+            audioSrc.clip = clip;
+            audioSrc.loop = true;
+            audioSrc.volume = 0.5f;
+            audioSrc.Play();
+        }
     }
 
     void Update()
