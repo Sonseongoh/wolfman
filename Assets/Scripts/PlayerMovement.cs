@@ -24,17 +24,24 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
-        var kb = Keyboard.current;
-        if (kb == null) return;
-
         moveInput = Vector2.zero;
-        if (kb.wKey.isPressed || kb.upArrowKey.isPressed) moveInput.y += 1f;
-        if (kb.sKey.isPressed || kb.downArrowKey.isPressed) moveInput.y -= 1f;
-        if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) moveInput.x -= 1f;
-        if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) moveInput.x += 1f;
 
-        // 대각선 이동이 더 빨라지지 않도록 정규화
-        moveInput = moveInput.normalized;
+        // 키보드 (PC) — 모바일엔 키보드가 없으므로 null이어도 계속 진행
+        var kb = Keyboard.current;
+        if (kb != null)
+        {
+            if (kb.wKey.isPressed || kb.upArrowKey.isPressed) moveInput.y += 1f;
+            if (kb.sKey.isPressed || kb.downArrowKey.isPressed) moveInput.y -= 1f;
+            if (kb.aKey.isPressed || kb.leftArrowKey.isPressed) moveInput.x -= 1f;
+            if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) moveInput.x += 1f;
+
+            // 대각선 이동이 더 빨라지지 않도록 정규화
+            moveInput = moveInput.normalized;
+        }
+
+        // 키보드 입력이 없으면 가상 조이스틱 (#63 — 모바일). 아날로그 강도 유지 (살짝 밀면 천천히)
+        if (moveInput == Vector2.zero)
+            moveInput = VirtualJoystick.Direction;
 
         // 이동 방향으로 스프라이트 뒤집기 (원본이 오른쪽을 봄)
         if (sr != null && moveInput.x != 0f)
