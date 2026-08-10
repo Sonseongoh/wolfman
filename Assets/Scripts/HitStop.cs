@@ -33,6 +33,7 @@ public class HitStop : MonoBehaviour
         bool keepFrozen = false;
 
         if (SkillSystem.Instance != null && SkillSystem.Instance.IsChoosing) keepFrozen = true;
+        if (PauseSystem.IsPaused) keepFrozen = true;
 
         PlayerHealth health = FindFirstObjectByType<PlayerHealth>();
         if (health != null && health.IsDead) keepFrozen = true;
