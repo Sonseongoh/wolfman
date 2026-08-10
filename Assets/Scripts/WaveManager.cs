@@ -145,9 +145,13 @@ public class WaveManager : MonoBehaviour
         resting = false;
         CurrentWave++;
 
-        // RoundController(#6)가 없을 때만 직접 라운드 시작 (임시 구조)
-        // #6 완성 후엔 OnPhaseChanged(Hunt) 받아서 시작하는 걸로 교체 예정
-        if (GameManager.Instance != null && GameManager.Instance.Phase != RoundPhase.Hunt)
+        // 라운드 시작의 주인은 흐름 제어(MainScene)다. 여기서 시작하는 건 사냥 씬만
+        // 단독 재생하는 개발 상황 하나뿐 — 시작해 줄 사람이 아무도 없을 때다.
+        //
+        // 예전 가드는 "페이즈가 Hunt 가 아니면" 이었는데 페이즈를 Hunt 로 옮기는 곳이
+        // 없어서 항상 열려 있었다. 그래서 웨이브마다 라운드를 새로 시작해 달을 다시
+        // 뽑았다 (#78).
+        if (GameManager.Instance != null && RoundFlowRule.NeedsRoundStart(GameManager.Instance.RoundNumber))
             GameManager.Instance.StartNextRound();
 
         float countMult = CurrentMoon != null ? CurrentMoon.enemyCountMultiplier : 1f;
@@ -378,6 +382,8 @@ public class WaveManager : MonoBehaviour
             {
                 SoundManager.Instance?.PlayButton();
                 waitingForAction = false;
+                // 사냥을 고른 것을 페이즈에 남긴다 — 귀환 시 정산이 이 값으로 갈린다 (#78)
+                if (GameManager.Instance != null) GameManager.Instance.SetPhase(RoundPhase.Hunt);
             }
 
             if (GUI.Button(new Rect(Screen.width * 0.5f + 20, btnY, btnW, btnH), "마을 남기"))
