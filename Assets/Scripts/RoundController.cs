@@ -41,6 +41,7 @@ public class RoundController : MonoBehaviour
         else
         {
             GameManager.Instance.StartNextRound();
+            Time.timeScale = 1f; // 앞 씬에서 멈춰둔 시간을 들고 넘어가지 않는다
             SceneManager.LoadScene("HuntScene");
         }
     }
@@ -53,6 +54,7 @@ public class RoundController : MonoBehaviour
         {
             showingReward = false;
             GameManager.Instance.StartNextRound();
+            Time.timeScale = 1f; // 앞 씬에서 멈춰둔 시간을 들고 넘어가지 않는다
             SceneManager.LoadScene("HuntScene");
         }
     }
