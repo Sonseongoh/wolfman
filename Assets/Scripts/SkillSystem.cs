@@ -217,6 +217,7 @@ public class SkillSystem : MonoBehaviour
 
     void Choose(int index)
     {
+        SoundManager.Instance?.PlayButton();
         SkillOption pick = currentChoices[index];
         Apply(pick);
         acquired.Add(pick);

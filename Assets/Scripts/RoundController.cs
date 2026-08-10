@@ -19,6 +19,9 @@ public class RoundController : MonoBehaviour
         if (GameManager.Instance == null) return;
         if (SceneManager.GetActiveScene().name != "MainScene") return;
 
+        // 타이틀 화면 → TitleScreen.cs가 시작 처리
+        if (GameManager.Instance.Phase == RoundPhase.Title) return;
+
         if (GameManager.Instance.Phase == RoundPhase.Hunt ||
             GameManager.Instance.Phase == RoundPhase.Village)
         {
@@ -39,7 +42,7 @@ public class RoundController : MonoBehaviour
         else
         {
             GameManager.Instance.StartNextRound();
-            SceneManager.LoadScene("SampleScene");
+            SceneManager.LoadScene("HuntScene");
         }
     }
 
@@ -51,7 +54,7 @@ public class RoundController : MonoBehaviour
         {
             showingReward = false;
             GameManager.Instance.StartNextRound();
-            SceneManager.LoadScene("SampleScene");
+            SceneManager.LoadScene("HuntScene");
         }
     }
 

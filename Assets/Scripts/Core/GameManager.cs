@@ -1,15 +1,5 @@
 using UnityEngine;
 
-/// <summary>한 라운드의 진행 단계. 모듈 A/B/C가 공유하는 기준.</summary>
-public enum RoundPhase
-{
-    MoonReveal,   // 달 공개 (C)
-    ActionSelect, // 마을에 남기 vs 사냥 나가기 선택 (C)
-    Village,      // 마을 디펜스/운영 (B)
-    Hunt,         // 사냥 뱀서 전투 (A)
-    Reward,       // 정산/보상 (C)
-}
-
 /// <summary>
 /// 게임 전체 흐름의 중심. 어느 씬에서든 GameManager.Instance로 접근.
 /// - 현재 달, 라운드 번호, 진행 페이즈를 보관
@@ -49,6 +39,7 @@ public class GameManager : MonoBehaviour
         }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+        Phase = RoundPhase.Title;
     }
 
     /// <summary>다음 라운드 시작: 달 추첨 → MoonReveal 페이즈로</summary>

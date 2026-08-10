@@ -443,6 +443,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
   maxHp: 5
   invincibleTime: 1
+  pauseButtonIcon: {fileID: 2800000, guid: d7ed4582003048eb912745a37804f31d, type: 3}
 --- !u!114 &605944749
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -456,32 +457,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SkillSystem
   magnetBonus: 0
+  damageBonus: 0
   clawWavePrefab: {fileID: 4602000000000000001, guid: ff778899aabbccddeeff004600000007, type: 3}
   pool:
   - skillName: "\uB0A0\uCE74\uB85C\uC6B4 \uBC1C\uD1B1"
     description: "\uACF5\uACA9\uB825 +1"
+    rarity: 0
     effect: 0
     value: 1
+    value2: 0
   - skillName: "\uBE60\uB978 \uC55E\uBC1C"
     description: "\uACF5\uACA9 \uC18D\uB3C4 +20%"
+    rarity: 0
     effect: 1
     value: 0.2
+    value2: 0
   - skillName: "\uB291\uB300\uC758 \uC9C8\uC8FC"
     description: "\uC774\uB3D9 \uC18D\uB3C4 +1"
+    rarity: 0
     effect: 2
     value: 1
+    value2: 0
   - skillName: "\uC9C8\uAE34 \uAC00\uC8FD"
     description: "\uCD5C\uB300 \uCCB4\uB825 +1, \uC804\uCCB4 \uD68C\uBCF5"
+    rarity: 0
     effect: 3
     value: 1
+    value2: 0
   - skillName: "\uC774\uBE68 \uD558\uB098 \uB354"
     description: "\uD22C\uC0AC\uCCB4 +1\uBC1C"
+    rarity: 0
     effect: 4
     value: 1
+    value2: 0
   - skillName: "\uC0AC\uB0E5 \uBCF8\uB2A5"
     description: "\uC0AC\uAC70\uB9AC +2"
+    rarity: 0
     effect: 5
     value: 2
+    value2: 0
   acquired: []
 --- !u!61 &605944750
 BoxCollider2D:
@@ -700,6 +714,7 @@ GameObject:
   - component: {fileID: 979627979}
   - component: {fileID: 979627978}
   - component: {fileID: 979627980}
+  - component: {fileID: 979627981}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -751,6 +766,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MoonEffects
   globalLight: {fileID: 619394801}
   transitionTime: 1.5
+--- !u!114 &979627981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979627977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b97c6638e6d844b81a636ee8f9dc9d57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  sfxShoot: {fileID: 8300000, guid: ea027af5d69d74f74972a6ae4bd0b5ae, type: 3}
+  sfxSlash: {fileID: 8300000, guid: 3236057406bcf42c580db554719ac81a, type: 3}
+  sfxHit: {fileID: 8300000, guid: 51375f78178d145b29827a69846e8534, type: 3}
+  sfxDeath: {fileID: 8300000, guid: 61186ab4884854b4387835567e73b224, type: 3}
+  sfxDamaged: {fileID: 8300000, guid: 9f7716e078f2846f69bd4730e5ccf466, type: 3}
+  sfxButton: {fileID: 8300000, guid: a72ddff72ab0541a1b47c66a88a17ff2, type: 3}
+  sfxPickup: {fileID: 8300000, guid: d09a02b826b234172bfc16f82863b0b7, type: 3}
+  sfxLevelUp: {fileID: 8300000, guid: 0fb8c97ef86cf4717bd5f9a8d763e72d, type: 3}
+  sfxWaveClear: {fileID: 8300000, guid: 70dbe136f7616447597534abbaf2d006, type: 3}
+  sfxSlot: {fileID: 8300000, guid: 8d18e08c1a6e148948a7064fd0a61e07, type: 3}
+  sfxMoonReveal: {fileID: 8300000, guid: e7139917767dd4be1967e1e89f5a656c, type: 3}
+  sfxMoonRevealLegendary: {fileID: 8300000, guid: 88192b60dfd224088818a3caf6ca3ca2, type: 3}
+  sfxGameOver: {fileID: 8300000, guid: 1d2ae07c76a2642029e34e2152292123, type: 3}
+  bgmBattle: {fileID: 8300000, guid: 6a4c5a21a10c54757adc13329447d77c, type: 3}
+  bgmVillage: {fileID: 8300000, guid: 5def487eb516b48828543f839107f458, type: 3}
+  bgmVolume: 0.4
 --- !u!1 &1064584541
 GameObject:
   m_ObjectHideFlags: 0

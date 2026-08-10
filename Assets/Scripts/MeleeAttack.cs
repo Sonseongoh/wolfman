@@ -96,6 +96,8 @@ public class MeleeAttack : MonoBehaviour
             if (enemy != null) enemy.TakeDamage(damage, dir);
         }
 
+        SoundManager.Instance?.PlaySlash();
+
         // 참격 연출 (아래로 휘두를 땐 뒤집어서 자연스럽게)
         float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
         SlashEffect.Spawn(slashSprite, hitCenter, angle, dir.x < 0f);
@@ -152,11 +154,10 @@ public class MeleeAttack : MonoBehaviour
             yield return new WaitForSeconds(0.16f);
         }
 
-        // 끝나면 늑대 기본 모습으로 확실히 복귀
+        // 끝나면 현재 형태의 기본 모습으로 확실히 복귀 (#53)
         // (연속 공격으로 애니가 끊겨도 공격 프레임에 멈춰 있지 않게)
         PlayerTransform form = GetComponent<PlayerTransform>();
-        if (form != null && form.wolfSprite != null)
-            sr.sprite = form.wolfSprite;
+        if (form != null) form.RestoreIdleSprite();
 
         IsAnimating = false;
     }

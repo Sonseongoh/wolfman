@@ -45,6 +45,7 @@ public class WaveManager : MonoBehaviour
 
     public int CurrentWave { get; private set; }
     public int AliveCount { get; private set; }
+    public int KillCount { get; private set; }
 
     [Header("달 슬롯 연출")]
     [Tooltip("달 이름이 슬롯머신처럼 돌아가는 시간(초)")]
@@ -84,6 +85,9 @@ public class WaveManager : MonoBehaviour
     Sprite promoDecoyIcon;  // 미끼 달 아이콘
 
     bool waitingForAction;  // 첫 웨이브 달 공개 후 사냥/마을 선택 대기 (#6)
+    public bool IsWaitingForAction => waitingForAction;
+    /// <summary>달 연출(슬롯·승급·배너·행동선택) 중이거나 첫 웨이브 전인지 — 이 때는 일시정지 버튼 숨김</summary>
+    public bool IsInMoonReveal => CurrentWave == 0 || moonSpinning || moonPromoting || moonBannerTimer > 0f || waitingForAction;
 
     EscapePortal activePortal;  // 이번 웨이브에 열린 탈출 포탈 (#46)
     float portalBannerTimer;    // "포탈이 열렸다" 안내 표시 시간
@@ -104,6 +108,8 @@ public class WaveManager : MonoBehaviour
 
         resting = true;
         restTimer = 2f; // 게임 시작 후 첫 웨이브까지 잠깐 여유
+
+        SoundManager.Instance?.PlayBGM(SoundManager.Instance.bgmBattle);
     }
 
     void Update()
@@ -172,6 +178,7 @@ public class WaveManager : MonoBehaviour
                     idx = (idx + 1) % table.moons.Length;
                     spinDisplayName = table.moons[idx].moonName;
                     spinDisplayIcon = table.moons[idx].icon;
+                    SoundManager.Instance?.PlaySlot();
                     // 처음엔 빠르게(0.05초), 끝으로 갈수록 느리게(0.3초) — 슬롯 감속
                     nextFlipAt = elapsed + Mathf.Lerp(0.05f, 0.3f, elapsed / moonSpinDuration);
                 }
@@ -205,6 +212,7 @@ public class WaveManager : MonoBehaviour
             }
 
             moonBannerTimer = 1.6f; // 확정된 달 보여주기 (최종 공개가 마지막 땅!)
+            SoundManager.Instance?.PlayMoonReveal(CurrentMoon?.rarity == MoonRarity.Legendary);
         }
 
         // 첫 웨이브에만 사냥/마을 선택 (#6) — 달 카드 뜨자마자 버튼 표시, 선택할 때까지 카드 유지
@@ -293,6 +301,7 @@ public class WaveManager : MonoBehaviour
     /// <summary>EnemyHealth가 사망 시 호출</summary>
     public void NotifyEnemyDied()
     {
+        KillCount++;
         AliveCount = Mathf.Max(0, AliveCount - 1);
         if (AliveCount <= 0 && !spawning && !resting) OnWaveCleared();
     }
@@ -318,6 +327,7 @@ public class WaveManager : MonoBehaviour
     {
         resting = true;
         restTimer = timeBetweenWaves;
+        SoundManager.Instance?.PlayWaveClear();
 
         // 탈출 포탈은 그 웨이브 동안만 유지 — 클리어하면 닫힌다 (#46)
         if (activePortal != null)
@@ -365,10 +375,15 @@ public class WaveManager : MonoBehaviour
             float btnY = Screen.height * 0.82f;
 
             if (GUI.Button(new Rect(Screen.width * 0.5f - btnW - 20, btnY, btnW, btnH), "사냥 나가기"))
+            {
+                SoundManager.Instance?.PlayButton();
                 waitingForAction = false;
+            }
 
             if (GUI.Button(new Rect(Screen.width * 0.5f + 20, btnY, btnW, btnH), "마을 남기"))
             {
+                SoundManager.Instance?.PlayButton();
+                SoundManager.Instance?.PlayBGM(SoundManager.Instance.bgmVillage);
                 waitingForAction = false;
                 if (GameManager.Instance != null) GameManager.Instance.SetPhase(RoundPhase.Village);
                 SceneManager.LoadScene("VillageScene");
@@ -501,7 +516,7 @@ public class WaveManager : MonoBehaviour
 
         // 현재 달 표시 — 우측 상단 골드 패널 아래에 아이콘 + 이름 (슬롯·연출 중엔 스포일러 방지로 숨김)
         MoonData moon = CurrentMoon;
-        if (moon != null && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f && !waitingForAction)
+        if (moon != null && !resting && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f && !waitingForAction)
         {
             float mw = 190f, mh = 46f;
             float mx = Screen.width - mw - 16f, my = 92f; // 골드 패널(y12, 높이72) 바로 아래
