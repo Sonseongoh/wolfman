@@ -105,7 +105,11 @@
 
 | 날짜 | 항목 | 팩 이름 | 작가 | 출처 링크 | 라이선스 | 크레딧 필요 |
 |---|---|---|---|---|---|---|
-| | | | | | | |
+| 2026-08-10 | UI 한글 폰트 (`Assets/Resources/Galmuri11.ttf`) | Galmuri v2.40.4 | Lee Minseo (quiple) | [github.com/quiple/galmuri](https://github.com/quiple/galmuri) | SIL OFL 1.1 — [사본](licenses/Galmuri-OFL.txt) | 아니오 (OFL 은 표기 의무 없음) |
+
+> **폰트는 `Assets/Resources/` 에 둔다.** 위 "반드시 지킬 것"의 `Assets/Art/` 규칙에 대한 예외다 — `Resources/` 에 있어야 빌드 산출물에 포함되고, 안 그러면 WebGL 에서 글자가 사라진다 (#83).
+>
+> 같은 폴더의 `CinzelBold.ttf` 는 타이틀 화면(#81)이 들여온 것인데 **이 표에 기록되어 있지 않다.** 출처와 라이선스 확인이 필요하다 — #67 대상.
 
 ## 교정 대상
 
