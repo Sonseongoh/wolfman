@@ -24,7 +24,8 @@ public class DamageNumber : MonoBehaviour
 
         TextMesh tm = go.AddComponent<TextMesh>();
         tm.text = message;
-        tm.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        // 숫자만 띄우는 게 아니다 — "창고 파괴!", "골드 부족" 같은 한글도 지나간다 (#83)
+        tm.font = UIFont.Font;
         tm.fontSize = 48;
         tm.characterSize = 0.045f * size;
         tm.fontStyle = FontStyle.Bold;
@@ -35,6 +36,8 @@ public class DamageNumber : MonoBehaviour
         // 텍스트가 스프라이트 뒤에 묻히지 않게
         MeshRenderer mr = go.GetComponent<MeshRenderer>();
         mr.sortingOrder = 50;
+        // TextMesh 는 폰트를 바꿔도 머티리얼이 따라오지 않는다 — 같이 갈아줘야 글자가 보인다
+        mr.material = tm.font.material;
 
         DamageNumber dn = go.AddComponent<DamageNumber>();
         dn.text = tm;
