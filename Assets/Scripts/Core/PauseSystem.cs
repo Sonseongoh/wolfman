@@ -30,6 +30,10 @@ public class PauseSystem : MonoBehaviour
     {
         if (Time.timeScale == 0f) return false; // 스킬 선택·게임오버·히트스톱이 멈춘 상태
         if (WaveManager.Instance != null && WaveManager.Instance.IsInMoonReveal) return false;
+
+        // 타이틀 화면에선 일시정지 개념이 없다 (아무곳-터치 시작과도 겹침)
+        if (GameManager.Instance != null && GameManager.Instance.Phase == RoundPhase.Title) return false;
+
         return true;
     }
 
