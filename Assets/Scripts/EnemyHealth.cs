@@ -91,7 +91,7 @@ public class EnemyHealth : MonoBehaviour
                     transform.position + (Vector3)(Random.insideUnitCircle * 0.3f),
                     Quaternion.identity);
 
-            CurrencyManager.Instance?.AddTempGold(goldDrop);
+            // 골드는 코인 줍기로만 지급 (#61) — 여기서 직접 지급하면 이중 지급이 된다
             SoundManager.Instance?.PlayDeath();
 
             if (WaveManager.Instance != null)
