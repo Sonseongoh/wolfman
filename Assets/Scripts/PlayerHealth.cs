@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
@@ -10,13 +9,9 @@ public class PlayerHealth : MonoBehaviour
     [Tooltip("피격 후 무적 시간(초) — 닿아있는 동안 연속으로 깎이는 것 방지")]
     public float invincibleTime = 1f;
 
-    [Tooltip("일시정지 버튼 아이콘 (Assets/Art/PauseBtn.png 할당)")]
-    public Texture2D pauseButtonIcon;
-
     int hp;
     float invincibleTimer;
     bool isDead;
-    bool isPaused;
     int lostGoldOnDeath;
     int earnedGoldOnDeath;
     SpriteRenderer sr;
@@ -41,17 +36,7 @@ public class PlayerHealth : MonoBehaviour
 
             if (invincibleTimer <= 0f && sr != null) sr.enabled = true;
         }
-
-        // ESC 일시정지 토글 (레벨업·스킬 선택 중엔 무시)
-        if (!isDead && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
-        {
-            bool skillChoosing = SkillSystem.Instance?.IsChoosing ?? false;
-            if (!skillChoosing)
-            {
-                isPaused = !isPaused;
-                Time.timeScale = isPaused ? 0f : 1f;
-            }
-        }
+        // 일시정지(ESC·⏸)는 전역 PauseSystem이 모든 씬에서 처리
     }
 
     void OnCollisionStay2D(Collision2D collision)
@@ -133,62 +118,7 @@ public class PlayerHealth : MonoBehaviour
         GUIStyle hpStyle = new GUIStyle { fontSize = 28, normal = { textColor = Color.white } };
         GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {maxHp}", hpStyle);
 
-        // ⏸ 버튼 — 우상단 작게, 사냥 중에만 (달 선택·스킬 선택 중엔 숨김)
-        if (!isDead && !isPaused)
-        {
-            bool skillChoosing = SkillSystem.Instance?.IsChoosing ?? false;
-            bool inReveal = WaveManager.Instance?.IsInMoonReveal ?? true;
-            if (!skillChoosing && !inReveal)
-            {
-                // 금고 패널(width=190, x=Screen.width-206, y=56, height=72) 바로 왼쪽에 정렬
-                float bSize = 26f;
-                float bx = Screen.width - 190f - 16f - bSize - 24f;
-                float by = 12f;
-                GUIContent pauseContent = pauseButtonIcon != null
-                    ? new GUIContent(pauseButtonIcon)
-                    : new GUIContent("⏸");
-                if (GUI.Button(new Rect(bx, by, bSize, bSize), pauseContent, GUIStyle.none))
-                {
-                    isPaused = true;
-                    Time.timeScale = 0f;
-                }
-            }
-        }
-
-        // 일시정지 오버레이
-        if (isPaused)
-        {
-            // 거의 검정 오버레이
-            GUI.color = new Color(0.04f, 0.04f, 0.06f, 0.9f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-
-            // 상하 차가운 회색 라인
-            GUI.color = new Color(0.5f, 0.5f, 0.55f, 0.5f);
-            GUI.DrawTexture(new Rect(0, 0, Screen.width, 3), Texture2D.whiteTexture);
-            GUI.DrawTexture(new Rect(0, Screen.height - 3, Screen.width, 3), Texture2D.whiteTexture);
-            GUI.color = Color.white;
-
-            // 버튼 — 옵션 | 계속하기 (화면 비례로 모바일 대응)
-            float btnW = Screen.width * 0.28f, btnH = Screen.height * 0.1f, gap = Screen.width * 0.04f;
-            float totalW = btnW * 2 + gap;
-            float bx = (Screen.width - totalW) * 0.5f;
-            float by = (Screen.height - btnH) * 0.5f;
-
-            GUIStyle btnStyle = new GUIStyle(GUI.skin.button)
-            {
-                fontSize = Mathf.RoundToInt(btnH * 0.38f),
-                fontStyle = FontStyle.Bold
-            };
-
-            GUI.Button(new Rect(bx, by, btnW, btnH), "옵션", btnStyle);
-            if (GUI.Button(new Rect(bx + btnW + gap, by, btnW, btnH), "계속하기", btnStyle))
-            {
-                isPaused = false;
-                Time.timeScale = 1f;
-            }
-
-            return;
-        }
+        // 일시정지 버튼·오버레이는 전역 PauseSystem(#33)이 모든 씬에서 그린다
 
         // 게임오버 화면
         if (isDead)

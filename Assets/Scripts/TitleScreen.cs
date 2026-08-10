@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
 public class TitleScreen : MonoBehaviour
@@ -34,11 +35,33 @@ public class TitleScreen : MonoBehaviour
     {
         elapsed += Time.unscaledDeltaTime;
 
+        // 화면 어디를 터치/클릭해도, 아무 키나 눌러도 시작
+        if (!starting && PressedAnywhere())
+            StartGame();
+
         if (starting)
         {
             fadeAlpha = Mathf.MoveTowards(fadeAlpha, 1f, Time.unscaledDeltaTime * 1.2f);
             if (fadeAlpha >= 1f)
                 SceneManager.LoadScene("VillageScene");
+        }
+    }
+
+    static bool PressedAnywhere()
+    {
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame) return true;
+        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame) return true;
+        if (Keyboard.current != null && Keyboard.current.anyKey.wasPressedThisFrame) return true;
+        return false;
+    }
+
+    void StartGame()
+    {
+        starting = true;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.StartNextRound();
+            GameManager.Instance.SetPhase(RoundPhase.Village);
         }
     }
 
@@ -110,17 +133,8 @@ public class TitleScreen : MonoBehaviour
                 alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = new Color(0.55f, 0.57f, 0.62f, alpha) }
             };
-            float btnW = W * 0.6f, btnH = H * 0.08f;
-            float bx = (W - btnW) * 0.5f, by = H * 0.88f;
-            if (GUI.Button(new Rect(bx, by, btnW, btnH), "화면을 터치하세요", tap))
-            {
-                starting = true;
-                if (GameManager.Instance != null)
-                {
-                    GameManager.Instance.StartNextRound();
-                    GameManager.Instance.SetPhase(RoundPhase.Village);
-                }
-            }
+            // 입력은 Update의 PressedAnywhere가 화면 전체에서 받는다 — 여기는 안내 문구만
+            GUI.Label(new Rect(0, H * 0.88f, W, H * 0.08f), "화면을 터치하세요", tap);
         }
 
         // 페이드 아웃
