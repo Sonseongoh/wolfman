@@ -16,6 +16,14 @@ public class TitleScreen : MonoBehaviour
 
     void Awake()
     {
+        // 타이틀은 첫 실행(Phase=Title)에만 — 라운드 정산차 돌아온 경우엔
+        // RoundController의 정산 화면이 떠야 하므로 타이틀(과 BGM)을 통째로 내린다 (#92)
+        if (GameManager.Instance != null && GameManager.Instance.Phase != RoundPhase.Title)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         texBg      = Resources.Load<Texture2D>("TitleBg");
         texWolf    = Resources.Load<Texture2D>("TitleWolf");
         fontCinzel = Resources.Load<Font>("CinzelBold");
