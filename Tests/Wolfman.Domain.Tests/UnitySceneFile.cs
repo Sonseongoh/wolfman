@@ -41,22 +41,29 @@ public class UnitySceneFile
     /// <summary>
     /// 이 스크립트가 씬에서 컴포넌트로 붙은 횟수.
     /// 씬은 스크립트를 이름이 아니라 .meta 의 GUID 로 참조하므로, 파일명을 바꿔도 이 검사는 살아남는다.
+    ///
+    /// 스크립트 파일 자체가 없으면 0 이다 — 없는 스크립트는 어디에도 붙어 있을 수 없다.
+    /// "이 컴포넌트는 씬에 없어야 한다"는 검사가 스크립트를 지웠다는 이유로 터지면 안 되기 때문이다:
+    /// #28 이 PlayerLevel 을 지우자 마을 씬 구성 테스트가 실제로 그렇게 터졌다.
     /// </summary>
     public int ComponentCount(string scriptName)
     {
-        return CountOccurrences(text, ScriptGuid(scriptName));
+        string guid = FindScriptGuid(scriptName);
+        return guid == null ? 0 : CountOccurrences(text, guid);
     }
 
-    /// <summary>Assets/Scripts 아래에서 {scriptName}.cs.meta 를 찾아 GUID를 읽는다.</summary>
-    public static string ScriptGuid(string scriptName)
+    /// <summary>
+    /// Assets/Scripts 아래에서 {scriptName}.cs.meta 를 찾아 GUID를 읽는다.
+    /// 그런 스크립트가 없으면 null — 삭제된 스크립트를 묻는 것도 정당한 질문이다.
+    /// </summary>
+    public static string FindScriptGuid(string scriptName)
     {
         string scriptsDir = Path.Combine(RepoRoot, "Assets", "Scripts");
         string metaPath = Directory
             .EnumerateFiles(scriptsDir, scriptName + ".cs.meta", SearchOption.AllDirectories)
             .FirstOrDefault();
 
-        if (metaPath == null)
-            throw new FileNotFoundException($"{scriptName}.cs.meta 를 찾을 수 없다 (Assets/Scripts 아래): {scriptsDir}");
+        if (metaPath == null) return null;
 
         string guidLine = File.ReadLines(metaPath).FirstOrDefault(l => l.StartsWith("guid:"));
         if (guidLine == null)
