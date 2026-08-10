@@ -51,7 +51,10 @@ public class TitleScreen : MonoBehaviour
         {
             fadeAlpha = Mathf.MoveTowards(fadeAlpha, 1f, Time.unscaledDeltaTime * 1.2f);
             if (fadeAlpha >= 1f)
+            {
+                Time.timeScale = 1f; // 새 런은 항상 시간이 흐르는 상태에서 시작한다
                 SceneManager.LoadScene("VillageScene");
+            }
         }
     }
 

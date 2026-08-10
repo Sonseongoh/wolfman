@@ -116,7 +116,8 @@ public class WaveManager : MonoBehaviour
     {
         if (moonBannerTimer > 0f)
         {
-            moonBannerTimer -= Time.deltaTime;
+            // 달 공개 연출은 실시간으로 흐른다 (위 슬롯·승급과 같은 이유)
+            moonBannerTimer -= Time.unscaledDeltaTime;
             if (waitingForAction && moonBannerTimer < 0.01f) moonBannerTimer = 0.01f;
         }
 
@@ -174,9 +175,13 @@ public class WaveManager : MonoBehaviour
             float nextFlipAt = 0f;
             int idx = Random.Range(0, table.moons.Length);
 
+            // 달 공개는 게임 시간이 아니라 실시간으로 흐른다. 연출의 반짝임·흔들림이
+            // 이미 unscaledTime 을 쓰는데 진행만 게임 시간에 매여 있었던 탓에,
+            // timeScale 이 0 인 채로 씬에 들어오면 카드가 살아 움직이면서도
+            // 영원히 끝나지 않았다.
             while (elapsed < moonSpinDuration)
             {
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 if (elapsed >= nextFlipAt)
                 {
                     idx = (idx + 1) % table.moons.Length;
@@ -202,7 +207,7 @@ public class WaveManager : MonoBehaviour
                 promoTier = 0;
                 SetPromoDisplay(table, MoonRarity.Common);
                 promoStepStart = Time.unscaledTime;
-                yield return new WaitForSeconds(2.0f);
+                yield return new WaitForSecondsRealtime(2.0f);
 
                 // 이후: 등급이 오를 때마다 그 등급의 달로 변모하며 땅땅땅
                 for (int tier = 1; tier < finalTier; tier++)
@@ -210,7 +215,7 @@ public class WaveManager : MonoBehaviour
                     promoTier = tier;
                     SetPromoDisplay(table, (MoonRarity)tier);
                     promoStepStart = Time.unscaledTime;
-                    yield return new WaitForSeconds(0.4f);
+                    yield return new WaitForSecondsRealtime(0.4f);
                 }
                 moonPromoting = false;
             }
