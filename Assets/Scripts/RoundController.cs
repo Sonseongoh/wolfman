@@ -19,8 +19,8 @@ public class RoundController : MonoBehaviour
         if (GameManager.Instance == null) return;
         if (SceneManager.GetActiveScene().name != "MainScene") return;
 
-        // 타이틀 화면 → TitleScreen.cs가 시작 처리
-        if (GameManager.Instance.Phase == RoundPhase.Title) return;
+        // 타이틀은 별도 씬(TitleScene, #94) — 여기는 정산 허브 전용.
+        // Phase가 Title인 채 오는 건 에디터에서 MainScene을 직접 Play한 경우뿐이라 새 라운드로 취급된다
 
         if (GameManager.Instance.Phase == RoundPhase.Hunt ||
             GameManager.Instance.Phase == RoundPhase.Village)
