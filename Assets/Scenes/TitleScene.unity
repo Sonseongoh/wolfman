@@ -266,6 +266,7 @@ GameObject:
   m_Component:
   - component: {fileID: 160875074}
   - component: {fileID: 160875073}
+  - component: {fileID: 160875075}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -288,6 +289,34 @@ MonoBehaviour:
   moonTable: {fileID: 11400000, guid: a1b2c3d4e5f60718293a4b5c6d7e8f10, type: 2}
   showDamageNumbers: 1
   debugForceMoon: {fileID: 0}
+--- !u!114 &160875075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 160875071}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b97c6638e6d844b81a636ee8f9dc9d57, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
+  sfxShoot: {fileID: 8300000, guid: ea027af5d69d74f74972a6ae4bd0b5ae, type: 3}
+  sfxSlash: {fileID: 8300000, guid: 3236057406bcf42c580db554719ac81a, type: 3}
+  sfxHit: {fileID: 8300000, guid: 51375f78178d145b29827a69846e8534, type: 3}
+  sfxDeath: {fileID: 8300000, guid: 61186ab4884854b4387835567e73b224, type: 3}
+  sfxDamaged: {fileID: 8300000, guid: 9f7716e078f2846f69bd4730e5ccf466, type: 3}
+  sfxButton: {fileID: 8300000, guid: a72ddff72ab0541a1b47c66a88a17ff2, type: 3}
+  sfxPickup: {fileID: 8300000, guid: d09a02b826b234172bfc16f82863b0b7, type: 3}
+  sfxLevelUp: {fileID: 8300000, guid: 0fb8c97ef86cf4717bd5f9a8d763e72d, type: 3}
+  sfxWaveClear: {fileID: 8300000, guid: 70dbe136f7616447597534abbaf2d006, type: 3}
+  sfxSlot: {fileID: 8300000, guid: 8d18e08c1a6e148948a7064fd0a61e07, type: 3}
+  sfxMoonReveal: {fileID: 8300000, guid: e7139917767dd4be1967e1e89f5a656c, type: 3}
+  sfxMoonRevealLegendary: {fileID: 8300000, guid: 88192b60dfd224088818a3caf6ca3ca2, type: 3}
+  sfxGameOver: {fileID: 8300000, guid: 1d2ae07c76a2642029e34e2152292123, type: 3}
+  bgmBattle: {fileID: 8300000, guid: 6a4c5a21a10c54757adc13329447d77c, type: 3}
+  bgmVillage: {fileID: 8300000, guid: 5def487eb516b48828543f839107f458, type: 3}
+  bgmVolume: 0.4
 --- !u!4 &160875074
 Transform:
   m_ObjectHideFlags: 0
