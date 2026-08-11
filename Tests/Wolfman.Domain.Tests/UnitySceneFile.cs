@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 /// <summary>
 /// 유니티 씬(.unity)과 빌드 설정은 텍스트 YAML이라, 에디터 없이도 읽어서 검사할 수 있다.
@@ -93,6 +95,63 @@ public class UnitySceneFile
         return false;
     }
 
+    /// <summary>
+    /// 이 스크립트가 붙어 있는 GameObject 들의 fileID.
+    ///
+    /// "무엇이 같은 오브젝트에 얹혀 있는가" 를 묻기 위한 것이다. 한 오브젝트에 수명이 다른 것들이
+    /// 섞여 있으면, 그 중 하나가 `Destroy(gameObject)` 를 부르는 순간 나머지가 같이 죽는다.
+    /// </summary>
+    public IReadOnlyCollection<string> GameObjectIdsWith(string scriptName)
+    {
+        var ids = new List<string>();
+        string guid = FindScriptGuid(scriptName);
+        if (guid == null) return ids;
+
+        foreach (string block in Blocks())
+        {
+            if (!block.Contains("guid: " + guid)) continue;
+
+            Match owner = Regex.Match(block, @"m_GameObject: \{fileID: (\d+)\}");
+            if (owner.Success) ids.Add(owner.Groups[1].Value);
+        }
+        return ids;
+    }
+
+    /// <summary>
+    /// 부모가 없는데 씬의 `SceneRoots` 목록에는 빠져 있는 트랜스폼들. 정상이면 비어 있다.
+    ///
+    /// 씬 YAML 을 손으로 편집해 오브젝트를 새로 만들면 딱 여기가 어긋난다 — 오브젝트는 존재하고
+    /// `FindObjectsByType` 에도 잡히지만 씬의 루트 목록에는 없어서, 하이어라키 순회나
+    /// `Scene.GetRootGameObjects()` 로는 보이지 않는다. 컴파일도 런타임도 아무 말을 안 해준다.
+    /// </summary>
+    public IReadOnlyCollection<string> RootTransformsMissingFromSceneRoots()
+    {
+        var rootTransforms = new List<string>();
+        var registered = new HashSet<string>();
+
+        foreach (string block in Blocks())
+        {
+            Match head = Regex.Match(block, @"^!u!(\d+) &(\d+)");
+            if (!head.Success) continue;
+
+            string unityClass = head.Groups[1].Value;
+            string fileId = head.Groups[2].Value;
+
+            // 4 = Transform, 224 = RectTransform
+            if ((unityClass == "4" || unityClass == "224") && block.Contains("m_Father: {fileID: 0}"))
+                rootTransforms.Add(fileId);
+
+            if (unityClass == "1660057539") // SceneRoots
+                foreach (Match m in Regex.Matches(block, @"- \{fileID: (\d+)\}"))
+                    registered.Add(m.Groups[1].Value);
+        }
+
+        return rootTransforms.Where(id => !registered.Contains(id)).ToList();
+    }
+
+    /// <summary>씬 YAML 은 `--- !u!&lt;클래스&gt; &amp;&lt;fileID&gt;` 로 시작하는 문서들의 나열이다.</summary>
+    IEnumerable<string> Blocks() => Regex.Split(text, @"^--- ", RegexOptions.Multiline).Skip(1);
+
     static int CountOccurrences(string haystack, string needle)
     {
         int count = 0;
@@ -111,7 +170,7 @@ public class UnitySceneFile
     /// 테스트 어셈블리 위치(Tests/.../bin/Debug/net9.0)에서 위로 올라가며
     /// Assets 와 ProjectSettings 가 함께 있는 디렉터리를 찾는다 — 그게 유니티 프로젝트 루트다.
     /// </summary>
-    static string RepoRoot
+    public static string RepoRoot
     {
         get
         {
