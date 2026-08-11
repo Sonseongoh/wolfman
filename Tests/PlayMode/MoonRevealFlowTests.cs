@@ -1,4 +1,3 @@
-#if UNITY_INCLUDE_TESTS
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -18,13 +17,24 @@ using UnityEngine.TestTools;
 ///
 /// 씬 로드·컴포넌트 수명·코루틴이 다 얽힌 자리라 PlayMode 테스트만이 맞는 seam 이다.
 ///
-/// **이 테스트는 기본으로 돌지 않는다 — 개발용 opt-in 이다.**
-/// asmdef 없이 Assembly-CSharp 안의 게임 스크립트를 보려면 `playModeTestRunnerEnabled` 가
-/// 켜져 있어야 하는데, 유니티가 deprecated 처리한 설정이라(테스트 어셈블리가 플레이어 빌드에
-/// 딸려간다) 저장소에는 꺼둔 채로 둔다. 돌리려면 버리는 사본에서 켜고 배치모드로 실행한다:
+/// ## 이 파일은 `Assets/` 안에 두면 안 된다 (#108)
 ///
-///   sed -i 's/playModeTestRunnerEnabled: 0/playModeTestRunnerEnabled: 1/' ProjectSettings/ProjectSettings.asset
-///   Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform PlayMode
+/// asmdef 없이 Assembly-CSharp 의 게임 스크립트를 보려면 `playModeTestRunnerEnabled` 가
+/// 켜져 있어야 한다. 유니티가 deprecated 처리한 설정이라 저장소에서는 꺼두는데,
+/// **끈 채로 이 파일이 `Assets/` 안에 있으면 프로젝트가 아예 컴파일되지 않는다.**
+///
+///   -define:UNITY_INCLUDE_TESTS        ← 이 define 은 플래그와 무관하게 항상 켜져 있다
+///   참조: nunit.framework.dll 뿐        ← UnityEngine.TestRunner.dll 은 빠진다
+///
+/// 즉 `#if UNITY_INCLUDE_TESTS` 로는 막을 수 없다 — 그 가드는 통과하고, 정작 `UnityTest`·
+/// `UnitySetUp` 이 없어서 Assembly-CSharp 가 통째로 터진다. 한 번 그렇게 dev 를 깨뜨렸다.
+///
+/// 그래서 소스는 `Assets/` 바깥인 여기 둔다. 돌릴 때만 **버리는 사본**의 `Assets/Tests/PlayMode/`
+/// 로 복사해 넣고, 그 사본에서만 플래그를 켠다:
+///
+///   cp -r Tests/PlayMode &lt;사본&gt;/Assets/Tests/PlayMode
+///   sed -i 's/playModeTestRunnerEnabled: 0/playModeTestRunnerEnabled: 1/' &lt;사본&gt;/ProjectSettings/ProjectSettings.asset
+///   Unity.exe -batchmode -nographics -projectPath &lt;사본&gt; -runTests -testPlatform PlayMode
 ///
 /// 배치 규칙 쪽 회귀는 여기 말고 `Tests/Wolfman.Domain.Tests/SceneLifetimeCompositionTests.cs`
 /// 가 지킨다 — 그쪽은 설정도 유니티도 없이 WSL 에서 매번 돈다.
@@ -280,4 +290,3 @@ public class MoonRevealFlowTests
     static void Call(object target, string method)
         => target.GetType().GetMethod(method, Any).Invoke(target, null);
 }
-#endif

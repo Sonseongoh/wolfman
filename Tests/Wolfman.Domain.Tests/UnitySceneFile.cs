@@ -170,7 +170,7 @@ public class UnitySceneFile
     /// 테스트 어셈블리 위치(Tests/.../bin/Debug/net9.0)에서 위로 올라가며
     /// Assets 와 ProjectSettings 가 함께 있는 디렉터리를 찾는다 — 그게 유니티 프로젝트 루트다.
     /// </summary>
-    static string RepoRoot
+    public static string RepoRoot
     {
         get
         {
