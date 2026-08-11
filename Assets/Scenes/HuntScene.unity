@@ -3424,7 +3424,6 @@ MonoBehaviour:
   enemyCountGrowth: 3
   timeBetweenWaves: 4
   spawnInterval: 0.25
-  moonSpinDuration: 1.8
   portalPrefab: {fileID: 4601000000000000001, guid: ee66ff778899aabbccddeeff00460001, type: 3}
   portalChance: 0.1
   portalMinWave: 5
