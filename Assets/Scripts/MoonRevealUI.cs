@@ -222,17 +222,22 @@ public class MoonRevealUI : MonoBehaviour
             float btnY = Screen.height * 0.82f;
 
             if (GUI.Button(new Rect(Screen.width * 0.5f - btnW - 20, btnY, btnW, btnH), "사냥 나가기"))
-            {
-                SoundManager.Instance?.PlayButton();
-                Result = Choice.Hunt;
-            }
+                Choose(Choice.Hunt);
 
             if (GUI.Button(new Rect(Screen.width * 0.5f + 20, btnY, btnW, btnH), "마을 남기"))
-            {
-                SoundManager.Instance?.PlayButton();
-                Result = Choice.Stay;
-            }
+                Choose(Choice.Stay);
         }
+    }
+
+    /// <summary>
+    /// 선택 확정 — OnGUI 버튼과 PlayMode 테스트(배치모드라 버튼을 못 누름)가 함께 쓰는 진입점.
+    /// </summary>
+    public void Choose(Choice pick)
+    {
+        if (Result != Choice.None || pick == Choice.None) return;
+
+        SoundManager.Instance?.PlayButton();
+        Result = pick;
     }
 
     /// <summary>
