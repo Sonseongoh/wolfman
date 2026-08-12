@@ -20,8 +20,8 @@ public class MoonRevealUI : MonoBehaviour
     /// <summary>연출·선택 진행 중인지 (PauseSystem이 일시정지 가드에 사용)</summary>
     public static bool Active { get; private set; }
 
-    [Tooltip("슬롯 회전 시간(초)")]
-    public float spinDuration = 1.8f;
+    [Tooltip("슬롯 회전 시간(초) — 마을에서 여유 있게 보는 연출이라 사냥 시절(1.8초)보다 길게")]
+    public float spinDuration = 3f;
 
     bool spinning;          // 슬롯 연출 중
     string spinName;        // 슬롯이 돌면서 보여주는 이름

@@ -84,6 +84,9 @@ public class WaveManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        // 사냥터 지형 관리 자동 장착 (#98 후처리 — 바닥 무한 채움 + 구조물 솎아내기)
+        if (GetComponent<HuntTerrain>() == null) gameObject.AddComponent<HuntTerrain>();
     }
 
     void Start()
