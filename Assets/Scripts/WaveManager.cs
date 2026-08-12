@@ -31,17 +31,17 @@ public class WaveManager : MonoBehaviour
 
     [Header("웨이브 규모")]
     [Tooltip("1웨이브의 적 수")]
-    public int baseEnemyCount = 6;
+    public int baseEnemyCount = 10;
 
     [Tooltip("웨이브마다 적이 몇 마리씩 늘어날지")]
     public int enemyCountGrowth = 3;
 
     [Header("타이밍")]
-    [Tooltip("웨이브 클리어 후 휴식 시간(초)")]
-    public float timeBetweenWaves = 4f;
+    [Tooltip("웨이브 길이(초) — 이 시간 동안 적이 꾸준히 흘러들어오고, 끝나면 다음 단계로 (뱀서식 연속 유입)")]
+    public float waveDuration = 15f;
 
-    [Tooltip("웨이브 내에서 적 하나하나가 나오는 간격(초)")]
-    public float spawnInterval = 0.25f;
+    [Tooltip("웨이브 사이 휴식 시간(초)")]
+    public float timeBetweenWaves = 4f;
 
     public int CurrentWave { get; private set; }
     public int AliveCount { get; private set; }
@@ -67,9 +67,10 @@ public class WaveManager : MonoBehaviour
     public float portalMaxRange = 80f;
 
     Transform player;
-    bool spawning;   // 이번 웨이브 스폰이 아직 진행 중인가
-    bool resting;    // 웨이브 사이 휴식 중인가
+    bool spawning;    // 이번 웨이브 스폰이 아직 진행 중인가
+    bool resting;     // 웨이브 사이 휴식 중인가
     float restTimer;
+    float waveTimer;  // 이번 웨이브의 남은 시간
 
     /// <summary>첫 웨이브 전인지 — 이 때는 일시정지 버튼 숨김.
     /// 달 공개·행동 선택은 마을(MoonRevealUI, #103)로 옮겨져 사냥 씬엔 연출이 없다</summary>
@@ -121,11 +122,18 @@ public class WaveManager : MonoBehaviour
             restTimer -= Time.deltaTime;
             if (restTimer <= 0f) StartNextWave();
         }
+        else if (waveTimer > 0f)
+        {
+            // 웨이브는 시간으로 밀려온다 — 다 못 잡아도 다음 무리가 겹쳐서 온다
+            waveTimer -= Time.deltaTime;
+            if (waveTimer <= 0f) OnWaveEnd();
+        }
     }
 
     void StartNextWave()
     {
         resting = false;
+        waveTimer = waveDuration;
         CurrentWave++;
 
         // 라운드 시작의 주인은 흐름 제어(마을·정산 허브)다. 여기서 시작하는 건 사냥 씬만
@@ -147,36 +155,47 @@ public class WaveManager : MonoBehaviour
 
     IEnumerator SpawnWave(int count)
     {
+        // 무리 단위 습격: 2~4마리가 같은 방향에서 한꺼번에 밀려온다.
+        // 웨이브 정원을 무리 수로 나눠 시간 전체에 분산 — 총량은 같지만 "팍팍" 온다
         spawning = true;
-        for (int i = 0; i < count; i++)
+        const float avgPack = 3f;
+        float interval = waveDuration / Mathf.Max(1f, count / avgPack);
+
+        int remaining = count;
+        while (remaining > 0)
         {
-            SpawnOne();
-            yield return new WaitForSeconds(spawnInterval);
+            int pack = Mathf.Min(remaining, Random.Range(2, 5));
+            float packAngle = Random.Range(0f, Mathf.PI * 2f); // 이 무리가 몰려오는 방향
+
+            for (int i = 0; i < pack; i++)
+                SpawnOne(packAngle + Random.Range(-0.35f, 0.35f)); // 같은 방향에서 살짝 흩어져
+
+            remaining -= pack;
+            yield return new WaitForSeconds(interval);
         }
         spawning = false;
-
-        // 스폰이 끝나기 전에 플레이어가 전부 잡아버린 경우
-        if (AliveCount <= 0) OnWaveCleared();
     }
 
-    void SpawnOne()
+    void SpawnOne(float angle)
     {
         if (player == null) return;
 
         GameObject prefab = PickEnemyPrefab();
         if (prefab == null) return;
 
-        // 장애물(타일맵 콜라이더) 위에 스폰되면 갇혀버리므로 자리를 몇 번 다시 뽑는다
-        Vector2 pos = (Vector2)player.position + Vector2.right * spawnRadius;
+        // 장애물 위에 스폰되면 갇혀버리므로, 무리 방향 근처에서 자리를 몇 번 다시 뽑는다
+        Vector2 pos = (Vector2)player.position
+            + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spawnRadius;
         for (int attempt = 0; attempt < 6; attempt++)
         {
-            float angle = Random.Range(0f, Mathf.PI * 2f);
+            float a = angle + Random.Range(-0.5f, 0.5f) * attempt; // 재시도할수록 조금씩 옆으로
             pos = (Vector2)player.position
-                + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spawnRadius;
+                + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (spawnRadius + Random.Range(0f, 1.5f));
 
             bool blocked = false;
             foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 0.6f))
-                if (c is TilemapCollider2D) { blocked = true; break; }
+                if (c is TilemapCollider2D || c is CompositeCollider2D
+                    || c.GetComponent<ObstacleProp>() != null) { blocked = true; break; }
 
             if (!blocked) break;
         }
@@ -215,18 +234,19 @@ public class WaveManager : MonoBehaviour
         return null;
     }
 
-    /// <summary>EnemyHealth가 사망 시 호출</summary>
+    /// <summary>EnemyHealth가 사망 시 호출. 웨이브는 시간으로만 넘어간다 — 전멸해도 조기 종료 없음</summary>
     public void NotifyEnemyDied()
     {
         KillCount++;
         AliveCount = Mathf.Max(0, AliveCount - 1);
-        if (AliveCount <= 0 && !spawning && !resting) OnWaveCleared();
     }
 
-    /// <summary>웨이브 시작 시 확률 판정 — 성공하면 플레이어 주변에 탈출 포탈이 열린다 (#46)</summary>
+    /// <summary>웨이브 시작 시 확률 판정 — 성공하면 플레이어 주변에 탈출 포탈이 열린다 (#46).
+    /// 포탈 수명은 EscapePortal이 스스로 관리 (기본 20초, 웨이브와 무관)</summary>
     void TrySpawnPortal()
     {
         if (portalPrefab == null || player == null) return;
+        if (activePortal != null) return; // 이미 열려 있으면 중복 생성 안 함
         if (CurrentWave < portalMinWave) return;
         if (Random.value >= portalChance) return;
 
@@ -240,18 +260,15 @@ public class WaveManager : MonoBehaviour
         portalBannerTimer = 3f;
     }
 
-    void OnWaveCleared()
+    /// <summary>웨이브 종료 (시간 만료) — 남은 적은 다음 웨이브로 그대로 이어진다</summary>
+    void OnWaveEnd()
     {
         resting = true;
         restTimer = timeBetweenWaves;
+        waveTimer = 0f;
         SoundManager.Instance?.PlayWaveClear();
 
-        // 탈출 포탈은 그 웨이브 동안만 유지 — 클리어하면 닫힌다 (#46)
-        if (activePortal != null)
-        {
-            activePortal.Close();
-            activePortal = null;
-        }
+        // 포탈은 웨이브가 끝나도 닫지 않는다 — 수명(20초)은 EscapePortal이 스스로 관리
 
         // 스킬 3택 (#10) — 선택하는 동안 시간 정지, 휴식 타이머는 그 후 진행
         if (SkillSystem.Instance != null) SkillSystem.Instance.OfferChoices();
@@ -273,8 +290,8 @@ public class WaveManager : MonoBehaviour
 
         {
             string text = resting
-                ? $"WAVE {CurrentWave} 클리어!"
-                : $"WAVE {CurrentWave}   남은 적: {AliveCount}";
+                ? $"WAVE {CurrentWave} 종료 — 다음 무리가 몰려온다!"
+                : $"WAVE {CurrentWave}   ⏱ {Mathf.CeilToInt(waveTimer)}초   처치 {KillCount}";
             GUI.Label(new Rect(0, 16, Screen.width, 40), text, style);
 
             // 웨이브 사이 카운트다운 — 화면 가운데 큰 숫자 3, 2, 1이 천천히 가라앉으며 사라진다
