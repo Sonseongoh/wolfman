@@ -27,6 +27,11 @@ public class EnemyChase : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
 
+        // 몸 크기를 콜라이더에서 계산 (탱커처럼 큰 적은 더 두껍게 감지)
+        Collider2D col = GetComponent<Collider2D>();
+        if (col != null)
+            bodyRadius = Mathf.Max(col.bounds.extents.x, col.bounds.extents.y) * 0.9f;
+
         // 걷기 흔들림 연출 자동 장착
         if (GetComponent<WalkWobble>() == null) gameObject.AddComponent<WalkWobble>();
     }
@@ -87,21 +92,60 @@ public class EnemyChase : MonoBehaviour
             sr.flipX = toPlayer.x < 0f;
     }
 
+    float steerSign; // 최근에 돌기로 한 우회 방향 (+1/-1)
+    float steerHold; // 그 방향을 유지할 남은 시간 — 좌우로 매 프레임 번갈아 떠는 것 방지
+    float bodyRadius = 0.45f; // 몸 크기 — Awake에서 콜라이더로부터 계산
+
     /// <summary>
     /// 진행 방향 앞에 장애물(타일맵 콜라이더)이 있으면 벽면을 따라 미끄러지는 방향으로 바꾼다.
-    /// 본격 길찾기 대신 쓰는 가벼운 우회 — 뭉쳐오는 적 무리엔 이걸로 충분하다 (끼임 방지).
+    /// 몸 두께만큼의 CircleCast라 모서리 스침도 잡고, 안쪽 모서리(ㄱ자)에선 반대쪽으로 돌며,
+    /// 한번 정한 우회 방향은 잠시 유지해 제자리 떨림을 막는다. 본격 길찾기 대신 쓰는 가벼운 우회.
     /// </summary>
     Vector2 SteerAroundObstacles(Vector2 dir)
     {
-        foreach (RaycastHit2D hit in Physics2D.RaycastAll(transform.position, dir, obstacleProbe))
-        {
-            if (!(hit.collider is TilemapCollider2D)) continue; // 적·플레이어끼리는 무시
+        if (steerHold > 0f) steerHold -= Time.fixedDeltaTime;
 
-            // 벽의 접선 방향 중 원래 가려던 쪽에 가까운 쪽으로 미끄러진다
-            Vector2 tangent = Vector2.Perpendicular(hit.normal);
-            if (Vector2.Dot(tangent, dir) < 0f) tangent = -tangent;
-            return tangent;
+        RaycastHit2D blocked = CastObstacle(dir);
+        if (blocked.collider == null)
+        {
+            steerHold = 0f;
+            return dir;
         }
-        return dir;
+
+        // 이미 벽에 파묻힌 상태(넉백 등)면 미끄러지기 전에 벽 바깥으로 빠져나온다
+        if (blocked.distance < 0.05f)
+        {
+            steerHold = 0f;
+            return blocked.normal;
+        }
+
+        Vector2 tangent = Vector2.Perpendicular(blocked.normal);
+
+        // 이미 돌던 방향이 있으면 유지, 없으면 원래 가려던 쪽에 가까운 쪽으로
+        float sign = steerHold > 0f ? steerSign
+            : (Vector2.Dot(tangent, dir) >= 0f ? 1f : -1f);
+        Vector2 slide = tangent * sign;
+
+        // 그 접선마저 막혀 있으면(안쪽 모서리) 반대로 돈다
+        if (CastObstacle(slide).collider != null)
+        {
+            sign = -sign;
+            slide = tangent * sign;
+        }
+
+        steerSign = sign;
+        steerHold = 0.35f;
+        return slide;
+    }
+
+    /// <summary>몸 두께만큼의 원으로 앞을 살핀다 — 타일맵(합쳐진 것 포함)과 큰 장애물 프리팹만 장애물로 친다</summary>
+    RaycastHit2D CastObstacle(Vector2 dir)
+    {
+        foreach (RaycastHit2D h in Physics2D.CircleCastAll(transform.position, bodyRadius, dir, obstacleProbe))
+        {
+            if (h.collider is TilemapCollider2D || h.collider is CompositeCollider2D) return h;
+            if (h.collider.GetComponent<ObstacleProp>() != null) return h;
+        }
+        return default;
     }
 }
