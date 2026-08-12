@@ -14,10 +14,21 @@ public class VillageController : MonoBehaviour
 
     string message;
     float messageTimer;
+    MoonRevealUI reveal; // 라운드 시작 달 공개 + 사냥/마을 선택 (#103)
 
     void Awake()
     {
         Instance = this;
+    }
+
+    void Start()
+    {
+        // 마을 = 라운드 시작 허브 (#103): 새 라운드의 달을 여기서 공개하고
+        // 사냥을 나갈지 마을에 남을지 고른다. 달이 없으면(마을 씬 단독 재생) 연출 생략
+        if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
+            reveal = gameObject.AddComponent<MoonRevealUI>();
+
+        SoundManager.Instance?.PlayBGM(SoundManager.Instance.bgmVillage);
     }
 
     /// <summary>화면 상단에 붉은 안내 메시지 표시 (수리 실패 등). 마을 밖에서 부르면 조용히 무시된다.</summary>
@@ -32,11 +43,31 @@ public class VillageController : MonoBehaviour
     void Update()
     {
         if (messageTimer > 0f) messageTimer -= Time.deltaTime;
+
+        // 달 공개가 끝나고 선택이 내려오면 처리 (#103)
+        if (reveal != null && reveal.Result != MoonRevealUI.Choice.None)
+        {
+            MoonRevealUI.Choice pick = reveal.Result;
+            Destroy(reveal);
+            reveal = null;
+
+            if (pick == MoonRevealUI.Choice.Hunt)
+            {
+                // 사냥을 고른 것을 페이즈에 남긴다 — 귀환 시 정산이 이 값으로 갈린다 (#78)
+                GameManager.Instance?.SetPhase(RoundPhase.Hunt);
+                Time.timeScale = 1f;
+                SceneManager.LoadScene("HuntScene");
+            }
+            // Stay: Phase는 이미 Village — 그대로 마을 라운드 진행 (수리·라운드 종료)
+        }
     }
 
     // 임시 UI (WaveManager와 같은 OnGUI 방식 — Canvas 기반으로 교체 예정)
     void OnGUI()
     {
+        // 달 공개·선택 중엔 마을 UI를 비운다 (연출은 MoonRevealUI가 그림)
+        if (reveal != null) return;
+
         GUIStyle title = new GUIStyle
         {
             fontSize = 26,

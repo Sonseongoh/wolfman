@@ -24,6 +24,9 @@ public class EnemyHealth : MonoBehaviour
 
     int hp;
     bool isDead; // 같은 프레임에 여러 발 맞아도 사망 처리는 한 번만
+
+    /// <summary>남은 체력 비율 (보스 HP바 등 표시용)</summary>
+    public float HpRatio => maxHp > 0 ? Mathf.Clamp01((float)hp / maxHp) : 0f;
     SpriteRenderer sr;
     Color originalColor;
     EnemyChase chase;

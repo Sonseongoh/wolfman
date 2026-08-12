@@ -3275,8 +3275,6 @@ GameObject:
   m_Component:
   - component: {fileID: 979627979}
   - component: {fileID: 979627978}
-  - component: {fileID: 979627980}
-  - component: {fileID: 979627981}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -3314,48 +3312,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1900000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1900000002}
+  - component: {fileID: 979627980}
+  m_Layer: 0
+  m_Name: MoonEffects
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1900000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1900000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &979627980
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 979627977}
+  m_GameObject: {fileID: 1900000001}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 17f2fa727b63775448826f06ca4c7dac, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::MoonEffects
   globalLight: {fileID: 619394801}
   transitionTime: 1.5
---- !u!114 &979627981
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 979627977}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b97c6638e6d844b81a636ee8f9dc9d57, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SoundManager
-  sfxShoot: {fileID: 8300000, guid: ea027af5d69d74f74972a6ae4bd0b5ae, type: 3}
-  sfxSlash: {fileID: 8300000, guid: 3236057406bcf42c580db554719ac81a, type: 3}
-  sfxHit: {fileID: 8300000, guid: 51375f78178d145b29827a69846e8534, type: 3}
-  sfxDeath: {fileID: 8300000, guid: 61186ab4884854b4387835567e73b224, type: 3}
-  sfxDamaged: {fileID: 8300000, guid: 9f7716e078f2846f69bd4730e5ccf466, type: 3}
-  sfxButton: {fileID: 8300000, guid: a72ddff72ab0541a1b47c66a88a17ff2, type: 3}
-  sfxPickup: {fileID: 8300000, guid: d09a02b826b234172bfc16f82863b0b7, type: 3}
-  sfxLevelUp: {fileID: 8300000, guid: 0fb8c97ef86cf4717bd5f9a8d763e72d, type: 3}
-  sfxWaveClear: {fileID: 8300000, guid: 70dbe136f7616447597534abbaf2d006, type: 3}
-  sfxSlot: {fileID: 8300000, guid: 8d18e08c1a6e148948a7064fd0a61e07, type: 3}
-  sfxMoonReveal: {fileID: 8300000, guid: e7139917767dd4be1967e1e89f5a656c, type: 3}
-  sfxMoonRevealLegendary: {fileID: 8300000, guid: 88192b60dfd224088818a3caf6ca3ca2, type: 3}
-  sfxGameOver: {fileID: 8300000, guid: 1d2ae07c76a2642029e34e2152292123, type: 3}
-  bgmBattle: {fileID: 8300000, guid: 6a4c5a21a10c54757adc13329447d77c, type: 3}
-  bgmVillage: {fileID: 8300000, guid: 5def487eb516b48828543f839107f458, type: 3}
-  bgmVolume: 0.4
 --- !u!1 &1064584541
 GameObject:
   m_ObjectHideFlags: 0
@@ -3420,17 +3422,17 @@ MonoBehaviour:
     minWave: 6
     weight: 1
   spawnRadius: 18
-  baseEnemyCount: 6
+  baseEnemyCount: 10
   enemyCountGrowth: 3
   timeBetweenWaves: 4
-  spawnInterval: 0.25
-  moonSpinDuration: 1.8
   portalPrefab: {fileID: 4601000000000000001, guid: ee66ff778899aabbccddeeff00460001, type: 3}
   portalChance: 0.1
   portalMinWave: 5
   portalDistanceMin: 20
   portalDistanceMax: 60
   portalMaxRange: 80
+  bossPrefab: {fileID: 2201000000000000001, guid: bb22cc22dd22ee22ff22aa2200000002, type: 3}
+  bossEveryWaves: 5
 --- !u!1 &1230945152
 GameObject:
   m_ObjectHideFlags: 0
@@ -15498,3 +15500,4 @@ SceneRoots:
   - {fileID: 1064584543}
   - {fileID: 979627979}
   - {fileID: 138728200}
+  - {fileID: 1900000002}

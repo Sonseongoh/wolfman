@@ -2,10 +2,9 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// MainScene 흐름 제어 (#6)
-/// - 첫 시작/보상 후: 달 추첨하고 SampleScene으로
+/// MainScene 흐름 제어 (#6) — 라운드 정산 허브.
 /// - 전투/마을 끝나고 돌아왔을 때: 보상 화면 표시 + 재화 뱅킹 (#8)
-/// 달 연출 + 사냥/마을 선택은 SampleScene(WaveManager)에서 첫 웨이브에만 처리
+/// - 정산 후: 달을 추첨하고 마을로 — 달 공개·사냥/마을 선택은 마을(MoonRevealUI, #103)
 /// </summary>
 public class RoundController : MonoBehaviour
 {
@@ -40,9 +39,7 @@ public class RoundController : MonoBehaviour
         }
         else
         {
-            GameManager.Instance.StartNextRound();
-            Time.timeScale = 1f; // 앞 씬에서 멈춰둔 시간을 들고 넘어가지 않는다
-            SceneManager.LoadScene("HuntScene");
+            StartNextRoundToVillage();
         }
     }
 
@@ -53,10 +50,17 @@ public class RoundController : MonoBehaviour
         if (rewardTimer <= 0f)
         {
             showingReward = false;
-            GameManager.Instance.StartNextRound();
-            Time.timeScale = 1f; // 앞 씬에서 멈춰둔 시간을 들고 넘어가지 않는다
-            SceneManager.LoadScene("HuntScene");
+            StartNextRoundToVillage();
         }
+    }
+
+    /// <summary>다음 라운드 시작 — 달 공개·행동 선택은 마을(MoonRevealUI)에서 한다 (#103)</summary>
+    static void StartNextRoundToVillage()
+    {
+        GameManager.Instance.StartNextRound();
+        GameManager.Instance.SetPhase(RoundPhase.Village); // 마을이 결정 허브 — 인간 형태 유지(#53)
+        Time.timeScale = 1f; // 앞 씬에서 멈춰둔 시간을 들고 넘어가지 않는다
+        SceneManager.LoadScene("VillageScene");
     }
 
     void OnGUI()
