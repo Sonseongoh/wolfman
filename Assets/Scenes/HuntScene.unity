@@ -3431,6 +3431,8 @@ MonoBehaviour:
   portalDistanceMin: 20
   portalDistanceMax: 60
   portalMaxRange: 80
+  bossPrefab: {fileID: 2201000000000000001, guid: bb22cc22dd22ee22ff22aa2200000002, type: 3}
+  bossEveryWaves: 5
 --- !u!1 &1230945152
 GameObject:
   m_ObjectHideFlags: 0
