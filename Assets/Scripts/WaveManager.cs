@@ -66,6 +66,13 @@ public class WaveManager : MonoBehaviour
     [Tooltip("포탈에서 이 거리 이상 멀어지면 포탈이 닫혀버린다 (무한 맵 대비 최대 범위). 반드시 포탈 최대 거리보다 커야 함 — 아니면 뜨자마자 닫힌다")]
     public float portalMaxRange = 80f;
 
+    [Header("중간보스 (#122)")]
+    [Tooltip("중간보스 프리팹 (무리의 우두머리)")]
+    public GameObject bossPrefab;
+
+    [Tooltip("몇 웨이브마다 보스가 나올지")]
+    public int bossEveryWaves = 5;
+
     Transform player;
     bool spawning;    // 이번 웨이브 스폰이 아직 진행 중인가
     bool resting;     // 웨이브 사이 휴식 중인가
@@ -79,6 +86,7 @@ public class WaveManager : MonoBehaviour
     EscapePortal activePortal;  // 이번 웨이브에 열린 탈출 포탈 (#46)
     float portalBannerTimer;    // "포탈이 열렸다" 안내 표시 시간
     float portalLostTimer;      // "멀어져서 닫혔다" 안내 표시 시간
+    float bossBannerTimer;      // "우두머리가 나타났다" 안내 표시 시간 (#122)
 
     /// <summary>GameManager가 씬에 있으면 현재 달, 없으면 null (달 없이도 동작)</summary>
     MoonData CurrentMoon => GameManager.Instance != null ? GameManager.Instance.CurrentMoon : null;
@@ -106,6 +114,7 @@ public class WaveManager : MonoBehaviour
     {
         if (portalBannerTimer > 0f) portalBannerTimer -= Time.deltaTime;
         if (portalLostTimer > 0f) portalLostTimer -= Time.deltaTime;
+        if (bossBannerTimer > 0f) bossBannerTimer -= Time.deltaTime;
 
         // 포탈에서 너무 멀어지면 닫혀버린다 (#46) — 무한 맵에서 밑도 끝도 없이 멀어지는 것 방지
         if (activePortal != null && player != null &&
@@ -150,7 +159,30 @@ public class WaveManager : MonoBehaviour
             (baseEnemyCount + enemyCountGrowth * (CurrentWave - 1)) * countMult));
 
         TrySpawnPortal();
+        TrySpawnBoss();
         StartCoroutine(SpawnWave(count));
+    }
+
+    /// <summary>보스 웨이브(5, 10, 15...)면 중간보스 소환 (#122).
+    /// 이전 보스가 살아있어도 겹쳐 나온다 — 빨리 못 잡은 대가는 유저의 몫</summary>
+    void TrySpawnBoss()
+    {
+        if (bossPrefab == null || player == null || bossEveryWaves <= 0) return;
+        if (CurrentWave % bossEveryWaves != 0) return;
+
+        float angle = Random.Range(0f, Mathf.PI * 2f);
+        Vector2 pos = (Vector2)player.position
+            + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spawnRadius;
+
+        GameObject go = Instantiate(bossPrefab, pos, Quaternion.identity);
+        AliveCount++;
+
+        // 체력은 웨이브에 비례해 자란다 (기본 100 × (1 + 웨이브×0.1))
+        EnemyHealth hp = go.GetComponent<EnemyHealth>();
+        if (hp != null) hp.ApplyHpMultiplier(1f + CurrentWave * 0.1f);
+
+        bossBannerTimer = 3f;
+        SoundManager.Instance?.PlayMoonReveal(false); // 등장 효과음 (임시 — 전용 사운드는 추후)
     }
 
     IEnumerator SpawnWave(int count)
@@ -312,6 +344,21 @@ public class WaveManager : MonoBehaviour
                 GUI.Label(new Rect(0, Screen.height * 0.5f - 110, Screen.width, 220),
                     sec.ToString(), countStyle);
             }
+        }
+
+        // 중간보스 등장 안내 (#122)
+        if (bossBannerTimer > 0f)
+        {
+            float blink = 0.6f + 0.4f * Mathf.Sin(Time.unscaledTime * 7f);
+            GUIStyle bossStyle = new GUIStyle
+            {
+                fontSize = 30,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.UpperCenter,
+                normal = { textColor = new Color(1f, 0.32f, 0.28f, blink) }
+            };
+            GUI.Label(new Rect(0, Screen.height * 0.3f, Screen.width, 40),
+                "우두머리가 나타났다!", bossStyle);
         }
 
         // 탈출 포탈 안내 (#46) — 열린 직후 3초는 큰 깜빡임, 이후엔 작은 상시 표시
