@@ -3422,10 +3422,9 @@ MonoBehaviour:
     minWave: 6
     weight: 1
   spawnRadius: 18
-  baseEnemyCount: 6
+  baseEnemyCount: 10
   enemyCountGrowth: 3
   timeBetweenWaves: 4
-  spawnInterval: 0.25
   portalPrefab: {fileID: 4601000000000000001, guid: ee66ff778899aabbccddeeff00460001, type: 3}
   portalChance: 0.1
   portalMinWave: 5

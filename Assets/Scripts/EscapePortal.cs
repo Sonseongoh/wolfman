@@ -17,15 +17,25 @@ public class EscapePortal : MonoBehaviour
     [Tooltip("열리고 닫힐 때 커지고 줄어드는 시간(초)")]
     public float openDuration = 0.4f;
 
+    [Tooltip("포탈 유지 시간(초) — 웨이브와 무관하게 이 시간이 지나면 닫힌다")]
+    public float lifetime = 20f;
+
+    [Tooltip("남은 시간이 이만큼이면 다급하게 깜빡이기 시작")]
+    public float warnTime = 5f;
+
     Vector3 baseScale;
     float openTimer;
+    float lifeTimer;
     bool closing;
     bool used;
+    SpriteRenderer sr;
 
     void Start()
     {
         baseScale = transform.localScale;
         transform.localScale = Vector3.zero;
+        lifeTimer = lifetime;
+        sr = GetComponent<SpriteRenderer>();
     }
 
     void Update()
@@ -34,11 +44,28 @@ public class EscapePortal : MonoBehaviour
 
         if (closing) return;
 
-        // 열림 연출(0 → 원래 크기) 후 맥동
+        // 수명 — 다 되면 스스로 닫힌다 (웨이브와 무관)
+        lifeTimer -= Time.deltaTime;
+        if (lifeTimer <= 0f)
+        {
+            Close();
+            return;
+        }
+
+        // 열림 연출(0 → 원래 크기) 후 맥동 — 수명이 끝나갈수록 다급하게
         openTimer += Time.deltaTime;
         float open = Mathf.Clamp01(openTimer / openDuration);
-        float pulse = 1f + pulseAmount * Mathf.Sin(Time.time * pulseSpeed);
+        float urgency = lifeTimer < warnTime ? 2.5f : 1f;
+        float pulse = 1f + pulseAmount * urgency * Mathf.Sin(Time.time * pulseSpeed * urgency);
         transform.localScale = baseScale * (open * pulse);
+
+        // 경고 구간엔 투명도도 깜빡
+        if (sr != null)
+        {
+            Color c = sr.color;
+            c.a = lifeTimer < warnTime ? 0.6f + 0.4f * Mathf.Sin(Time.time * 10f) : 1f;
+            sr.color = c;
+        }
     }
 
     /// <summary>웨이브가 끝나면 WaveManager가 호출 — 줄어들며 닫힌다</summary>
