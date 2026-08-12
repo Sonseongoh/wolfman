@@ -12,7 +12,7 @@
 
 - Unity 6.5 (6000.5.6f1) · Universal 2D (URP) · 새 Input System
 - 제출 빌드는 WebGL → GitHub Pages ([ADR 0003](Docs/adr/0003-제출-빌드는-웹으로-내고-깃허브-페이지에-올린다.md))
-- 프로젝트 파일은 Windows 쪽에 있어야 한다 (`CLAUDE.md` 참고 — 유니티가 WSL 경로를 열지 못한다)
+- 프로젝트 파일은 Windows 쪽에 있어야 한다 — 유니티가 WSL 경로를 열지 못한다
 
 ## 조작법
 
