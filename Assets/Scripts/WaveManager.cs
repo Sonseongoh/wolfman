@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 사냥 모드의 웨이브 진행 관리 (#9).
@@ -47,10 +46,6 @@ public class WaveManager : MonoBehaviour
     public int AliveCount { get; private set; }
     public int KillCount { get; private set; }
 
-    [Header("달 슬롯 연출")]
-    [Tooltip("달 이름이 슬롯머신처럼 돌아가는 시간(초)")]
-    public float moonSpinDuration = 1.8f;
-
     [Header("탈출 포탈 (#46)")]
     [Tooltip("탈출 포탈 프리팹")]
     public GameObject portalPrefab;
@@ -74,20 +69,10 @@ public class WaveManager : MonoBehaviour
     bool spawning;   // 이번 웨이브 스폰이 아직 진행 중인가
     bool resting;    // 웨이브 사이 휴식 중인가
     float restTimer;
-    float moonBannerTimer;  // 달 확정 후 배너 표시 시간
-    bool moonSpinning;      // 슬롯 연출 중인가
-    string spinDisplayName; // 슬롯이 돌면서 보여주는 이름
-    Sprite spinDisplayIcon; // 슬롯이 돌면서 보여주는 아이콘 (있을 때만)
-    bool moonPromoting;     // 등급 승급 연출 중인가 (전설 전용)
-    int promoTier;          // 승급 연출에서 현재 보여주는 등급 (0=Common)
-    float promoStepStart;   // 현재 승급 단계가 시작된 시각 (펀치·플래시용)
-    string promoDecoyName;  // 가짜 공개용 미끼 달 이름 (초승달/보름달)
-    Sprite promoDecoyIcon;  // 미끼 달 아이콘
 
-    bool waitingForAction;  // 첫 웨이브 달 공개 후 사냥/마을 선택 대기 (#6)
-    public bool IsWaitingForAction => waitingForAction;
-    /// <summary>달 연출(슬롯·승급·배너·행동선택) 중이거나 첫 웨이브 전인지 — 이 때는 일시정지 버튼 숨김</summary>
-    public bool IsInMoonReveal => CurrentWave == 0 || moonSpinning || moonPromoting || moonBannerTimer > 0f || waitingForAction;
+    /// <summary>첫 웨이브 전인지 — 이 때는 일시정지 버튼 숨김.
+    /// 달 공개·행동 선택은 마을(MoonRevealUI, #103)로 옮겨져 사냥 씬엔 연출이 없다</summary>
+    public bool IsInMoonReveal => CurrentWave == 0;
 
     EscapePortal activePortal;  // 이번 웨이브에 열린 탈출 포탈 (#46)
     float portalBannerTimer;    // "포탈이 열렸다" 안내 표시 시간
@@ -99,6 +84,9 @@ public class WaveManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
+
+        // 사냥터 지형 관리 자동 장착 (#98 후처리 — 바닥 무한 채움 + 구조물 솎아내기)
+        if (GetComponent<HuntTerrain>() == null) gameObject.AddComponent<HuntTerrain>();
     }
 
     void Start()
@@ -114,13 +102,6 @@ public class WaveManager : MonoBehaviour
 
     void Update()
     {
-        if (moonBannerTimer > 0f)
-        {
-            // 달 공개 연출은 실시간으로 흐른다 (위 슬롯·승급과 같은 이유)
-            moonBannerTimer -= Time.unscaledDeltaTime;
-            if (waitingForAction && moonBannerTimer < 0.01f) moonBannerTimer = 0.01f;
-        }
-
         if (portalBannerTimer > 0f) portalBannerTimer -= Time.deltaTime;
         if (portalLostTimer > 0f) portalLostTimer -= Time.deltaTime;
 
@@ -146,93 +127,21 @@ public class WaveManager : MonoBehaviour
         resting = false;
         CurrentWave++;
 
-        // 라운드 시작의 주인은 흐름 제어(MainScene)다. 여기서 시작하는 건 사냥 씬만
-        // 단독 재생하는 개발 상황 하나뿐 — 시작해 줄 사람이 아무도 없을 때다.
-        //
-        // 예전 가드는 "페이즈가 Hunt 가 아니면" 이었는데 페이즈를 Hunt 로 옮기는 곳이
-        // 없어서 항상 열려 있었다. 그래서 웨이브마다 라운드를 새로 시작해 달을 다시
-        // 뽑았다 (#78).
+        // 라운드 시작의 주인은 흐름 제어(마을·정산 허브)다. 여기서 시작하는 건 사냥 씬만
+        // 단독 재생하는 개발 상황 하나뿐 — 시작해 줄 사람이 아무도 없을 때다. (#78)
+        // 달 공개·행동 선택은 마을(MoonRevealUI, #103)에서 끝내고 오므로 여긴 연출 없이 스폰만
         if (GameManager.Instance != null && RoundFlowRule.NeedsRoundStart(GameManager.Instance.RoundNumber))
+        {
             GameManager.Instance.StartNextRound();
+            GameManager.Instance.SetPhase(RoundPhase.Hunt); // 단독 재생도 사냥 라운드로 취급
+        }
 
         float countMult = CurrentMoon != null ? CurrentMoon.enemyCountMultiplier : 1f;
         int count = Mathf.Max(1, Mathf.RoundToInt(
             (baseEnemyCount + enemyCountGrowth * (CurrentWave - 1)) * countMult));
 
         TrySpawnPortal();
-        StartCoroutine(MoonRevealThenSpawn(count));
-    }
-
-    /// <summary>달 슬롯머신 연출 → 확정 배너 → 스폰 시작</summary>
-    IEnumerator MoonRevealThenSpawn(int count)
-    {
-        MoonTable table = GameManager.Instance != null ? GameManager.Instance.moonTable : null;
-
-        if (CurrentWave == 1 && table != null && table.moons != null && table.moons.Length > 1 && CurrentMoon != null)
-        {
-            moonSpinning = true;
-            float elapsed = 0f;
-            float nextFlipAt = 0f;
-            int idx = Random.Range(0, table.moons.Length);
-
-            // 달 공개는 게임 시간이 아니라 실시간으로 흐른다. 연출의 반짝임·흔들림이
-            // 이미 unscaledTime 을 쓰는데 진행만 게임 시간에 매여 있었던 탓에,
-            // timeScale 이 0 인 채로 씬에 들어오면 카드가 살아 움직이면서도
-            // 영원히 끝나지 않았다.
-            while (elapsed < moonSpinDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                if (elapsed >= nextFlipAt)
-                {
-                    idx = (idx + 1) % table.moons.Length;
-                    spinDisplayName = table.moons[idx].moonName;
-                    spinDisplayIcon = table.moons[idx].icon;
-                    SoundManager.Instance?.PlaySlot();
-                    // 처음엔 빠르게(0.05초), 끝으로 갈수록 느리게(0.3초) — 슬롯 감속
-                    nextFlipAt = elapsed + Mathf.Lerp(0.05f, 0.3f, elapsed / moonSpinDuration);
-                }
-                yield return null;
-            }
-            moonSpinning = false;
-
-            // 등급 승급 연출 — 슈퍼 블루 블러드문(전설) 전용 의식:
-            // 일반 달(초승달/보름달)이 뜬 것처럼 가짜 공개 → 부들부들 → 땅! 땅! 땅! → 금색 대공개
-            if (CurrentMoon != null && CurrentMoon.rarity == MoonRarity.Legendary)
-            {
-                int finalTier = (int)CurrentMoon.rarity;
-
-                moonPromoting = true;
-
-                // 1단계: Common 달로 진짜 공개인 척 2초 — 완전히 방심시킨다
-                promoTier = 0;
-                SetPromoDisplay(table, MoonRarity.Common);
-                promoStepStart = Time.unscaledTime;
-                yield return new WaitForSecondsRealtime(2.0f);
-
-                // 이후: 등급이 오를 때마다 그 등급의 달로 변모하며 땅땅땅
-                for (int tier = 1; tier < finalTier; tier++)
-                {
-                    promoTier = tier;
-                    SetPromoDisplay(table, (MoonRarity)tier);
-                    promoStepStart = Time.unscaledTime;
-                    yield return new WaitForSecondsRealtime(0.4f);
-                }
-                moonPromoting = false;
-            }
-
-            moonBannerTimer = 1.6f; // 확정된 달 보여주기 (최종 공개가 마지막 땅!)
-            SoundManager.Instance?.PlayMoonReveal(CurrentMoon?.rarity == MoonRarity.Legendary);
-        }
-
-        // 첫 웨이브에만 사냥/마을 선택 (#6) — 달 카드 뜨자마자 버튼 표시, 선택할 때까지 카드 유지
-        if (CurrentWave == 1)
-        {
-            waitingForAction = true;
-            yield return new WaitUntil(() => !waitingForAction);
-            moonBannerTimer = 0f;
-        }
-
-        yield return StartCoroutine(SpawnWave(count));
+        StartCoroutine(SpawnWave(count));
     }
 
     IEnumerator SpawnWave(int count)
@@ -270,21 +179,6 @@ public class WaveManager : MonoBehaviour
 
             EnemyHealth hp = go.GetComponent<EnemyHealth>();
             if (hp != null) hp.ApplyHpMultiplier(moon.enemyHpMultiplier);
-        }
-    }
-
-    /// <summary>승급 연출: 해당 등급의 달 중 하나를 골라 카드에 표시</summary>
-    void SetPromoDisplay(MoonTable table, MoonRarity rarity)
-    {
-        var candidates = new List<MoonData>();
-        foreach (MoonData m in table.moons)
-            if (m != null && m.rarity == rarity) candidates.Add(m);
-
-        if (candidates.Count > 0)
-        {
-            MoonData pick = candidates[Random.Range(0, candidates.Count)];
-            promoDecoyName = pick.moonName;
-            promoDecoyIcon = pick.icon;
         }
     }
 
@@ -351,19 +245,7 @@ public class WaveManager : MonoBehaviour
         // TODO(#7 머지 후): 다음 웨이브 규모·적 스탯에 MoonData 배율 적용
     }
 
-    static Color RarityColor(MoonRarity r)
-    {
-        switch (r)
-        {
-            case MoonRarity.Uncommon: return new Color(0.4f, 1f, 0.4f);
-            case MoonRarity.Rare: return new Color(0.4f, 0.7f, 1f);
-            case MoonRarity.Epic: return new Color(0.8f, 0.4f, 1f);
-            case MoonRarity.Legendary: return new Color(1f, 0.7f, 0.1f);
-            default: return new Color(0.85f, 0.85f, 0.85f);
-        }
-    }
-
-    // 임시 UI
+    // 임시 UI — 달 공개·행동 선택은 마을(MoonRevealUI #103)로 이동, 여긴 전투 HUD만
     void OnGUI()
     {
         if (CurrentWave == 0) return;
@@ -375,33 +257,6 @@ public class WaveManager : MonoBehaviour
             normal = { textColor = Color.white }
         };
 
-
-
-        // 사냥/마을 선택 UI (첫 웨이브 달 공개 후)
-        if (waitingForAction)
-        {
-            float btnW = 200f, btnH = 55f;
-            float btnY = Screen.height * 0.82f;
-
-            if (GUI.Button(new Rect(Screen.width * 0.5f - btnW - 20, btnY, btnW, btnH), "사냥 나가기"))
-            {
-                SoundManager.Instance?.PlayButton();
-                waitingForAction = false;
-                // 사냥을 고른 것을 페이즈에 남긴다 — 귀환 시 정산이 이 값으로 갈린다 (#78)
-                if (GameManager.Instance != null) GameManager.Instance.SetPhase(RoundPhase.Hunt);
-            }
-
-            if (GUI.Button(new Rect(Screen.width * 0.5f + 20, btnY, btnW, btnH), "마을 남기"))
-            {
-                SoundManager.Instance?.PlayButton();
-                SoundManager.Instance?.PlayBGM(SoundManager.Instance.bgmVillage);
-                waitingForAction = false;
-                if (GameManager.Instance != null) GameManager.Instance.SetPhase(RoundPhase.Village);
-                SceneManager.LoadScene("VillageScene");
-            }
-        }
-
-        if (!waitingForAction && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f)
         {
             string text = resting
                 ? $"WAVE {CurrentWave} 클리어!"
@@ -429,7 +284,6 @@ public class WaveManager : MonoBehaviour
         }
 
         // 탈출 포탈 안내 (#46) — 열린 직후 3초는 큰 깜빡임, 이후엔 작은 상시 표시
-        if (!waitingForAction && !moonSpinning && !moonPromoting)
         {
             if (portalBannerTimer > 0f)
             {
@@ -521,18 +375,17 @@ public class WaveManager : MonoBehaviour
             }
         }
 
-        // 재화 HUD (#8) — 달 연출·행동 선택 중에는 화면을 비운다
-        if (!moonSpinning && moonBannerTimer <= 0f && !waitingForAction)
-            GoldPanelUI.Draw();
+        // 재화 HUD (#8)
+        GoldPanelUI.Draw();
 
-        // 현재 달 표시 — 우측 상단 골드 패널 아래에 아이콘 + 이름 (슬롯·연출 중엔 스포일러 방지로 숨김)
+        // 현재 달 표시 — 우측 상단 골드 패널 아래에 아이콘 + 이름
         MoonData moon = CurrentMoon;
-        if (moon != null && !resting && !moonSpinning && !moonPromoting && moonBannerTimer <= 0f && !waitingForAction)
+        if (moon != null && !resting)
         {
             float mw = 190f, mh = 46f;
             float mx = Screen.width - mw - 16f, my = 92f; // 골드 패널(y12, 높이72) 바로 아래
 
-            Color rc = RarityColor(moon.rarity);
+            Color rc = MoonRevealUI.RarityColor(moon.rarity);
 
             // 등급색 테두리 + 어두운 배경 (골드 패널과 같은 스타일)
             GUI.color = new Color(rc.r, rc.g, rc.b, 0.75f);
@@ -560,135 +413,5 @@ public class WaveManager : MonoBehaviour
                 moon.moonName, moonStyle);
         }
 
-        // 달 슬롯머신 연출: 카드 안에서 달이 돌아가고, 카드가 반짝인다
-        if (moonSpinning && spinDisplayName != null)
-        {
-            float pulse = 0.55f + 0.15f * Mathf.Sin(Time.unscaledTime * 8f);
-            Color spinBorder = new Color(pulse, pulse, pulse * 0.9f);
-            DrawMoonCard("오늘 밤의 달은...", spinDisplayName, spinDisplayIcon, spinBorder, 1f, Vector2.zero);
-        }
-
-        // 등급 승급 연출: 미끼 달이 공개된 척하다가 떨리며 단계별로 땅! 땅! 승급
-        if (moonPromoting)
-        {
-            float ts = Time.unscaledTime - promoStepStart;
-            Color pc = RarityColor((MoonRarity)promoTier);
-
-            // 승급 순간 작은 플래시
-            if (ts < 0.12f)
-            {
-                GUI.color = new Color(pc.r, pc.g, pc.b, 0.15f * (1f - ts / 0.12f));
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-                GUI.color = Color.white;
-            }
-
-            // 승급 순간 카드 펀치. 미끼 단계(0)는 떨지 않고, 승급이 시작되면 점점 격해짐
-            float punch = 1f + 0.18f * Mathf.Pow(1f - Mathf.Clamp01(ts / 0.15f), 2f);
-            float amp = promoTier == 0 ? 0f : 2f + promoTier * 3f;
-            Vector2 shake = new Vector2(
-                Mathf.Sin(Time.unscaledTime * 67f),
-                Mathf.Cos(Time.unscaledTime * 53f) * 0.6f) * amp;
-
-            DrawMoonCard($"{promoDecoyName}이 떠올랐다!", promoDecoyName, promoDecoyIcon, pc, punch, shake);
-        }
-
-        // 확정된 달 카드 — 플래시 → 카드 쿵 착지 → 광선 회전 + 카드 반짝임
-        if (moon != null && moonBannerTimer > 0f && !moonSpinning && !moonPromoting)
-        {
-            const float bannerDuration = 1.6f;
-            float t = bannerDuration - moonBannerTimer; // 공개 후 경과 시간
-            Color rc = RarityColor(moon.rarity);
-
-            // 1) 공개 순간 등급색 화면 플래시 (0.35초간 사라짐)
-            if (t < 0.35f)
-            {
-                GUI.color = new Color(rc.r, rc.g, rc.b, 0.4f * (1f - t / 0.35f));
-                GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), Texture2D.whiteTexture);
-                GUI.color = Color.white;
-            }
-
-            // 2) 카드 뒤에서 천천히 도는 등급색 광선 8줄기
-            Vector2 center = new Vector2(Screen.width * 0.5f, Screen.height * 0.42f);
-            float rayLen = Screen.height * 0.34f;
-            Matrix4x4 saved = GUI.matrix;
-            for (int i = 0; i < 8; i++)
-            {
-                GUI.matrix = saved;
-                GUIUtility.RotateAroundPivot(i * 45f + Time.unscaledTime * 25f, center);
-                GUI.color = new Color(rc.r, rc.g, rc.b, 0.1f);
-                GUI.DrawTexture(
-                    new Rect(center.x - rayLen * 0.035f, center.y - rayLen, rayLen * 0.07f, rayLen),
-                    Texture2D.whiteTexture);
-            }
-            GUI.matrix = saved;
-            GUI.color = Color.white;
-
-            // 3) 카드 쿵 착지 (1.35배 → 제자리) + 등급색 테두리
-            float punch = 1f + 0.35f * Mathf.Pow(1f - Mathf.Clamp01(t / 0.25f), 2f);
-            DrawMoonCard($"{moon.moonName}이 떠올랐다!", moon.moonName, moon.icon, rc, punch, Vector2.zero);
-        }
-    }
-
-    /// <summary>
-    /// 달 카드 그리기: 테두리 + 어두운 카드 안에 아이콘·이름, 표면을 스치는 반짝임(샤인).
-    /// scale은 등장 펀치용 (1 = 기본 크기).
-    /// </summary>
-    static void DrawMoonCard(string title, string moonName, Sprite icon, Color borderColor, float scale, Vector2 shakeOffset)
-    {
-        float cardW = Mathf.Min(360f, Screen.width * 0.34f) * scale;
-        float cardH = cardW * 1.3f;
-        Rect card = new Rect(
-            (Screen.width - cardW) * 0.5f + shakeOffset.x,
-            Screen.height * 0.42f - cardH * 0.5f + shakeOffset.y,
-            cardW, cardH);
-
-        // 테두리
-        GUI.color = borderColor;
-        GUI.DrawTexture(new Rect(card.x - 4, card.y - 4, card.width + 8, card.height + 8), Texture2D.whiteTexture);
-
-        // 카드 배경
-        GUI.color = new Color(0.1f, 0.09f, 0.15f);
-        GUI.DrawTexture(card, Texture2D.whiteTexture);
-        GUI.color = Color.white;
-
-        // 제목 (카드 위 바깥)
-        GUIStyle titleStyle = new GUIStyle
-        {
-            fontSize = 24,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-            normal = { textColor = borderColor }
-        };
-        GUI.Label(new Rect(0, card.y - 44, Screen.width, 34), title, titleStyle);
-
-        // 아이콘 (카드 안 상단)
-        if (icon != null)
-        {
-            float isz = cardW * 0.62f;
-            GUI.DrawTexture(
-                new Rect(card.x + (cardW - isz) * 0.5f, card.y + cardH * 0.12f, isz, isz),
-                icon.texture, ScaleMode.ScaleToFit, true);
-        }
-
-        // 달 이름 (카드 안 하단)
-        GUIStyle nameStyle = new GUIStyle
-        {
-            fontSize = 26,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.MiddleCenter,
-            wordWrap = true,
-            normal = { textColor = Color.white }
-        };
-        GUI.Label(new Rect(card.x + 8, card.y + cardH * 0.72f, cardW - 16, cardH * 0.24f), moonName, nameStyle);
-
-        // 반짝임: 카드 표면을 왼쪽→오른쪽으로 스치는 빛 밴드 (카드 영역에만 그려짐)
-        GUI.BeginGroup(card);
-        float sweep = (Time.unscaledTime * cardW * 0.9f) % (cardW * 1.8f) - cardW * 0.4f;
-        GUI.color = new Color(1f, 1f, 1f, 0.10f);
-        GUI.DrawTexture(new Rect(sweep, 0, cardW * 0.22f, cardH), Texture2D.whiteTexture);
-        GUI.color = new Color(1f, 1f, 1f, 0.18f);
-        GUI.DrawTexture(new Rect(sweep + cardW * 0.07f, 0, cardW * 0.07f, cardH), Texture2D.whiteTexture);
-        GUI.EndGroup();
-        GUI.color = Color.white;
     }
 }

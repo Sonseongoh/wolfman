@@ -17,6 +17,13 @@ using UnityEngine.TestTools;
 ///
 /// 씬 로드·컴포넌트 수명·코루틴이 다 얽힌 자리라 PlayMode 테스트만이 맞는 seam 이다.
 ///
+/// ## 달 공개는 마을에서 한다 (#103)
+///
+/// 달 공개·사냥/마을 선택이 사냥 씬(WaveManager)에서 마을(MoonRevealUI)로 옮겨졌다.
+/// 라운드 한 바퀴: 마을(달 공개 → 선택) → 사냥 or 마을 라운드 → 정산 → 다시 마을.
+/// 이 테스트는 그 바퀴를 그대로 밟는다 — 검증하는 불변식(달은 한 바퀴에 한 번,
+/// 싱글턴 생존, 조명은 그 밤의 달)은 이사 전과 같다.
+///
 /// ## 이 파일은 `Assets/` 안에 두면 안 된다 (#108)
 ///
 /// asmdef 없이 Assembly-CSharp 의 게임 스크립트를 보려면 `playModeTestRunnerEnabled` 가
@@ -39,8 +46,8 @@ using UnityEngine.TestTools;
 /// 배치 규칙 쪽 회귀는 여기 말고 `Tests/Wolfman.Domain.Tests/SceneLifetimeCompositionTests.cs`
 /// 가 지킨다 — 그쪽은 설정도 유니티도 없이 WSL 에서 매번 돈다.
 ///
-/// 버튼은 OnGUI 라 배치모드에서 누를 수 없으니, 각 버튼 핸들러와 똑같은 상태 변경을 직접 일으킨다.
-/// 지나가는 코드 경로는 손으로 누를 때와 같다.
+/// 버튼은 OnGUI 라 배치모드에서 누를 수 없으니, 각 버튼 핸들러와 똑같은 진입점을 직접 부른다
+/// (MoonRevealUI.Choose 는 버튼과 테스트가 함께 쓰는 공용 진입점이다).
 /// </summary>
 public class MoonRevealFlowTests
 {
@@ -108,20 +115,21 @@ public class MoonRevealFlowTests
         // ?. 없이 부른다. ?. 를 붙이면 Instance 가 null 을 돌려주는 순간 호출 자체가 사라져서
         // "예외가 안 났다" 가 공허한 참이 된다 — 소리가 죽어도 초록이 된다는 뜻이다.
         Assert.DoesNotThrow(() => SoundManager.Instance.PlaySlot(),
-            "달 슬롯 효과음 호출이 예외를 던진다 — 이 호출은 달 공개 코루틴 안에 있어서 흐름을 죽인다");
+            "달 슬롯 효과음 호출이 예외를 던진다 — 이 호출은 달 공개 코루틴(MoonRevealUI) 안에 있어서 흐름을 죽인다");
     }
 
     /// <summary>
-    /// 사용자가 손으로 밟은 경로를 그대로 밟는다:
-    ///   타이틀 → 마을 → "라운드 종료" → 정산(클리어) → 사냥 씬 → 달 슬롯 → "사냥 나가기" → 스폰
+    /// 사용자가 손으로 밟은 경로를 그대로 밟는다 (#103 이후 흐름):
+    ///   타이틀 → 마을(달 공개 → "마을 남기") → "라운드 종료" → 정산 → 다음 라운드 마을
+    ///   → 달 슬롯 → "사냥 나가기" → 사냥 씬 → 스폰
     /// </summary>
     [UnityTest]
-    public IEnumerator 마을에서_라운드를_끝내면_달이_슬롯으로_돌고_사냥이_시작된다()
+    public IEnumerator 마을에서_라운드를_끝내면_다음_달이_마을에서_돌고_사냥이_시작된다()
     {
-        yield return StartRunAndReachHunt();
+        yield return ReachSecondRoundVillage();
 
-        // ── 달 공개 연출을 프레임 단위로 관찰 ───────────────────────────
-        WaveManager wm = null;
+        // ── 마을 달 공개 연출을 프레임 단위로 관찰 ───────────────────────
+        MoonRevealUI reveal = null;
         var slotNames = new HashSet<string>();
         bool sawSpinning = false;
         bool sawBanner = false;
@@ -129,26 +137,26 @@ public class MoonRevealFlowTests
 
         while (t < Timeout)
         {
-            if (wm == null) wm = WaveManager.Instance;
-            if (wm != null)
+            if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
+            if (reveal != null)
             {
-                if (Get<bool>(wm, "moonSpinning")) sawSpinning = true;
-                if (Get<float>(wm, "moonBannerTimer") > 0f) sawBanner = true;
+                if (Get<bool>(reveal, "spinning")) sawSpinning = true;
+                if (Get<float>(reveal, "bannerTimer") > 0f) sawBanner = true;
 
-                string shown = Get<string>(wm, "spinDisplayName");
+                string shown = Get<string>(reveal, "spinName");
                 if (!string.IsNullOrEmpty(shown)) slotNames.Add(shown);
 
-                if (wm.IsWaitingForAction) break;
+                if (Get<bool>(reveal, "choosing")) break;
             }
             t += Time.unscaledDeltaTime;
             yield return null;
         }
 
-        Assert.NotNull(wm, "사냥 씬에 WaveManager 가 없다");
-        Assert.IsTrue(wm.IsWaitingForAction,
+        Assert.NotNull(reveal, "마을에 MoonRevealUI 가 없다 — 달 공개가 시작되지 않았다 (#103)");
+        Assert.IsTrue(Get<bool>(reveal, "choosing"),
             $"달 공개가 끝나고 사냥/마을 선택이 뜨지 않았다 " +
-            $"(wave={wm.CurrentWave}, spinning={Get<bool>(wm, "moonSpinning")}, " +
-            $"banner={Get<float>(wm, "moonBannerTimer"):0.00}, timeScale={Time.timeScale})");
+            $"(spinning={Get<bool>(reveal, "spinning")}, " +
+            $"banner={Get<float>(reveal, "bannerTimer"):0.00}, timeScale={Time.timeScale})");
 
         // 증상 1 — 달은 슬롯이 돌다가 1개로 확정돼야 한다
         Assert.IsTrue(sawSpinning, "달 슬롯 연출이 한 프레임도 켜지지 않았다");
@@ -158,23 +166,27 @@ public class MoonRevealFlowTests
         Assert.IsTrue(sawBanner, "확정된 달 배너가 뜨지 않았다");
         Assert.NotNull(GameManager.Instance.CurrentMoon, "확정된 달이 없다");
 
-        // 슬롯이 도는 사이에 달을 다시 뽑지 않았는가 (#78). WaveManager 가 라운드를 한 번 더
-        // 시작하면 앞서 확정된 달을 덮어쓴다 — 카드에 뜬 달과 실제로 적용되는 달이 갈라진다.
+        // 슬롯이 도는 사이에 달을 다시 뽑지 않았는가 (#78). 라운드를 한 번 더 시작하면
+        // 앞서 확정된 달을 덮어쓴다 — 카드에 뜬 달과 실제로 적용되는 달이 갈라진다.
         Assert.That(moonDraws, Is.EqualTo(1),
             $"라운드 한 바퀴에 달이 정확히 한 번 추첨돼야 하는데 {moonDraws}번 뽑혔다 (#78)");
 
-        // ── "사냥 나가기" (WaveManager.OnGUI 버튼과 동일) ─────────────────
-        Set(wm, "waitingForAction", false);
-        GameManager.Instance.SetPhase(RoundPhase.Hunt);
+        // ── "사냥 나가기" (MoonRevealUI.OnGUI 버튼과 동일한 진입점) ────────
+        reveal.Choose(MoonRevealUI.Choice.Hunt);
+        yield return WaitForScene("HuntScene");
 
         // 증상 2 — 사냥이 진행돼야 한다 = 적이 실제로 스폰된다
+        WaveManager wm = null;
         float t2 = 0f;
-        while (t2 < Timeout && wm.AliveCount <= 0)
+        while (t2 < Timeout)
         {
+            if (wm == null) wm = WaveManager.Instance;
+            if (wm != null && wm.AliveCount > 0) break;
             t2 += Time.unscaledDeltaTime;
             yield return null;
         }
 
+        Assert.NotNull(wm, "사냥 씬에 WaveManager 가 없다");
         Assert.That(wm.AliveCount, Is.GreaterThan(0),
             $"'사냥 나가기' 를 눌렀는데 적이 한 마리도 스폰되지 않았다 — 사냥이 진행되지 않는다 " +
             $"(timeScale={Time.timeScale}, phase={GameManager.Instance.Phase}, wave={wm.CurrentWave})");
@@ -185,7 +197,7 @@ public class MoonRevealFlowTests
     ///
     /// 그런데 조명은 씬을 넘어 살아남으면 안 된다. MoonEffects 가 붙잡는 Global Light 2D 는
     /// 그 씬의 것이라, 사냥 씬을 나가면 같이 사라져야 한다. 반대로 달은 씬보다 먼저 정해진다 —
-    /// 정산 허브에서 뽑히고, 그 다음에 사냥 씬이 로드된다. 이 둘의 순서가 이 테스트의 핵심이다.
+    /// 마을에서 공개되고, 그 다음에 사냥 씬이 로드된다. 이 둘의 순서가 이 테스트의 핵심이다.
     /// </summary>
     [UnityTest]
     public IEnumerator 사냥터_조명이_그_밤의_달을_따른다()
@@ -229,8 +241,12 @@ public class MoonRevealFlowTests
 
     // ── 공통 경로 ─────────────────────────────────────────────────────────
 
-    /// <summary>타이틀에서 새 런을 시작해 마을 → 라운드 종료 → 정산을 거쳐 사냥 씬까지 간다.</summary>
-    IEnumerator StartRunAndReachHunt()
+    /// <summary>
+    /// 타이틀에서 새 런을 시작하고, 1라운드 마을의 달 공개를 "마을 남기" 로 넘긴 뒤
+    /// "라운드 종료" → 정산을 거쳐 **2라운드 마을**(달 공개가 새로 시작되는 지점)까지 간다.
+    /// 이 바퀴가 #78 불변식(라운드 +1, 달 추첨 1회)을 밟는 경로다.
+    /// </summary>
+    IEnumerator ReachSecondRoundVillage()
     {
         SceneManager.LoadScene("TitleScene");
         yield return WaitForScene("TitleScene");
@@ -247,6 +263,9 @@ public class MoonRevealFlowTests
             "타이틀을 지나면 마을 페이즈여야 한다");
         int roundInVillage = GameManager.Instance.RoundNumber;
 
+        // 1라운드 달 공개를 "마을 남기" 로 넘긴다 (#103 — 공개·선택은 마을에서)
+        yield return ChooseFromReveal(MoonRevealUI.Choice.Stay);
+
         // 이 지점부터 달이 몇 번 뽑히는지 센다. 한 바퀴에 정확히 한 번이어야 한다 (#78)
         moonDraws = 0;
         GameManager.Instance.OnMoonRevealed += CountMoonDraw;
@@ -256,12 +275,41 @@ public class MoonRevealFlowTests
         SceneManager.LoadScene("MainScene");
         yield return WaitForScene("MainScene");
 
-        // 정산 허브가 "라운드 클리어!" 를 3초 보여준 뒤 사냥 씬으로 넘긴다
-        yield return WaitForScene("HuntScene");
+        // 정산 허브가 "라운드 클리어!" 를 3초 보여준 뒤 다음 라운드 마을로 넘긴다 (#103)
+        yield return WaitForScene("VillageScene");
 
         Assert.That(GameManager.Instance.RoundNumber, Is.EqualTo(roundInVillage + 1),
             $"라운드 한 바퀴에 라운드 번호가 정확히 1 올라야 한다 (#78) — " +
-            $"마을에서 {roundInVillage} 였는데 사냥 씬에서 {GameManager.Instance.RoundNumber} 다.");
+            $"마을에서 {roundInVillage} 였는데 다음 마을에서 {GameManager.Instance.RoundNumber} 다.");
+    }
+
+    /// <summary>2라운드 마을의 달 공개를 "사냥 나가기" 로 넘겨 사냥 씬까지 간다.</summary>
+    IEnumerator StartRunAndReachHunt()
+    {
+        yield return ReachSecondRoundVillage();
+        yield return ChooseFromReveal(MoonRevealUI.Choice.Hunt);
+        yield return WaitForScene("HuntScene");
+    }
+
+    /// <summary>마을 달 공개가 선택 단계에 이르기를 기다렸다가 pick 으로 확정한다.</summary>
+    IEnumerator ChooseFromReveal(MoonRevealUI.Choice pick)
+    {
+        MoonRevealUI reveal = null;
+        float t = 0f;
+        while (t < Timeout)
+        {
+            if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
+            if (reveal != null && Get<bool>(reveal, "choosing")) break;
+            t += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        Assert.NotNull(reveal, "마을에 MoonRevealUI 가 없다 — 달 공개가 시작되지 않았다 (#103)");
+        Assert.IsTrue(Get<bool>(reveal, "choosing"),
+            $"{Timeout}초 안에 달 공개가 선택 단계에 이르지 못했다 (timeScale={Time.timeScale})");
+
+        reveal.Choose(pick);
+        yield return null; // VillageController 가 선택을 집어가는 프레임
     }
 
     void CountMoonDraw(MoonData _) => moonDraws++;
@@ -283,9 +331,6 @@ public class MoonRevealFlowTests
 
     static T Get<T>(object target, string field)
         => (T)target.GetType().GetField(field, Any).GetValue(target);
-
-    static void Set(object target, string field, object value)
-        => target.GetType().GetField(field, Any).SetValue(target, value);
 
     static void Call(object target, string method)
         => target.GetType().GetMethod(method, Any).Invoke(target, null);
