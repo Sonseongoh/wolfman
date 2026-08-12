@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyChase : MonoBehaviour
@@ -11,6 +12,9 @@ public class EnemyChase : MonoBehaviour
 
     [Tooltip("넉백 면역 시간(초) — 한 번 밀린 뒤 이 시간 동안은 다시 안 밀린다. 공속 스택으로 무한 밀어내기(스턴락) 방지")]
     public float knockbackImmunity = 0.5f;
+
+    [Tooltip("장애물 감지 거리 — 앞이 막혀 있으면 벽면을 따라 미끄러져 우회 (끼임 방지)")]
+    public float obstacleProbe = 0.9f;
 
     Rigidbody2D rb;
     SpriteRenderer sr;
@@ -63,7 +67,7 @@ public class EnemyChase : MonoBehaviour
         }
 
         Vector2 toPlayer = player.position - transform.position;
-        Vector2 dir = toPlayer.normalized;
+        Vector2 dir = SteerAroundObstacles(toPlayer.normalized);
 
         if (keepDistance > 0f)
         {
@@ -79,7 +83,25 @@ public class EnemyChase : MonoBehaviour
         }
 
         // 항상 플레이어 쪽을 본다 — 후퇴 중에도 (원본이 오른쪽을 봄)
-        if (sr != null && dir.x != 0f)
-            sr.flipX = dir.x < 0f;
+        if (sr != null && toPlayer.x != 0f)
+            sr.flipX = toPlayer.x < 0f;
+    }
+
+    /// <summary>
+    /// 진행 방향 앞에 장애물(타일맵 콜라이더)이 있으면 벽면을 따라 미끄러지는 방향으로 바꾼다.
+    /// 본격 길찾기 대신 쓰는 가벼운 우회 — 뭉쳐오는 적 무리엔 이걸로 충분하다 (끼임 방지).
+    /// </summary>
+    Vector2 SteerAroundObstacles(Vector2 dir)
+    {
+        foreach (RaycastHit2D hit in Physics2D.RaycastAll(transform.position, dir, obstacleProbe))
+        {
+            if (!(hit.collider is TilemapCollider2D)) continue; // 적·플레이어끼리는 무시
+
+            // 벽의 접선 방향 중 원래 가려던 쪽에 가까운 쪽으로 미끄러진다
+            Vector2 tangent = Vector2.Perpendicular(hit.normal);
+            if (Vector2.Dot(tangent, dir) < 0f) tangent = -tangent;
+            return tangent;
+        }
+        return dir;
     }
 }

@@ -21,9 +21,17 @@ public class HuntTerrain : MonoBehaviour
     [Tooltip("바닥 채움에 쓸 타일의 최소 등장 비율 — 이보다 드문 타일(가장자리 등)은 반복하면 어색해서 제외")]
     [Range(0f, 0.5f)] public float fillTileMinShare = 0.05f;
 
+    [Tooltip("새로 깔리는 지역에 장애물을 흩뿌릴 확률 (셀당) — 칠해진 안쪽과 밀도를 맞춤")]
+    [Range(0f, 0.2f)] public float outerObstacleChance = 0.025f;
+
+    [Tooltip("플레이어에서 이 거리 안에는 장애물을 새로 만들지 않음 (머리 위에 벽이 생기지 않게)")]
+    public float obstacleSafeRadius = 5f;
+
     Tilemap ground;
+    Tilemap obstacles;
     Transform player;
-    readonly List<TileBase> fillTiles = new List<TileBase>();   // 가중치 = 등장 횟수만큼 중복 수록
+    readonly List<TileBase> fillTiles = new List<TileBase>();     // 가중치 = 등장 횟수만큼 중복 수록
+    readonly List<TileBase> obstacleTiles = new List<TileBase>(); // 흩뿌릴 장애물 팔레트
     Vector3Int lastFillCenter = new Vector3Int(int.MinValue, 0, 0);
 
     void Start()
@@ -31,7 +39,6 @@ public class HuntTerrain : MonoBehaviour
         GameObject p = GameObject.FindWithTag("Player");
         if (p != null) player = p.transform;
 
-        Tilemap obstacles = null;
         foreach (Tilemap tm in FindObjectsByType<Tilemap>(FindObjectsSortMode.None))
         {
             if (tm.gameObject.name == "Ground") ground = tm;
@@ -39,7 +46,20 @@ public class HuntTerrain : MonoBehaviour
         }
 
         BuildFillPalette();
+        BuildObstaclePalette(); // 솎아내기 전에 원본 구성으로 팔레트를 만든다
         ThinObstacles(obstacles);
+    }
+
+    /// <summary>칠해진 장애물 구성을 흩뿌리기 팔레트로 수집 (등장 횟수 = 가중치)</summary>
+    void BuildObstaclePalette()
+    {
+        if (obstacles == null) return;
+
+        foreach (Vector3Int pos in obstacles.cellBounds.allPositionsWithin)
+        {
+            TileBase t = obstacles.GetTile(pos);
+            if (t != null) obstacleTiles.Add(t);
+        }
     }
 
     /// <summary>칠해진 바닥에서 "자주 쓰인" 타일만 모아 채움 팔레트를 만든다 (등장 횟수 = 가중치)</summary>
@@ -96,6 +116,14 @@ public class HuntTerrain : MonoBehaviour
                 if (ground.HasTile(pos)) continue;
 
                 ground.SetTile(pos, fillTiles[Random.Range(0, fillTiles.Count)]);
+
+                // 새로 깔린 땅에만 장애물을 희박하게 흩뿌린다 (플레이어 주변은 안전지대)
+                if (obstacles != null && obstacleTiles.Count > 0
+                    && Random.value < outerObstacleChance
+                    && Vector2.Distance(ground.GetCellCenterWorld(pos), player.position) > obstacleSafeRadius)
+                {
+                    obstacles.SetTile(pos, obstacleTiles[Random.Range(0, obstacleTiles.Count)]);
+                }
             }
         }
     }

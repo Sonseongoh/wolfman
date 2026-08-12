@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 /// <summary>
 /// 사냥 모드의 웨이브 진행 관리 (#9).
@@ -165,9 +166,22 @@ public class WaveManager : MonoBehaviour
         GameObject prefab = PickEnemyPrefab();
         if (prefab == null) return;
 
-        float angle = Random.Range(0f, Mathf.PI * 2f);
-        Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spawnRadius;
-        GameObject go = Instantiate(prefab, (Vector2)player.position + offset, Quaternion.identity);
+        // 장애물(타일맵 콜라이더) 위에 스폰되면 갇혀버리므로 자리를 몇 번 다시 뽑는다
+        Vector2 pos = (Vector2)player.position + Vector2.right * spawnRadius;
+        for (int attempt = 0; attempt < 6; attempt++)
+        {
+            float angle = Random.Range(0f, Mathf.PI * 2f);
+            pos = (Vector2)player.position
+                + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spawnRadius;
+
+            bool blocked = false;
+            foreach (Collider2D c in Physics2D.OverlapCircleAll(pos, 0.6f))
+                if (c is TilemapCollider2D) { blocked = true; break; }
+
+            if (!blocked) break;
+        }
+
+        GameObject go = Instantiate(prefab, pos, Quaternion.identity);
         AliveCount++;
 
         // 달 배율 적용 (#7) — 데미지 배율·변신 제한·특화 효과는 TODO
