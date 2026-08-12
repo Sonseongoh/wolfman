@@ -106,10 +106,21 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    static void Restart()
+    /// <summary>
+    /// 죽음 = 밤 소모 (#113): 그 밤의 임시 골드·스킬만 잃고 다음 밤의 마을로 돌아간다.
+    /// 금고 골드는 남는다. 정산 허브를 거치지 않으므로 클리어 보너스는 없다 —
+    /// 죽은 밤에 보너스가 나오면 안 되기 때문이다.
+    /// </summary>
+    static void ReturnToVillage()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.StartNextRound(); // 밤은 소모된다 — 같은 밤 무한 재시도 불가
+            GameManager.Instance.SetPhase(RoundPhase.Village);
+        }
+        SceneManager.LoadScene("VillageScene");
     }
 
     // 임시 UI (나중에 제대로 된 UI로 교체 예정)
@@ -241,7 +252,7 @@ public class PlayerHealth : MonoBehaviour
             GUI.color = Color.white;
 
             if (GUI.Button(new Rect(bx, by, btnW, btnH), "마을로 돌아가기"))
-                Restart();
+                ReturnToVillage();
         }
     }
 }
