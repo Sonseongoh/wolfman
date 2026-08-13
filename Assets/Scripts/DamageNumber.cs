@@ -35,7 +35,7 @@ public class DamageNumber : MonoBehaviour
 
         // 텍스트가 스프라이트 뒤에 묻히지 않게
         MeshRenderer mr = go.GetComponent<MeshRenderer>();
-        mr.sortingOrder = 50;
+        mr.sortingOrder = 500; // 모든 스프라이트 위에 항상
         // TextMesh 는 폰트를 바꿔도 머티리얼이 따라오지 않는다 — 같이 갈아줘야 글자가 보인다
         mr.material = tm.font.material;
 

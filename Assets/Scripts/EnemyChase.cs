@@ -32,8 +32,9 @@ public class EnemyChase : MonoBehaviour
         if (col != null)
             bodyRadius = Mathf.Max(col.bounds.extents.x, col.bounds.extents.y) * 0.9f;
 
-        // 걷기 흔들림 연출 자동 장착
+        // 걷기 흔들림 연출·Y 정렬 자동 장착
         if (GetComponent<WalkWobble>() == null) gameObject.AddComponent<WalkWobble>();
+        if (GetComponent<YSort>() == null) gameObject.AddComponent<YSort>();
     }
 
     /// <summary>피격 시 밀려남. duration 동안 추적을 멈추고 넉백 속도를 유지한다.

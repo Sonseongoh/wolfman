@@ -18,8 +18,9 @@ public class PlayerMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
 
-        // 걷기 흔들림 연출 자동 장착
+        // 걷기 흔들림 연출·Y 정렬 자동 장착
         if (GetComponent<WalkWobble>() == null) gameObject.AddComponent<WalkWobble>();
+        if (GetComponent<YSort>() == null) gameObject.AddComponent<YSort>();
     }
 
     void Update()
