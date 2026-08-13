@@ -23,7 +23,7 @@ public class SlashEffect : MonoBehaviour
         SpriteRenderer sr = go.AddComponent<SpriteRenderer>();
         sr.sprite = sprite;
         sr.flipY = flipY;
-        sr.sortingOrder = 20;
+        sr.sortingOrder = 200; // Y 정렬 캐릭터 층(-80~80) 위에 항상
 
         SlashEffect fx = go.AddComponent<SlashEffect>();
         fx.sr = sr;

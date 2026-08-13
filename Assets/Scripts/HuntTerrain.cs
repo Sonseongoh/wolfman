@@ -17,7 +17,7 @@ public class HuntTerrain : MonoBehaviour
     public float fillRadius = 24f;
 
     [Tooltip("셀당 큰 장애물이 설 확률 — 매 사냥 배치가 달라진다")]
-    [Range(0f, 0.2f)] public float obstacleChance = 0.012f;
+    [Range(0f, 0.2f)] public float obstacleChance = 0.01f;
 
     [Tooltip("플레이어에서 이 거리 안에는 장애물을 만들지 않음 (머리 위에 벽이 생기지 않게)")]
     public float obstacleSafeRadius = 5f;
@@ -105,7 +105,8 @@ public class HuntTerrain : MonoBehaviour
         if (player != null && Vector2.Distance(wp, player.position) <= obstacleSafeRadius) return;
 
         wp.y -= 0.5f; // 프리팹 피벗이 바닥이라 셀 아래 변에 세운다
-        Instantiate(props[Random.Range(0, props.Length)], wp, Quaternion.identity, propParent);
+        GameObject prop = Instantiate(props[Random.Range(0, props.Length)], wp, Quaternion.identity, propParent);
+        prop.AddComponent<YSort>(); // 캐릭터와 앞뒤가 발 위치로 정렬되게
     }
 
     void Update()
