@@ -1,59 +1,101 @@
 # 🐺 wolfman
 
-늑대인간이 주인공인 탑다운 2D 로그라이크. **디펜스 + 마을 운영 + 뱀서라이크 전투** 장르로, 매 라운드 확률로 떠오르는 **달이 그 판의 룰셋**(적 구성·플레이어 능력·목표·보상 등급)을 결정하는 것이 핵심 차별점이다.
+늑대인간이 주인공인 탑다운 2D 로그라이크. **뱀서라이크 전투 + 마을 운영** 장르로, 매 밤 확률로 떠오르는 **달이 그 밤의 룰셋**을 정한다.
 
-상세 기획은 [Docs/GameDesign.md](Docs/GameDesign.md) 참고.
+굶으면 이성을 잃고 사냥하면 짐승에 가까워진다. 어느 쪽 끝에 닿아도 **내가 마을을 덮친다** — 이 게임에서 마을을 위협하는 것은 플레이어 자신뿐이다.
+
+- 용어집 — [CONTEXT.md](CONTEXT.md)
+- 게임 디자인 — [Docs/GameDesign.md](Docs/GameDesign.md)
+- 결정 기록 — [Docs/adr/](Docs/adr/)
 
 ## 개발 환경
 
-- Unity 6.5 (6000.5.6f1) · Universal 2D (URP) 템플릿
-- 새 Input System (`com.unity.inputsystem`)
-- C#
+- Unity 6.5 (6000.5.6f1) · Universal 2D (URP) · 새 Input System
+- 제출 빌드는 WebGL → GitHub Pages ([ADR 0003](Docs/adr/0003-제출-빌드는-웹으로-내고-깃허브-페이지에-올린다.md))
+- 프로젝트 파일은 Windows 쪽에 있어야 한다 — 유니티가 WSL 경로를 열지 못한다
 
 ## 조작법
 
-| 키 | 동작 |
+| 입력 | 동작 |
 |---|---|
-| WASD / 방향키 | 이동 |
-| 1 / 2 / 3 | 레벨업 시 강화 선택 |
-| R | 게임오버 후 재시작 |
+| WASD / 방향키 / 가상 조이스틱 | 이동 |
+| 1 / 2 / 3 | 웨이브 클리어 후 3택 선택 (클릭도 가능) |
+| ESC 또는 우상단 ⏸ | 일시정지 (어느 씬에서든) |
+| E | 마을에서 시설 수리 |
+| T | 마을에서 시설에 피해 (디버그) |
 
-공격은 자동 — 사거리 안의 가장 가까운 적에게 투사체를 발사한다.
+공격은 자동 — 사거리 안의 가장 가까운 적에게 발톱을 휘두른다.
 
-## 현재 구현된 것 (핵심 루프)
+## 씬 구성
 
-- **이동/카메라**: WASD 이동, 부드러운 카메라 추적
-- **적**: 플레이어 주변 화면 밖에서 스폰되어 추적. 시간이 지날수록 스폰 간격이 짧아지는 난이도 곡선 (1.5초 → 0.25초 / 2분)
-- **전투**: 0.8초마다 최근접 적에게 자동 발사, 적은 2대 맞으면 사망
-- **성장**: 적 처치 시 경험치 보석 드랍 → 자석 흡수 → 레벨업 시 게임 일시정지 후 강화 선택 (공격속도 / 이동속도 / 최대체력)
-- **생존**: 체력 5, 적 접촉 시 데미지 (피격 후 1초 무적), 0이 되면 게임오버 → R로 재시작
+```
+TitleScene → MainScene(허브) → HuntScene (사냥) 또는 VillageScene (마을)
+                    ▲                    │
+                    └──── 정산 ◀─────────┘
+```
 
-## 스크립트 구조 (`Assets/Scripts/`)
+## 현재 구현된 것
+
+**달** — 9종 ScriptableObject, 가중치 추첨. 슬롯머신 연출 + 전설 등급 승급 연출. 달이 적 배율·드랍·조명 색을 정한다
+
+**사냥** — 무한 웨이브. 적 4종(추적형·돌진형·원거리형·기본형), 웨이브마다 규모 증가. 근접 발톱 자동 공격(기본 데미지 10, 0.6초 간격), 넉백·히트스톱·카메라 흔들림·데미지 숫자
+
+**성장** — 웨이브 클리어마다 3택 1 (등급 4단계 가중치 추첨, 16종). 현재는 그 사냥 안에서만 유지
+
+**재화** — 골드 코인 드랍 → 임시 골드 → 살아서 귀환하면 금고로 확정. 사망 시 임시 골드 손실
+
+**탈출** — 5웨이브부터 10% 확률로 포탈이 열린다. 화면 밖이면 가장자리에 방향·거리 표시
+
+**마을** — 인간 형태로 전환(`PlayerFormRule`이 페이즈로 결정), 시설 체력·파괴·수리
+
+**그 외** — 전역 일시정지, 게임오버 화면, 효과음, 가상 조이스틱, 타이틀 화면
+
+## 스크립트 구조
+
+**`Assets/Scripts/Core/`** — `UnityEngine`에 의존하지 않는 순수 로직을 여기에 둔다. WSL에서 테스트하기 위해서다.
 
 | 파일 | 역할 |
 |---|---|
-| `PlayerMovement.cs` | WASD 이동 (Rigidbody2D) |
-| `PlayerAttack.cs` | 최근접 적 조준 자동 발사 |
-| `PlayerHealth.cs` | 체력, 접촉 데미지, 게임오버/재시작 |
-| `PlayerLevel.cs` | 경험치, 레벨업 강화 선택 UI |
-| `CameraFollow.cs` | 카메라 추적 |
-| `EnemySpawner.cs` | 적 스폰 + 난이도 곡선 |
-| `EnemyChase.cs` | 적의 플레이어 추적 |
-| `EnemyHealth.cs` | 적 체력, 사망 시 보석 드랍 |
-| `Projectile.cs` | 투사체 이동/명중 판정 |
-| `XPGem.cs` | 경험치 보석 (자석 흡수) |
+| `GameManager.cs` | 현재 달·라운드·페이즈 보관, 이벤트 발행 |
+| `RoundPhase.cs` · `RoundFlowRule.cs` | 페이즈 정의와 라운드 한 바퀴의 판정 (순수) |
+| `PlayerFormRule.cs` | 페이즈 → 인간/늑대인간 (순수) |
+| `GoldWallet.cs` · `FacilityCore.cs` | 재화 뱅킹, 시설 체력·수리 (순수) |
+| `CurrencyManager.cs` | 위 지갑의 씬 수명 관리 |
+| `MoonData.cs` · `MoonTable.cs` · `MoonEffects.cs` | 달 데이터, 추첨, 조명 전환 |
+| `PauseSystem.cs` · `SoundManager.cs` | 전역 일시정지, 효과음 |
 
-지금은 플레이어/적/총알/보석 모두 도형 스프라이트(네모·원)로 된 프로토타입 단계. UI도 OnGUI 임시 구현.
+**`Assets/Scripts/`** — 씬에 붙는 것들
 
-## 로드맵 (1차 MVP)
+| 묶음 | 파일 |
+|---|---|
+| 플레이어 | `PlayerMovement` `PlayerHealth` `PlayerTransform` `MeleeAttack` `PlayerAttack` `PlayerWalkAnim` |
+| 적 | `EnemyChase` `EnemyHealth` `EnemyCharge` `EnemyRangedAttack` `EnemyProjectile` |
+| 흐름 | `WaveManager` `RoundController` `VillageController` `TitleScreen` `EscapePortal` |
+| 획득물 | `GoldCoin` `HealthPickup` `Projectile` |
+| 연출 | `CameraFollow` `DamageNumber` `DeathPop` `HitStop` `SlashEffect` `WalkWobble` |
+| UI | `ChoiceCardUI` `GoldPanelUI` `UIFont` `VirtualJoystick` |
+| 마을 | `FacilityHealth` |
 
-- [ ] **웨이브/스테이지 구조** — 무한 스폰 → 라운드제로 전환 (클리어 조건 도입)
-- [ ] **달 시스템** — 라운드 시작 시 확률 추첨, 달별 룰셋 적용 (게임의 정체성)
-- [ ] **보상 시스템** — 달 희귀도에 따른 클리어 보상 선택
-- [ ] **마을 & 행동 선택** — 마을 방어 vs 사냥 선택, 재화로 영구 강화
-- [ ] 늑대인간 캐릭터 스프라이트 + 애니메이션 (적·이펙트 포함)
-- [ ] 적 종류 추가 (빠른 적, 탱커, 보스)
-- [ ] 제대로 된 UI (Canvas 기반 HP바/XP바/선택 카드)
-- [ ] 사운드, 게임 밸런싱
+UI는 전부 `OnGUI` 임시 구현이다. Canvas 전환은 아직이다.
+
+## 테스트
+
+| 위치 | 대상 | 실행 |
+|---|---|---|
+| `Tests/Wolfman.Domain.Tests/` | 순수 C# 로직 (NUnit) | WSL에서 `dotnet test` |
+| `Assets/Tests/PlayMode/` | 씬이 필요한 흐름 | 유니티 Test Runner |
+
+## 로드맵
+
+설계는 [Docs/GameDesign.md](Docs/GameDesign.md)에 확정돼 있고, 아래는 아직 코드가 없는 것들이다.
+
+- [ ] **야성 · 굶주림 축** — 사냥하면 야성이 차고 마을에 있으면 굶주림이 찬다. 양 끝 모두 폭주로 이어진다
+- [ ] **폭주** — 한계를 넘으면 조작은 남지만 막지 못한 채 마을을 부순다
+- [ ] **낮과 밤** — 낮에 정해진 횟수만큼 행동(사기·고치기·묶이기), 해질녘에 달을 보고 그 밤을 정한다
+- [ ] **영구 강화 상점** (#13) — 대장간에서 금고 골드로. 런을 넘어 남는 유일한 성장
+- [ ] **망루탑** — 세 번째 시설. 야성을 늦추고 묶이는 장소
+- [ ] **런 경계** (#121) — 런이 시작·종료될 때 금고와 라운드 번호를 리셋한다
+- [ ] **죽음의 비용** (#124)
+- [ ] Canvas 기반 UI, 밸런싱
 
 동료 시스템은 1차 MVP에서 제외.

@@ -35,10 +35,12 @@ git config merge.unityyamlmerge.driver "'C:/Program Files/Unity/Hub/Editor/6000.
 | 파일 | 역할 |
 |---|---|
 | `GameManager.cs` | 싱글톤. 라운드 번호·현재 달·페이즈 보관. `OnMoonRevealed`, `OnPhaseChanged` 이벤트 제공 |
-| `RoundPhase.cs` | 라운드 진행 단계 열거형. UnityEngine 비의존이라 WSL 테스트에서 그대로 쓴다 |
+| `RoundPhase.cs` · `RoundFlowRule.cs` | 페이즈 정의와 라운드 한 바퀴의 판정. UnityEngine 비의존이라 WSL 테스트에서 그대로 쓴다 |
 | `PlayerFormRule.cs` | 페이즈 → 플레이어 형태(인간/늑대인간) 규칙. 순수 함수, 씬마다 맞추지 않는다 (#53) |
-| `MoonData.cs` | 달 1개 = ScriptableObject 에셋 1개 (확률, 적 배율, 변신 가능 여부, 보상 등급) |
-| `MoonTable.cs` | 달 목록 + 가중치 확률 추첨 `Draw()` |
+| `GoldWallet.cs` · `FacilityCore.cs` | 재화 뱅킹, 시설 체력·수리 (순수 C#) |
+| `CurrencyManager.cs` | 지갑의 씬 수명 관리 (`DontDestroyOnLoad`) |
+| `MoonData.cs` · `MoonTable.cs` · `MoonEffects.cs` | 달 데이터(ScriptableObject), 가중치 추첨 `Draw()`, 조명 전환 |
+| `PauseSystem.cs` · `SoundManager.cs` | 전역 일시정지, 효과음 |
 
 ### 사용 예
 
@@ -55,5 +57,5 @@ GameManager.Instance.OnPhaseChanged += phase => { if (phase == RoundPhase.Hunt) 
 
 ### 달 데이터 만들기 (에디터)
 
-Project 우클릭 → **Create → Wolfman → Moon Data** (달 6종은 이슈 #7에서 작성)
-전부 만든 뒤 **Create → Wolfman → Moon Table** 에셋에 6종을 등록하고 GameManager에 꽂는다.
+Project 우클릭 → **Create → Wolfman → Moon Data** (달 9종은 이미 저장소에 있다)
+전부 만든 뒤 **Create → Wolfman → Moon Table** 에셋에 9종을 등록하고 GameManager에 꽂는다.
