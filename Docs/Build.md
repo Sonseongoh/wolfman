@@ -36,13 +36,17 @@ Actions 쪽은 저장소의 **Actions 탭 → "웹 배포" → Run workflow**로
 
 ### Actions 배포를 쓰기 전에 (한 번만)
 
-저장소 시크릿 **`UNITY_BUILD_API_KEY`** 가 필요하다. Unity Cloud 대시보드의 Build Automation → Settings 에서 API key 를 복사해 `Settings → Secrets and variables → Actions` 에 넣는다. CLI 로는 값을 화면에 노출하지 않고 넣을 수 있다:
+저장소 시크릿 **`UNITY_BUILD_API_KEY`** 가 필요하다. Unity Cloud 대시보드의 Build Automation → Settings 에서 API key 를 복사해 넣는다.
+
+**CLI 로 넣는 게 확실하다.** 값이 화면에도 명령 이력에도 남지 않는다:
 
 ```bash
 tr -d ' \t\r\n' < ~/.unity-build-token | gh secret set UNITY_BUILD_API_KEY --repo Sonseongoh/wolfman
 ```
 
-**등록에 admin 은 필요 없다 — collaborator 면 된다.** 이 저장소는 개인 계정 소유이고, GitHub 문서가 개인 계정 저장소는 "you must be a repository collaborator", REST API 는 "collaborator access" 라고 못박는다. 실제로 `admin: false, push: true` 인 계정으로 등록된다.
+웹 UI(`Settings → Secrets and variables → Actions`)는 **admin 이 아니면 Settings 탭 자체가 안 보인다.** 시크릿을 넣을 권한과 Settings 탭이 보이는 조건이 서로 달라서 생기는 일이다 — 권한은 있는데 화면이 없는 상태가 된다. 그래서 CLI 를 먼저 쓴다.
+
+**등록 권한에 admin 은 필요 없다 — collaborator 면 된다.** GitHub 문서가 개인 계정 저장소는 "you must be a repository collaborator", REST API 는 "collaborator access" 라고 못박는다. 실제로 `admin: false, push: true` 인 계정으로 등록됐다.
 
 한 번 등록하면 **값을 다시 읽을 수 없다.** 이름과 갱신 시각만 조회된다:
 
