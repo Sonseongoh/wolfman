@@ -21,7 +21,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --branch) BRANCH=$2; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
-    -h|--help) sed -n '2,20p' "$0" | sed 's/^# \?//'; exit 0 ;;
+    -h|--help) sed -n '2,14p' "$0" | sed 's/^# \?//'; exit 0 ;;
     *) echo "모르는 인자: $1" >&2; exit 2 ;;
   esac
 done
