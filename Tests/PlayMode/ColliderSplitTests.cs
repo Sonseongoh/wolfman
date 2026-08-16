@@ -17,43 +17,8 @@ using UnityEngine.TestTools;
 /// 이 파일은 Assets/ 안에 두면 안 된다 (#108) — 돌릴 때만 버리는 사본의
 /// Assets/Tests/PlayMode/ 로 복사한다. 실행 방법은 MoonRevealFlowTests.cs 머리 주석 참고.
 /// </summary>
-public class ColliderSplitTests
+public class ColliderSplitTests : PlayModeTestBase
 {
-    const float Timeout = 30f;
-
-    /// <summary>매 테스트를 첫 실행처럼 — DontDestroyOnLoad 싱글턴 누수 차단 (RunBoundaryTests 와 동일)</summary>
-    [UnitySetUp]
-    public IEnumerator SetUp()
-    {
-        foreach (Transform t in Object.FindObjectsByType<Transform>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            if (t == null || t.parent != null) continue;
-            if (t.gameObject.scene.name == "DontDestroyOnLoad")
-                Object.DestroyImmediate(t.gameObject);
-        }
-
-        foreach (System.Type type in new[]
-                 {
-                     typeof(GameManager), typeof(SoundManager), typeof(CurrencyManager),
-                     typeof(WaveManager), typeof(VillageController), typeof(SkillSystem),
-                 })
-            ClearStaticInstance(type);
-
-        Time.timeScale = 1f;
-        yield return null;
-    }
-
-    static void ClearStaticInstance(System.Type type)
-    {
-        const BindingFlags S = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
-        foreach (string name in new[] { "<Instance>k__BackingField", "_instance", "instance" })
-        {
-            FieldInfo f = type.GetField(name, S);
-            if (f != null) { f.SetValue(null, null); return; }
-        }
-    }
-
     /// <summary>
     /// AC 1·2 (#143): 묘비 뒤(위)로 걸어 들어가지고, 그때 묘비가 플레이어 앞에 그려진다.
     ///
@@ -70,8 +35,6 @@ public class ColliderSplitTests
         Assert.NotNull(player, "사냥 씬에 Player 가 없다");
 
         GameObject tomb = SpawnTomb(player.transform.position + new Vector3(0f, -1.05f, 0f));
-
-        // 묘비 바로 위 — 스프라이트는 크게 겹치는 자리
         yield return Settle();
 
         Collider2D playerFoot = FootOf(player);
@@ -114,7 +77,8 @@ public class ColliderSplitTests
         Assert.NotNull(playerFoot, "플레이어에 발밑(솔리드) 콜라이더가 없다");
 
         // 묘비 밑동 바로 아래, 겹치지 않는 자리에서 출발한다 (좌표는 런타임 콜라이더에서 계산)
-        float startFootTop = tombFoot.bounds.min.y - 0.5f;
+        const float Gap = 0.5f;
+        float startFootTop = tombFoot.bounds.min.y - Gap;
         player.transform.position = new Vector3(
             tombFoot.bounds.center.x - playerFoot.offset.x,
             startFootTop - playerFoot.bounds.extents.y - playerFoot.offset.y,
@@ -128,7 +92,6 @@ public class ColliderSplitTests
         var rb = player.GetComponent<Rigidbody2D>();
         Assert.NotNull(rb, "플레이어에 Rigidbody2D 가 없다");
 
-        const float Gap = 0.5f;        // 위에서 띄워둔 거리
         float startY = player.transform.position.y;
         for (int i = 0; i < 60; i++)   // 5유닛/초 × 1.2초 = 막히지 않으면 6유닛을 지나 완전히 통과할 거리
         {
@@ -158,6 +121,9 @@ public class ColliderSplitTests
     /// 콜라이더가 둘이 되면서 새로 생긴 위험이다 — MeleeAttack 은 OverlapCircleAll 로 닿은 콜라이더를
     /// 전부 훑으므로, 가드가 없으면 같은 적을 발밑·몸통 두 번 때린다. 그래서 이 테스트는 먼저
     /// "정말 두 개가 잡히는지"를 확인해 위험이 실재함을 못박고, 그 다음 피해량이 한 번 분인지 본다.
+    ///
+    /// 기대 피해는 AttackPower.ForHit 에 그대로 물어본다 (#117 이 식을 그리로 모았다) —
+    /// 여기서 공식을 복제하면 배율이 하나 늘 때마다 이 테스트가 조용히 틀린 값을 기대하게 된다.
     /// </summary>
     [UnityTest]
     public IEnumerator 한_번_휘두르면_적은_한_번만_맞는다()
@@ -169,8 +135,8 @@ public class ColliderSplitTests
         Assert.NotNull(melee, "플레이어에 MeleeAttack 이 없다");
 
         EnemyHealth enemy = null;
-        yield return WaitFor(() => (enemy = Object.FindFirstObjectByType<EnemyHealth>()) != null,
-            "적이 스폰되지 않았다");
+        yield return WaitUntil(() => (enemy = Object.FindFirstObjectByType<EnemyHealth>()) != null);
+        Assert.NotNull(enemy, $"{Timeout}초 안에 적이 스폰되지 않았다");
 
         // 사거리 안으로 끌어다 놓는다
         Vector3 target = player.transform.position + new Vector3(1.1f, 0f, 0f);
@@ -179,21 +145,24 @@ public class ColliderSplitTests
         if (chase != null) chase.enabled = false;   // 추적으로 자리를 벗어나지 않게
         Physics2D.SyncTransforms();
 
-        // 위험이 실재하는지 — 같은 적의 콜라이더가 둘 다 잡혀야 이 테스트가 의미 있다
+        // 위험이 실재하는지 — 같은 적의 콜라이더가 둘 다 잡혀야 이 테스트가 의미 있다.
+        // 나중에 콜라이더를 도로 하나로 합치면 여기가 먼저 깨져서, 이 테스트가 조용히
+        // 이중 타격을 못 잡는 상태로 남지 않는다.
         int mine = 0;
         foreach (Collider2D c in Physics2D.OverlapCircleAll(target, melee.hitRadius))
             if (c.GetComponent<EnemyHealth>() == enemy) mine++;
         Assert.AreEqual(2, mine,
             $"적에게 걸린 콜라이더가 {mine}개다 — 2개(발밑+몸통)가 아니면 이 테스트는 이중 타격을 못 잡는다");
 
+        int expected = AttackPower.ForHit(melee.baseDamage);
         int before = Hp(enemy);
-        Call(melee, "Swing", target);
+        CallWith(melee, "Swing", target);
         yield return null;
         int drop = before - Hp(enemy);
 
         Assert.Greater(drop, 0, "적이 전혀 맞지 않았다 — 몸통 트리거로 피격이 들어가지 않는다");
-        Assert.AreEqual(ExpectedDamage(melee), drop,
-            $"한 번 휘둘렀는데 {drop} 깎였다 — 발밑까지 세어 두 번 때린 것으로 보인다 (#143)");
+        Assert.AreEqual(expected, drop,
+            $"한 번 휘둘렀는데 {drop} 깎였다 (한 번 분은 {expected}) — 발밑까지 세어 두 번 때린 것으로 보인다 (#143)");
     }
 
     /// <summary>
@@ -252,16 +221,6 @@ public class ColliderSplitTests
         yield return null;   // LateUpdate(YSort) 가 한 번 더 도는 프레임
     }
 
-    /// <summary>MeleeAttack.Swing 과 같은 계산 — "두 번 맞았는가"를 보려면 한 번 분을 알아야 한다.</summary>
-    static int ExpectedDamage(MeleeAttack melee)
-    {
-        float power = 1f;
-        if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
-            power = GameManager.Instance.CurrentMoon.playerPowerMultiplier;
-        float skillMult = 1f + (SkillSystem.Instance != null ? SkillSystem.Instance.damageBonus : 0f);
-        return Mathf.Max(1, Mathf.RoundToInt(melee.baseDamage * skillMult * power));
-    }
-
     /// <summary>타이틀 → 마을 → 사냥. RunBoundaryTests 와 같은 경로를 지난다.</summary>
     IEnumerator EnterHunt()
     {
@@ -274,48 +233,25 @@ public class ColliderSplitTests
         yield return WaitForScene("VillageScene");
 
         MoonRevealUI reveal = null;
-        yield return WaitFor(() =>
+        yield return WaitUntil(() =>
         {
             if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
             return reveal != null && Get<bool>(reveal, "choosing");
-        }, "달 공개가 선택 단계에 이르지 못했다");
+        });
+        Assert.NotNull(reveal, "마을에 MoonRevealUI 가 없다 — 달 공개가 시작되지 않았다 (#103)");
+        Assert.IsTrue(Get<bool>(reveal, "choosing"),
+            $"{Timeout}초 안에 달 공개가 선택 단계에 이르지 못했다 (timeScale={Time.timeScale})");
 
         reveal.Choose(MoonRevealUI.Choice.Hunt);
         yield return WaitForScene("HuntScene");
         yield return Settle();   // 지형·스폰이 자리 잡을 시간
     }
 
-    static IEnumerator WaitFor(System.Func<bool> cond, string message)
-    {
-        float t = 0f;
-        while (!cond() && t < Timeout)
-        {
-            t += Time.unscaledDeltaTime;
-            yield return null;
-        }
-        Assert.IsTrue(cond(), $"{Timeout}초 안에: {message} (timeScale={Time.timeScale})");
-    }
-
-    static IEnumerator WaitForScene(string name)
-    {
-        float t = 0f;
-        while (SceneManager.GetActiveScene().name != name && t < Timeout)
-        {
-            t += Time.unscaledDeltaTime;
-            yield return null;
-        }
-        Assert.AreEqual(name, SceneManager.GetActiveScene().name,
-            $"{Timeout}초 안에 {name} 으로 넘어가지 않았다 (timeScale={Time.timeScale})");
-        yield return null;
-    }
-
     const BindingFlags Any = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
     static int Hp(EnemyHealth e) => (int)typeof(EnemyHealth).GetField("hp", Any).GetValue(e);
 
-    static T Get<T>(object target, string field)
-        => (T)target.GetType().GetField(field, Any).GetValue(target);
-
-    static void Call(object target, string method, params object[] args)
+    /// <summary>인자 있는 사설 메서드 호출 — 베이스의 Call 은 무인자 전용이다.</summary>
+    static void CallWith(object target, string method, params object[] args)
         => target.GetType().GetMethod(method, Any).Invoke(target, args);
 }
