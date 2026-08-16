@@ -74,6 +74,35 @@ public class AttackPowerRuleTests
     // 규칙 본문을 한 줄로 접으면 그 대조가 4개 깨진다 — AttackPowerRule 의 주석을 볼 것.
 
     [Test]
+    public void 굶주림_배율이_곱해진다()
+    {
+        // 단계가 깊어질수록 같은 무기가 덜 아프다 (#117).
+        Assert.That(AttackPowerRule.Damage(100, 0f, 1f, 0.85f), Is.EqualTo(85));
+        Assert.That(AttackPowerRule.Damage(100, 0f, 1f, 0.70f), Is.EqualTo(70));
+        Assert.That(AttackPowerRule.Damage(100, 0f, 1f, 0.50f), Is.EqualTo(50));
+    }
+
+    [Test]
+    public void 굶주림_배율_1이면_기존_식과_같다()
+    {
+        // 굶지 않았을 때 오버로드가 기존 수치를 건드리면 안 된다.
+        // 유니티(Mono)에서는 528개 조합 전부를 AttackPowerMonoChecks 가 대조한다 —
+        // 여기서는 0.5 경계에 걸리지 않는 몇 개만 본다 (아래 정밀도 주석 참조).
+        Assert.That(AttackPowerRule.Damage(10, 0f, 1f, 1f), Is.EqualTo(AttackPowerRule.Damage(10, 0f, 1f)));
+        Assert.That(AttackPowerRule.Damage(100, 0.30f, 1f, 1f), Is.EqualTo(AttackPowerRule.Damage(100, 0.30f, 1f)));
+        Assert.That(AttackPowerRule.Damage(100, 0.2f, 1.5f, 1f), Is.EqualTo(AttackPowerRule.Damage(100, 0.2f, 1.5f)));
+        Assert.That(AttackPowerRule.Damage(20, 0.15f, 0.7f, 1f), Is.EqualTo(AttackPowerRule.Damage(20, 0.15f, 0.7f)));
+    }
+
+    [Test]
+    public void 굶주림으로_깎여도_최소_1은_들어간다()
+    {
+        // 아사 상태에서 약한 무기를 들면 0 이 되는데, 0 은 "약해졌다"가 아니라
+        // "적이 죽지 않는다"라서 아사 데드락을 실제 데드락으로 만든다.
+        Assert.That(AttackPowerRule.Damage(1, 0f, 1f, 0.5f), Is.EqualTo(1));
+    }
+
+    [Test]
     public void 발톱과_참격은_같은_식을_지난다()
     {
         // 두 모드의 차이는 기본 데미지뿐이어야 한다. 배율이 한쪽에만 걸리면

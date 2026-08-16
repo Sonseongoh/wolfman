@@ -21,6 +21,7 @@
     <Compile Include="../../Assets/Scripts/Core/PlayerFormRule.cs" Link="Domain/PlayerFormRule.cs" />
     <Compile Include="../../Assets/Scripts/Core/RoundFlowRule.cs" Link="Domain/RoundFlowRule.cs" />
     <Compile Include="../../Assets/Scripts/Core/AttackPowerRule.cs" Link="Domain/AttackPowerRule.cs" />
+    <Compile Include="../../Assets/Scripts/Core/WildAxisCore.cs" Link="Domain/WildAxisCore.cs" />
   </ItemGroup>
 
   <ItemGroup>

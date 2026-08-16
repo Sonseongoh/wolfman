@@ -27,12 +27,26 @@ public static class AttackPowerRule
     /// </param>
     /// <param name="moonPowerMultiplier">그 밤의 달이 주는 플레이어 강화 배율. 달이 없으면 1.</param>
     public static int Damage(int baseDamage, float skillDamageBonus, float moonPowerMultiplier)
+        => Damage(baseDamage, skillDamageBonus, moonPowerMultiplier, 1f);
+
+    /// <summary>
+    /// 이 타격이 넣는 피해 — 굶주림 페널티까지 얹은 것 (#117).
+    /// </summary>
+    /// <param name="baseDamage">무기가 가진 기본 피해.</param>
+    /// <param name="skillDamageBonus">스킬 공격력 %보너스의 합 (합연산).</param>
+    /// <param name="moonPowerMultiplier">그 밤의 달이 주는 플레이어 강화 배율.</param>
+    /// <param name="hungerMultiplier">
+    /// 굶주림 단계가 거는 배율 (<c>WildAxisCore.AttackMultiplier</c>). 굶지 않았으면 1.
+    /// 마지막에 따로 곱한다 — 스킬·달 보너스를 깎는 게 아니라 몸이 약해진 것이기 때문이다.
+    /// </param>
+    public static int Damage(int baseDamage, float skillDamageBonus, float moonPowerMultiplier, float hungerMultiplier)
     {
         // 중간값을 float 지역변수에 담는 것까지 옛 인라인 식과 똑같이 맞춰 뒀다.
         // 괄호로 묶어 한 줄로 접으면 곱셈이 확장 정밀도로 남을 수 있어 990개 조합 중 4개가 어긋난다.
         float skillMult = 1f + skillDamageBonus;
         float raw = baseDamage * skillMult * moonPowerMultiplier;
+        float starved = raw * hungerMultiplier;
 
-        return Math.Max(MinimumDamage, (int)Math.Round((double)raw, MidpointRounding.ToEven));
+        return Math.Max(MinimumDamage, (int)Math.Round((double)starved, MidpointRounding.ToEven));
     }
 }
