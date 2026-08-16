@@ -42,6 +42,20 @@ public class GameManager : MonoBehaviour
         Phase = RoundPhase.Title;
     }
 
+    /// <summary>
+    /// 새 런 시작 (#121): 이전 런의 상태를 지우고 밤 1부터 다시 센다.
+    /// 런 경계의 유일한 진입점 — 타이틀 새 시작이 부르고, 런을 끝내는 쪽(#12 시설 전멸)은
+    /// Phase 를 Title 로 되돌려 타이틀로 보내기만 하면 다음 시작이 여기를 지난다.
+    /// 죽음(#113)은 런의 끝이 아니므로 이 함수를 부르지 않는다 — StartNextRound 만 부른다.
+    /// </summary>
+    public void StartRun()
+    {
+        RoundNumber = 0; // StartNextRound 가 1로 올린다 — 새 런은 밤 1부터
+        if (CurrencyManager.Instance != null) CurrencyManager.Instance.ResetRun();
+        // 야성·굶주림(#117)이 들어오면 여기서 함께 리셋한다 (#121 AC 5)
+        StartNextRound();
+    }
+
     /// <summary>다음 라운드 시작: 달 추첨 → MoonReveal 페이즈로</summary>
     public void StartNextRound()
     {

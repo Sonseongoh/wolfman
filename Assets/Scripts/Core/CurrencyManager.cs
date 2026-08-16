@@ -60,6 +60,9 @@ public class CurrencyManager : MonoBehaviour, IGoldVault
     /// </summary>
     public bool TrySpendConfirmed(int cost) => wallet.TrySpendConfirmed(cost);
 
+    /// <summary>런 경계 (#121): 이전 런의 재화를 전부 지운다 — GameManager.StartRun 만 부른다.</summary>
+    public void ResetRun() => wallet.ResetRun();
+
     /// <summary>달 rewardTier(1~5) 기준 클리어 보너스 골드</summary>
     public static int ClearBonus(int rewardTier) => rewardTier * 20;
 }

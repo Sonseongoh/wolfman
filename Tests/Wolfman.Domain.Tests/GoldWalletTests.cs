@@ -142,4 +142,40 @@ public class GoldWalletTests
         Assert.That(wallet.ConfirmedGold, Is.EqualTo(0));
         Assert.That(wallet.TempGold, Is.EqualTo(500));
     }
+
+    [Test]
+    public void ResetRun은_금고와_주머니를_모두_비운다()
+    {
+        wallet.AddTemp(120);
+        wallet.Bank();
+        wallet.AddTemp(35);
+
+        wallet.ResetRun();
+
+        Assert.That(wallet.ConfirmedGold, Is.EqualTo(0));
+        Assert.That(wallet.TempGold, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void ResetRun_후에는_새_런의_뱅킹이_0에서_시작한다()
+    {
+        wallet.AddTemp(50);
+        wallet.Bank();
+
+        wallet.ResetRun();
+        wallet.AddTemp(10);
+        wallet.Bank();
+
+        Assert.That(wallet.ConfirmedGold, Is.EqualTo(10));
+        Assert.That(wallet.TempGold, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void ResetRun은_빈_지갑에서도_안전하다()
+    {
+        wallet.ResetRun();
+
+        Assert.That(wallet.TempGold, Is.EqualTo(0));
+        Assert.That(wallet.ConfirmedGold, Is.EqualTo(0));
+    }
 }
