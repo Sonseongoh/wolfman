@@ -14,29 +14,8 @@ using UnityEngine;
 /// (<c>WaveManager</c> · <c>VillageController</c>)가 <see cref="Advance(float)"/> 로 굴리게 했다.
 /// 축이 안 도는 씬은 흐름 소유자가 없는 씬이고, 그건 축을 밀 이유도 없는 씬이다.
 /// </summary>
-public class WildAxisManager : MonoBehaviour
+public class WildAxisManager : LazySingleton<WildAxisManager>
 {
-    static WildAxisManager _instance;
-    public static WildAxisManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                var go = new GameObject("WildAxisManager");
-                _instance = go.AddComponent<WildAxisManager>();
-
-                // 플레이 모드 밖에서는 DontDestroyOnLoad 가 예외를 던진다. 그냥 두면
-                // 에디터에서 AttackPower.ForHit 이나 PlayerHealth.EffectiveMaxHp 를 읽는 것만으로
-                // 터져서, 이 저장소가 기대는 MCP 검증이 통째로 막힌다 (실제로 막혔다).
-                // 에디터에서는 대신 씬에 저장되지 않는 임시 오브젝트로 만든다.
-                if (Application.isPlaying) DontDestroyOnLoad(go);
-                else go.hideFlags = HideFlags.HideAndDontSave;
-            }
-            return _instance;
-        }
-    }
-
     // core 를 밖으로 내보내지 않는다: 내보내면 Reset() 같은 런 수명 제어까지 아무 데서나
     // 부를 수 있게 된다. 소비자에게는 읽기값과 이름 붙은 사건(처치·폭주 소비)만 보인다.
     readonly WildAxisCore core = new WildAxisCore();
@@ -56,12 +35,6 @@ public class WildAxisManager : MonoBehaviour
     /// <summary>상점을 열 수 있는가 (#13 이 소비).</summary>
     public bool ShopOpen => core.ShopOpen;
 
-    void Awake()
-    {
-        if (_instance != null && _instance != this) { Destroy(gameObject); return; }
-        _instance = this;
-        if (Application.isPlaying) DontDestroyOnLoad(gameObject);
-    }
 
     /// <summary>
     /// 흐른 시간만큼 축을 민다. 그 씬의 흐름 소유자가 매 프레임 부른다.

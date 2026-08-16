@@ -5,28 +5,8 @@ using UnityEngine;
 /// TempGold: 사냥 중 쌓이는 임시 주머니 — 사망 시 손실.
 /// ConfirmedGold: 살아서 귀환하거나 마을에서 성공 후 금고로 확정된 재화.
 /// </summary>
-public class CurrencyManager : MonoBehaviour, IGoldVault
+public class CurrencyManager : LazySingleton<CurrencyManager>, IGoldVault
 {
-    static CurrencyManager _instance;
-    public static CurrencyManager Instance
-    {
-        get
-        {
-            if (_instance == null)
-            {
-                var go = new GameObject("CurrencyManager");
-                _instance = go.AddComponent<CurrencyManager>();
-
-                // 플레이 모드 밖에서는 DontDestroyOnLoad 가 예외를 던진다 — 에디터에서
-                // 잔액을 읽어보는 것만으로 터지면 검증할 방법이 없어진다 (WildAxisManager 와 같은 이유).
-                // 에디터에서는 씬에 저장되지 않는 임시 오브젝트로 만든다.
-                if (Application.isPlaying) DontDestroyOnLoad(go);
-                else go.hideFlags = HideFlags.HideAndDontSave;
-            }
-            return _instance;
-        }
-    }
-
     // 실제 계산은 순수 C# GoldWallet 이 한다 (#11) — 이쪽은 씬 수명만 관리하는 껍데기.
     // wallet 을 밖으로 내보내지 않는다: 내보내면 Bank()/LoseTemp() 같은 흐름 제어까지
     // 아무 데서나 부를 수 있게 된다. 소비자에게는 IGoldVault(차감 하나)만 보인다.
@@ -35,12 +15,6 @@ public class CurrencyManager : MonoBehaviour, IGoldVault
     public int TempGold => wallet.TempGold;
     public int ConfirmedGold => wallet.ConfirmedGold;
 
-    void Awake()
-    {
-        if (_instance != null && _instance != this) { Destroy(gameObject); return; }
-        _instance = this;
-        if (Application.isPlaying) DontDestroyOnLoad(gameObject);
-    }
 
     public void AddTempGold(int amount)
     {
