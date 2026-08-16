@@ -65,7 +65,6 @@ internal static class AttackPowerMonoChecks
         int checks = 0;
 
         checks += 고정값을_대조한다(failures);
-        checks += 굶주림_1은_기존_식과_같다(failures);
         checks += 굶주릴수록_약해진다(failures);
 
         if (failures.Count == 0)
@@ -87,31 +86,16 @@ internal static class AttackPowerMonoChecks
     /// </summary>
     static int 고정값을_대조한다(List<string> failures)
     {
-        Expect(failures, AttackPowerRule.Damage(10, 0.05f, 3f), 31, "Damage(10, 0.05, 3)");
-        Expect(failures, AttackPowerRule.Damage(100, 0.05f, 0.7f), 73, "Damage(100, 0.05, 0.7)");
-        Expect(failures, AttackPowerRule.Damage(100, 0.3f, 0.85f), 110, "Damage(100, 0.3, 0.85)");
-        Expect(failures, AttackPowerRule.Damage(100, 0.45f, 0.1f), 15, "Damage(100, 0.45, 0.1)");
+        Expect(failures, AttackPowerRule.Damage(10, 0.05f, 3f, 1f), 31, "Damage(10, 0.05, 3)");
+        Expect(failures, AttackPowerRule.Damage(100, 0.05f, 0.7f, 1f), 73, "Damage(100, 0.05, 0.7)");
+        Expect(failures, AttackPowerRule.Damage(100, 0.3f, 0.85f, 1f), 110, "Damage(100, 0.3, 0.85)");
+        Expect(failures, AttackPowerRule.Damage(100, 0.45f, 0.1f, 1f), 15, "Damage(100, 0.45, 0.1)");
         return 4;
     }
 
-    /// <summary>
-    /// 4-인자 오버로드(#117)가 기존 수치를 건드리지 않았는가.
-    /// 굶주림 배율 1 은 IEEE 항등이라 전 조합에서 3-인자와 같아야 한다.
-    /// </summary>
-    static int 굶주림_1은_기존_식과_같다(List<string> failures)
-    {
-        int checks = 0;
-        foreach (int b in BaseDamages)
-            foreach (float s in SkillBonuses)
-                foreach (float m in MoonPowers)
-                {
-                    int three = AttackPowerRule.Damage(b, s, m);
-                    int four = AttackPowerRule.Damage(b, s, m, 1f);
-                    Expect(failures, four, three, $"Damage({b}, {s}, {m}, 1) == Damage({b}, {s}, {m})");
-                    checks++;
-                }
-        return checks;
-    }
+    // 한때 "4-인자가 3-인자와 같은 값을 내는가"를 528 조합으로 대조했다. 3-인자 오버로드를
+    // 없앤 지금은 지울 수밖에 없다 — 남겨두면 자기 자신과 비교하는 항등식이라 절대 실패하지 않는다.
+    // 그때 지키려던 것(오버로드 추가가 기존 수치를 건드리지 않았는가)은 아래 고정 4건이 이어받는다.
 
     /// <summary>
     /// 굶주림이 깊어질수록 피해가 줄기만 하고(단조 비증가), 그래도 0 으로는 떨어지지 않는다.

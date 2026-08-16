@@ -19,6 +19,11 @@ public static class AttackPowerRule
 
     /// <summary>
     /// 이 타격이 넣는 피해.
+    ///
+    /// **배율을 뺀 짧은 오버로드를 두지 않는다.** 한때 굶주림 없이 계산하는 3-인자 오버로드가
+    /// 있었는데, 그건 이 클래스가 없애려던 누수를 다시 열어주는 문이다 — 새 무기를 붙이는
+    /// 사람이 짧은 쪽을 부르면 굶주림이 조용히 빠진 채 테스트를 통과한다.
+    /// 굶지 않았으면 <paramref name="hungerMultiplier"/> 에 1 을 넘겨 그렇다고 말할 것.
     /// </summary>
     /// <param name="baseDamage">무기가 가진 기본 피해. 발톱은 인스펙터 값, 참격은 프리팹 값.</param>
     /// <param name="skillDamageBonus">
@@ -26,15 +31,6 @@ public static class AttackPowerRule
     /// 같은 스킬을 여러 장 쌓았을 때 벌어지지 않게 하려는 의도된 선택이다.
     /// </param>
     /// <param name="moonPowerMultiplier">그 밤의 달이 주는 플레이어 강화 배율. 달이 없으면 1.</param>
-    public static int Damage(int baseDamage, float skillDamageBonus, float moonPowerMultiplier)
-        => Damage(baseDamage, skillDamageBonus, moonPowerMultiplier, 1f);
-
-    /// <summary>
-    /// 이 타격이 넣는 피해 — 굶주림 페널티까지 얹은 것 (#117).
-    /// </summary>
-    /// <param name="baseDamage">무기가 가진 기본 피해.</param>
-    /// <param name="skillDamageBonus">스킬 공격력 %보너스의 합 (합연산).</param>
-    /// <param name="moonPowerMultiplier">그 밤의 달이 주는 플레이어 강화 배율.</param>
     /// <param name="hungerMultiplier">
     /// 굶주림 단계가 거는 배율 (<c>WildAxisCore.AttackMultiplier</c>). 굶지 않았으면 1.
     /// 마지막에 따로 곱한다 — 스킬·달 보너스를 깎는 게 아니라 몸이 약해진 것이기 때문이다.
