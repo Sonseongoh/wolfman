@@ -1,3 +1,5 @@
+using System;
+
 /// <summary>굶주림이 얼마나 깊은가 (#117). 축의 음수 쪽을 다섯 칸으로 끊은 것이다.</summary>
 public enum HungerStage
 {
@@ -211,7 +213,15 @@ public class WildAxisCore
     public int OnKill()
     {
         int bite = HungerRule.Bite(Stage);
-        Move(EatNudgePerKill);
+
+        // **먹기는 굶주림을 풀 뿐, 야성을 밀지 않는다.** 안전(0)을 넘어가지 않게 자른다.
+        //
+        // 부호와 무관하게 더하면 처치 수가 야성을 지배한다 — 웨이브 하나가 15초에 10~22마리인데
+        // 같은 15초의 시간 기여는 달 속도 0.5 × 15 = 7.5 뿐이라, 한계 100 의 대부분을 처치가 민다.
+        // 그러면 "달이 야성이 차오르는 속도를 정한다"가 이름만 남는다.
+        // 야성을 올리는 것은 그 밤의 달 아래 머무는 시간이고, 처치는 굶주림 쪽만 건드린다.
+        if (Value < 0f) Move(Math.Min(EatNudgePerKill, -Value));
+
         return bite;
     }
 

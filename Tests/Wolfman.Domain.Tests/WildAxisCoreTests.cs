@@ -104,6 +104,53 @@ public class WildAxisCoreTests
         Assert.That(core.Value, Is.EqualTo(-79f).Within(0.001f));
     }
 
+    [Test]
+    public void 먹기는_안전을_넘어_야성으로_밀지_않는다()
+    {
+        // 처치 수가 야성을 지배하면 안 된다 — 웨이브 하나가 15초에 10~22마리인데
+        // 같은 15초의 시간 기여는 달 속도 0.5 × 15 = 7.5 뿐이다. 부호 없이 더하면
+        // 한계 100 의 대부분을 처치가 밀고 "달이 속도를 정한다"가 이름만 남는다.
+        축을_여기까지(-0.4f);
+
+        core.OnKill();
+
+        Assert.That(core.Value, Is.EqualTo(0f).Within(0.001f), "먹기가 안전을 넘어섰다");
+    }
+
+    [Test]
+    public void 굶주리지_않았으면_먹어도_축이_움직이지_않는다()
+    {
+        축을_여기까지(40f); // 야성 쪽
+
+        core.OnKill();
+
+        Assert.That(core.Value, Is.EqualTo(40f).Within(0.001f), "먹기가 야성을 밀었다");
+    }
+
+    [Test]
+    public void 야성은_처치가_아니라_달_아래_머문_시간이_올린다()
+    {
+        // 사냥 15초 + 처치 20회. 처치가 야성에 기여하면 안 되므로 시간분만 올라야 한다.
+        core.Advance(RoundPhase.Hunt, 15f, 0.5f);
+        for (int i = 0; i < 20; i++) core.OnKill();
+
+        Assert.That(core.Value, Is.EqualTo(7.5f).Within(0.001f));
+    }
+
+    [Test]
+    public void 굶주림_한계에서_먹고_다시_떨어지면_폭주가_새로_무장된다()
+    {
+        // 먹기가 Move 를 거치지 않고 값만 바꾸면 한계 플래그가 남아, 다시 떨어져도
+        // "이미 한계에 있었다"로 판단해 폭주가 오지 않는다.
+        축을_여기까지(-100f);
+        core.TryConsumeBreakout(out _);
+
+        core.OnKill();                  // −99 로 올라와 한계를 벗어난다
+        축을_여기까지(-100f);            // 다시 떨어진다
+
+        Assert.That(core.TryConsumeBreakout(out _), Is.True);
+    }
+
     [TestCase(0f, 0, TestName = "굶주릴수록_한_입이_크다_포식은_0")]
     [TestCase(-30f, 1, TestName = "굶주릴수록_한_입이_크다_허기는_1")]
     [TestCase(-60f, 2, TestName = "굶주릴수록_한_입이_크다_주림은_2")]
