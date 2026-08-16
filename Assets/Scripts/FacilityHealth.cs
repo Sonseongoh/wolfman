@@ -18,14 +18,14 @@ public class FacilityHealth : MonoBehaviour
 
     // 시설끼리 이 범위가 겹치지 않게 배치할 것 — 겹치면 E 한 번에 양쪽이 같이 수리되고
     // 골드도 두 번 나간다. 시설마다 독립적으로 입력을 받는 구조라 그렇다.
-    // 습격(#12)에서 상호작용 주체를 한 곳으로 모을 때 함께 정리한다.
+    // 폭주(#12)에서 상호작용 주체를 한 곳으로 모을 때 함께 정리한다.
     [Tooltip("플레이어가 이 거리 안에 들어와야 상호작용할 수 있다 (시설끼리 겹치지 않게 배치할 것)")]
     public float interactRange = 2.5f;
 
     [Tooltip("시작부터 파괴된 상태로 — 파괴·수리 사이클 검증용 임시 옵션")]
     public bool startDestroyed;
 
-    [Tooltip("T 키로 피해를 주는 디버그 입력 — 습격(#12)이 들어오면 제거")]
+    [Tooltip("T 키로 피해를 주는 디버그 입력 — 폭주(#12)가 들어오면 제거")]
     public bool enableDebugDamage = true;
 
     [Tooltip("파괴됐을 때 덮어씌울 색")]
@@ -36,7 +36,7 @@ public class FacilityHealth : MonoBehaviour
     Color originalColor;
     Transform player;
 
-    /// <summary>습격(#12) 등 외부에서 상태를 읽는 계약</summary>
+    /// <summary>폭주(#12) 등 외부에서 상태를 읽는 계약</summary>
     public bool IsDestroyed => core.IsDestroyed;
 
     /// <summary>파괴 여부에 따른 평상시 색 — 섬광이 끝나면 이 색으로 돌아온다</summary>
@@ -77,7 +77,10 @@ public class FacilityHealth : MonoBehaviour
             TakeDamage(1);
     }
 
-    /// <summary>습격(#12)의 적이 호출할 진입점. 체력이 0이 돼도 오브젝트는 파괴하지 않는다.</summary>
+    /// <summary>
+    /// 시설이 피해를 받는 유일한 진입점. 체력이 0이 돼도 오브젝트는 파괴하지 않는다.
+    /// 부르는 쪽은 폭주한 플레이어다 (#12) — 적이 아니다. 마을을 부수는 것은 밖에서 오지 않는다 (ADR 0005).
+    /// </summary>
     public void TakeDamage(int amount)
     {
         // 이미 파괴된 시설은 더 깎이지 않는다 — 연출도 내보내지 않는다

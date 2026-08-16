@@ -197,7 +197,7 @@ public class WaveManager : MonoBehaviour
 
     IEnumerator SpawnWave(int count)
     {
-        // 무리 단위 습격: 2~4마리가 같은 방향에서 한꺼번에 밀려온다.
+        // 무리 단위 스폰: 2~4마리가 같은 방향에서 한꺼번에 밀려온다.
         // 웨이브 정원을 무리 수로 나눠 시간 전체에 분산 — 총량은 같지만 "팍팍" 온다
         spawning = true;
         const float avgPack = 3f;
