@@ -41,10 +41,13 @@ public abstract class LazySingleton<T> : MonoBehaviour where T : LazySingleton<T
     }
 
     /// <summary>
-    /// 그래도 누가 씬에 꽂았을 때의 방어. 재정의하려면 <c>base.Awake()</c> 를 먼저 부를 것 —
-    /// 안 부르면 중복 인스턴스가 살아남아 값이 둘로 갈린다.
+    /// 그래도 누가 씬에 꽂았을 때의 방어.
+    ///
+    /// **구현 클래스는 <c>Awake</c> 를 직접 만들지 말 것.** 만들면 이쪽을 가려서 중복 방어가
+    /// 통째로 사라지고, 값이 둘로 갈린 채 조용히 돌아간다. 초기화할 것이 있으면
+    /// <see cref="OnSingletonAwake"/> 를 재정의한다 — 그러면 <c>base</c> 호출을 잊을 수가 없다.
     /// </summary>
-    protected virtual void Awake()
+    void Awake()
     {
         if (_instance != null && _instance != this)
         {
@@ -54,5 +57,13 @@ public abstract class LazySingleton<T> : MonoBehaviour where T : LazySingleton<T
 
         _instance = (T)this;
         if (Application.isPlaying) DontDestroyOnLoad(gameObject);
+
+        OnSingletonAwake();
     }
+
+    /// <summary>
+    /// 이 인스턴스가 "그 하나"로 확정된 뒤에 한 번 불린다. 중복이라 지워지는 쪽에서는 불리지 않는다.
+    /// 구독 같은 초기화를 여기 둔다 (<c>CurrencyManager</c> · <c>WildAxisManager</c> 가 런 경계를 구독한다).
+    /// </summary>
+    protected virtual void OnSingletonAwake() { }
 }

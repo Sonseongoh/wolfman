@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
@@ -49,49 +48,10 @@ using UnityEngine.TestTools;
 /// 버튼은 OnGUI 라 배치모드에서 누를 수 없으니, 각 버튼 핸들러와 똑같은 진입점을 직접 부른다
 /// (MoonRevealUI.Choose 는 버튼과 테스트가 함께 쓰는 공용 진입점이다).
 /// </summary>
-public class MoonRevealFlowTests
+public class MoonRevealFlowTests : PlayModeTestBase
 {
-    const float Timeout = 30f;
-
     /// <summary>마을을 떠난 뒤 달이 몇 번 추첨됐는가 (#78 — 한 바퀴에 정확히 한 번이어야 한다)</summary>
     int moonDraws;
-
-    /// <summary>
-    /// PlayMode 테스트는 한 도메인을 공유한다. DontDestroyOnLoad 로 살아남은 싱글턴이 다음 테스트로
-    /// 새어 들어가면 두 번째 테스트는 새 런이 아니게 된다 — Phase 가 Title 이 아니라서 TitleScreen 이
-    /// Awake 에서 스스로를 지워버리고, 엉뚱한 실패가 난다. 매 테스트를 첫 실행처럼 만든다.
-    /// </summary>
-    [UnitySetUp]
-    public IEnumerator SetUp()
-    {
-        foreach (Transform t in Object.FindObjectsByType<Transform>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            if (t == null || t.parent != null) continue;
-            if (t.gameObject.scene.name == "DontDestroyOnLoad")
-                Object.DestroyImmediate(t.gameObject);
-        }
-
-        foreach (System.Type type in new[]
-                 {
-                     typeof(GameManager), typeof(SoundManager), typeof(CurrencyManager),
-                     typeof(WaveManager), typeof(VillageController), typeof(SkillSystem),
-                 })
-            ClearStaticInstance(type);
-
-        Time.timeScale = 1f;
-        yield return null;
-    }
-
-    static void ClearStaticInstance(System.Type type)
-    {
-        const BindingFlags S = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
-        foreach (string name in new[] { "<Instance>k__BackingField", "_instance", "instance" })
-        {
-            FieldInfo f = type.GetField(name, S);
-            if (f != null) { f.SetValue(null, null); return; }
-        }
-    }
 
     /// <summary>
     /// 씬을 넘어 살아남아야 하는 싱글턴이 "파괴됐지만 참조는 남은" 상태로 방치되면 안 된다.
@@ -133,24 +93,21 @@ public class MoonRevealFlowTests
         var slotNames = new HashSet<string>();
         bool sawSpinning = false;
         bool sawBanner = false;
-        float t = 0f;
 
-        while (t < Timeout)
+        // 연출은 지나가면 사라지니 프레임마다 봐 둔다 — 선택 단계에 이르면 대기가 끝난다.
+        yield return WaitUntil(() =>
         {
             if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
-            if (reveal != null)
-            {
-                if (Get<bool>(reveal, "spinning")) sawSpinning = true;
-                if (Get<float>(reveal, "bannerTimer") > 0f) sawBanner = true;
+            if (reveal == null) return false;
 
-                string shown = Get<string>(reveal, "spinName");
-                if (!string.IsNullOrEmpty(shown)) slotNames.Add(shown);
+            if (Get<bool>(reveal, "spinning")) sawSpinning = true;
+            if (Get<float>(reveal, "bannerTimer") > 0f) sawBanner = true;
 
-                if (Get<bool>(reveal, "choosing")) break;
-            }
-            t += Time.unscaledDeltaTime;
-            yield return null;
-        }
+            string shown = Get<string>(reveal, "spinName");
+            if (!string.IsNullOrEmpty(shown)) slotNames.Add(shown);
+
+            return Get<bool>(reveal, "choosing");
+        });
 
         Assert.NotNull(reveal, "마을에 MoonRevealUI 가 없다 — 달 공개가 시작되지 않았다 (#103)");
         Assert.IsTrue(Get<bool>(reveal, "choosing"),
@@ -177,14 +134,11 @@ public class MoonRevealFlowTests
 
         // 증상 2 — 사냥이 진행돼야 한다 = 적이 실제로 스폰된다
         WaveManager wm = null;
-        float t2 = 0f;
-        while (t2 < Timeout)
+        yield return WaitUntil(() =>
         {
             if (wm == null) wm = WaveManager.Instance;
-            if (wm != null && wm.AliveCount > 0) break;
-            t2 += Time.unscaledDeltaTime;
-            yield return null;
-        }
+            return wm != null && wm.AliveCount > 0;
+        });
 
         Assert.NotNull(wm, "사냥 씬에 WaveManager 가 없다");
         Assert.That(wm.AliveCount, Is.GreaterThan(0),
@@ -295,14 +249,11 @@ public class MoonRevealFlowTests
     IEnumerator ChooseFromReveal(MoonRevealUI.Choice pick)
     {
         MoonRevealUI reveal = null;
-        float t = 0f;
-        while (t < Timeout)
+        yield return WaitUntil(() =>
         {
             if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
-            if (reveal != null && Get<bool>(reveal, "choosing")) break;
-            t += Time.unscaledDeltaTime;
-            yield return null;
-        }
+            return reveal != null && Get<bool>(reveal, "choosing");
+        });
 
         Assert.NotNull(reveal, "마을에 MoonRevealUI 가 없다 — 달 공개가 시작되지 않았다 (#103)");
         Assert.IsTrue(Get<bool>(reveal, "choosing"),
@@ -313,25 +264,4 @@ public class MoonRevealFlowTests
     }
 
     void CountMoonDraw(MoonData _) => moonDraws++;
-
-    static IEnumerator WaitForScene(string name)
-    {
-        float t = 0f;
-        while (SceneManager.GetActiveScene().name != name && t < Timeout)
-        {
-            t += Time.unscaledDeltaTime;
-            yield return null;
-        }
-        Assert.AreEqual(name, SceneManager.GetActiveScene().name,
-            $"{Timeout}초 안에 {name} 으로 넘어가지 않았다 (timeScale={Time.timeScale})");
-        yield return null; // Awake 뒤 Start 가 도는 프레임을 하나 준다
-    }
-
-    const BindingFlags Any = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-
-    static T Get<T>(object target, string field)
-        => (T)target.GetType().GetField(field, Any).GetValue(target);
-
-    static void Call(object target, string method)
-        => target.GetType().GetMethod(method, Any).Invoke(target, null);
 }

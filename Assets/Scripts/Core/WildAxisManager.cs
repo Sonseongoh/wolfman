@@ -35,6 +35,25 @@ public class WildAxisManager : LazySingleton<WildAxisManager>
     /// <summary>상점을 열 수 있는가 (#13 이 소비).</summary>
     public bool ShopOpen => core.ShopOpen;
 
+    /// <summary>
+    /// 런 경계 (#121): 새 런이 열리면 축도 안전한 중앙으로 돌아간다.
+    /// 재화(<c>CurrencyManager</c>)와 같은 방식으로 구독한다 — 런 경계에서 지워야 할 상태를
+    /// 가진 쪽이 스스로 붙는 게 그쪽 규약이고, <c>GameManager.OnRunStarted</c> 주석이
+    /// 야성·굶주림도 여기 붙는다고 미리 적어 두었다.
+    ///
+    /// **밤이 바뀔 때가 아니다.** 죽음은 밤만 소모하고 런은 계속되므로(ADR 0004)
+    /// <c>ReturnToVillage</c> 경로에서는 리셋되지 않는다 — 축은 밤을 넘어 누적된다.
+    /// </summary>
+    protected override void OnSingletonAwake()
+    {
+        if (GameManager.Instance != null) GameManager.Instance.OnRunStarted += ResetRun;
+    }
+
+    void OnDestroy()
+    {
+        if (GameManager.Instance != null) GameManager.Instance.OnRunStarted -= ResetRun;
+    }
+
 
     /// <summary>
     /// 흐른 시간만큼 축을 민다. 그 씬의 흐름 소유자가 매 프레임 부른다.
