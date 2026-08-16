@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -16,43 +15,8 @@ using UnityEngine.TestTools;
 /// Assets/Tests/PlayMode/ 로 복사한다. 실행 방법은 MoonRevealFlowTests.cs 머리 주석 참고.
 /// 버튼은 OnGUI 라 배치모드에서 못 누르니, 각 버튼·죽음 경로와 동일한 진입점을 직접 부른다.
 /// </summary>
-public class RunBoundaryTests
+public class RunBoundaryTests : PlayModeTestBase
 {
-    const float Timeout = 30f;
-
-    /// <summary>매 테스트를 첫 실행처럼 — DontDestroyOnLoad 싱글턴 누수 차단 (MoonRevealFlowTests 와 동일)</summary>
-    [UnitySetUp]
-    public IEnumerator SetUp()
-    {
-        foreach (Transform t in Object.FindObjectsByType<Transform>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            if (t == null || t.parent != null) continue;
-            if (t.gameObject.scene.name == "DontDestroyOnLoad")
-                Object.DestroyImmediate(t.gameObject);
-        }
-
-        foreach (System.Type type in new[]
-                 {
-                     typeof(GameManager), typeof(SoundManager), typeof(CurrencyManager),
-                     typeof(WaveManager), typeof(VillageController), typeof(SkillSystem),
-                 })
-            ClearStaticInstance(type);
-
-        Time.timeScale = 1f;
-        yield return null;
-    }
-
-    static void ClearStaticInstance(System.Type type)
-    {
-        const BindingFlags S = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
-        foreach (string name in new[] { "<Instance>k__BackingField", "_instance", "instance" })
-        {
-            FieldInfo f = type.GetField(name, S);
-            if (f != null) { f.SetValue(null, null); return; }
-        }
-    }
-
     /// <summary>
     /// AC 2·3 (#121): 타이틀 → 진행(밤 2, 금고 300G) → 런 종료 → 타이틀 → 새 시작이
     /// 이전 런을 물려받지 않는다. "런 종료 → 타이틀"은 #12 가 밟게 될 경로 그대로 —
@@ -133,26 +97,4 @@ public class RunBoundaryTests
         Assert.NotNull(GameManager.Instance, "GameManager 가 살아있지 않다");
         Assert.AreEqual(RoundPhase.Village, GameManager.Instance.Phase, "타이틀을 지나면 마을 페이즈여야 한다");
     }
-
-    static IEnumerator WaitForScene(string name)
-    {
-        float t = 0f;
-        while (SceneManager.GetActiveScene().name != name && t < Timeout)
-        {
-            t += Time.unscaledDeltaTime;
-            yield return null;
-        }
-        Assert.AreEqual(name, SceneManager.GetActiveScene().name,
-            $"{Timeout}초 안에 {name} 으로 넘어가지 않았다 (timeScale={Time.timeScale})");
-        yield return null; // Awake 뒤 Start 가 도는 프레임을 하나 준다
-    }
-
-    const BindingFlags Any = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-
-    static void Call(object target, string method)
-        => target.GetType().GetMethod(method, Any).Invoke(target, null);
-
-    static void CallStatic(System.Type type, string method)
-        => type.GetMethod(method, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-               .Invoke(null, null);
 }
