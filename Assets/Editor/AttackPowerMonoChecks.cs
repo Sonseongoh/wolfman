@@ -34,8 +34,32 @@ internal static class AttackPowerMonoChecks
     [MenuItem("Wolfman/검증/공격력 규칙 Mono 대조")]
     static void RunFromMenu() => Debug.Log(Run());
 
+    /// <summary>
+    /// 스크립트를 고칠 때마다 저절로 돈다.
+    ///
+    /// 메뉴로만 돌리게 두면 아무도 안 눌러서 조용히 썩는다 — 그러면 이 파일이 지키려던
+    /// 반올림 4건이 깨져도 아무도 모른다. CI 에 붙이려면 유니티 라이선스가 필요한데
+    /// 이 저장소의 워크플로는 웹 배포 하나뿐이라, 도메인 리로드를 길목으로 삼았다.
+    /// 에디터를 켠 사람이면 누구나 지나간다.
+    ///
+    /// **통과하면 아무 말도 하지 않는다** — 매 리로드마다 로그를 남기면 그게 소음이 되고,
+    /// 소음이 되면 진짜 실패도 묻힌다.
+    /// </summary>
+    [InitializeOnLoadMethod]
+    static void RunOnDomainReload()
+    {
+        if (TryFindFailures(out string report)) Debug.LogError(report);
+    }
+
     /// <summary>대조를 돌리고 결과를 한 줄짜리 문자열로 돌려준다 (실패가 있으면 목록까지).</summary>
     public static string Run()
+    {
+        TryFindFailures(out string report);
+        return report;
+    }
+
+    /// <summary>대조를 돌린다. 실패가 하나라도 있으면 true.</summary>
+    public static bool TryFindFailures(out string report)
     {
         var failures = new List<string>();
         int checks = 0;
@@ -44,12 +68,17 @@ internal static class AttackPowerMonoChecks
         checks += 굶주림_1은_기존_식과_같다(failures);
         checks += 굶주릴수록_약해진다(failures);
 
-        if (failures.Count == 0) return $"[AttackPowerMonoChecks] OK: {checks}건";
+        if (failures.Count == 0)
+        {
+            report = $"[AttackPowerMonoChecks] OK: {checks}건";
+            return false;
+        }
 
         var sb = new StringBuilder();
         sb.AppendLine($"[AttackPowerMonoChecks] 실패 {failures.Count}건 / 검사 {checks}건");
         foreach (string f in failures) sb.AppendLine("  " + f);
-        return sb.ToString();
+        report = sb.ToString();
+        return true;
     }
 
     /// <summary>
