@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyCountMultiplier: 1.1
   transformAllowed: 1
   playerPowerMultiplier: 1.3
+  wildRisePerSecond: 0.9
   rewardTier: 3
   description: 달빛 과잉 — 변신 대폭 강화, 적도 강화
   dropMultiplier: 1

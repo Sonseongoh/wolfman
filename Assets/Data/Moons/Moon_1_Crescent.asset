@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyCountMultiplier: 0.7
   transformAllowed: 1
   playerPowerMultiplier: 1
+  wildRisePerSecond: 0.25
   rewardTier: 1
   description: 적 약하고 수 적음. 입문 밤
   dropMultiplier: 1
