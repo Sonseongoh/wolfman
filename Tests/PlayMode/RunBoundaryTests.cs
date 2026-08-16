@@ -13,7 +13,9 @@ using UnityEngine.TestTools;
 ///
 /// 이 파일은 Assets/ 안에 두면 안 된다 (#108) — 돌릴 때만 버리는 사본의
 /// Assets/Tests/PlayMode/ 로 복사한다. 실행 방법은 MoonRevealFlowTests.cs 머리 주석 참고.
-/// 버튼은 OnGUI 라 배치모드에서 못 누르니, 각 버튼·죽음 경로와 동일한 진입점을 직접 부른다.
+/// 버튼은 OnGUI 라 배치모드에서 못 누르니 버튼과 같은 공용 진입점을 직접 부르고,
+/// 죽음은 결과를 재조립하지 않는다 — 데미지로 체력을 0으로 만들어
+/// PlayerHealth 의 죽음 블록을 실제로 지난다 (#136).
 /// </summary>
 public class RunBoundaryTests : PlayModeTestBase
 {
@@ -54,8 +56,11 @@ public class RunBoundaryTests : PlayModeTestBase
 
     /// <summary>
     /// AC 4 (#121): 죽음(#113)은 런을 끝내지 않는다 — 주머니만 잃고 밤이 넘어가며 금고는 남는다.
-    /// PlayerHealth 의 죽음 처리(LoseTempGold)와 "마을로 돌아가기" 버튼(ReturnToVillage)이
-    /// 부르는 진입점을 그대로 부른다. 리셋이 StartNextRound 쪽에 잘못 들어가면 여기서 잡힌다.
+    ///
+    /// 실제 죽음 경로를 지난다 (#136): 사냥 씬의 플레이어에게 TakeEnemyHit(적 공격 공통 진입점)로
+    /// 데미지를 넣어 체력 0 → 죽음 블록(LoseTempGold)을 실행시키고, "마을로 돌아가기" 버튼과
+    /// 같은 문(PlayerHealth.ReturnToVillage)으로 돌아온다. 죽음 블록에 런 리셋(StartRun)이
+    /// 들어오면 금고가 지워져 아래 단언이 잡는다 — ADR 0004 를 지키는 진짜 회귀선이다.
     /// </summary>
     [UnityTest]
     public IEnumerator 죽음은_런을_끝내지_않는다_금고는_남고_밤만_소모된다()
@@ -64,12 +69,32 @@ public class RunBoundaryTests : PlayModeTestBase
 
         CurrencyManager.Instance.AddTempGold(100);
         CurrencyManager.Instance.BankGold();       // 금고 100G
-        CurrencyManager.Instance.AddTempGold(40);  // 그 밤의 주머니 40G
+        CurrencyManager.Instance.AddTempGold(40);  // 그 밤의 주머니 40G — 죽으면 잃어야 한다
         int nightBeforeDeath = GameManager.Instance.RoundNumber;
 
-        // 죽음의 결과 (#113): 주머니 손실 → "마을로 돌아가기"
-        CurrencyManager.Instance.LoseTempGold();
-        CallStatic(typeof(PlayerHealth), "ReturnToVillage");
+        // 사냥을 나가야 죽을 수 있다 — PlayerHealth 는 사냥 씬에만 있다
+        yield return ChooseFromReveal(MoonRevealUI.Choice.Hunt);
+        yield return WaitForScene("HuntScene");
+
+        PlayerHealth player = Object.FindFirstObjectByType<PlayerHealth>();
+        Assert.NotNull(player, "사냥 씬에 PlayerHealth 가 없다");
+
+        // 실제 죽음: 무적 프레임에 막힌 히트는 무시되므로 죽을 때까지 프레임마다 때린다
+        float t = 0f;
+        while (!player.IsDead && t < Timeout)
+        {
+            player.TakeEnemyHit(9999);
+            t += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        Assert.IsTrue(player.IsDead, $"{Timeout}초 안에 플레이어가 죽지 않았다 — 죽음 경로에 들어가지 못했다");
+
+        // 주머니는 테스트가 아니라 죽음 블록이 비워야 한다 (#136)
+        Assert.That(CurrencyManager.Instance.TempGold, Is.EqualTo(0),
+            "죽음 블록이 주머니를 비우지 않았다 — LoseTempGold 가 죽음 처리에서 빠졌다 (#113)");
+
+        // "마을로 돌아가기" (PlayerHealth.OnGUI 버튼과 동일한 공용 진입점, #136)
+        PlayerHealth.ReturnToVillage();
         yield return WaitForScene("VillageScene");
 
         Assert.That(CurrencyManager.Instance.ConfirmedGold, Is.EqualTo(100),
@@ -96,5 +121,23 @@ public class RunBoundaryTests : PlayModeTestBase
 
         Assert.NotNull(GameManager.Instance, "GameManager 가 살아있지 않다");
         Assert.AreEqual(RoundPhase.Village, GameManager.Instance.Phase, "타이틀을 지나면 마을 페이즈여야 한다");
+    }
+
+    /// <summary>마을 달 공개가 선택 단계에 이르기를 기다렸다가 pick 으로 확정한다 (MoonRevealFlowTests 와 동일).</summary>
+    IEnumerator ChooseFromReveal(MoonRevealUI.Choice pick)
+    {
+        MoonRevealUI reveal = null;
+        yield return WaitUntil(() =>
+        {
+            if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
+            return reveal != null && Get<bool>(reveal, "choosing");
+        });
+
+        Assert.NotNull(reveal, "마을에 MoonRevealUI 가 없다 — 달 공개가 시작되지 않았다 (#103)");
+        Assert.IsTrue(Get<bool>(reveal, "choosing"),
+            $"{Timeout}초 안에 달 공개가 선택 단계에 이르지 못했다 (timeScale={Time.timeScale})");
+
+        reveal.Choose(pick);
+        yield return null; // VillageController 가 선택을 집어가는 프레임
     }
 }

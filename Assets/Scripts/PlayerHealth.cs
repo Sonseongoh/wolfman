@@ -110,8 +110,9 @@ public class PlayerHealth : MonoBehaviour
     /// 죽음 = 밤 소모 (#113): 그 밤의 임시 골드·스킬만 잃고 다음 밤의 마을로 돌아간다.
     /// 금고 골드는 남는다. 정산 허브를 거치지 않으므로 클리어 보너스는 없다 —
     /// 죽은 밤에 보너스가 나오면 안 되기 때문이다.
+    /// "마을로 돌아가기" 버튼과 PlayMode 테스트(배치모드라 버튼을 못 누름)가 함께 쓰는 진입점 (#136).
     /// </summary>
-    static void ReturnToVillage()
+    public static void ReturnToVillage()
     {
         Time.timeScale = 1f;
 

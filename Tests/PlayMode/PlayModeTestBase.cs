@@ -91,8 +91,4 @@ public abstract class PlayModeTestBase
 
     protected static void Call(object target, string method)
         => target.GetType().GetMethod(method, Any).Invoke(target, null);
-
-    protected static void CallStatic(System.Type type, string method)
-        => type.GetMethod(method, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public)
-               .Invoke(null, null);
 }
