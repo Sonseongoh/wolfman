@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -18,43 +17,8 @@ using UnityEngine.TestTools;
 /// 죽음은 결과를 재조립하지 않는다 — 데미지로 체력을 0으로 만들어
 /// PlayerHealth 의 죽음 블록을 실제로 지난다 (#136).
 /// </summary>
-public class RunBoundaryTests
+public class RunBoundaryTests : PlayModeTestBase
 {
-    const float Timeout = 30f;
-
-    /// <summary>매 테스트를 첫 실행처럼 — DontDestroyOnLoad 싱글턴 누수 차단 (MoonRevealFlowTests 와 동일)</summary>
-    [UnitySetUp]
-    public IEnumerator SetUp()
-    {
-        foreach (Transform t in Object.FindObjectsByType<Transform>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
-        {
-            if (t == null || t.parent != null) continue;
-            if (t.gameObject.scene.name == "DontDestroyOnLoad")
-                Object.DestroyImmediate(t.gameObject);
-        }
-
-        foreach (System.Type type in new[]
-                 {
-                     typeof(GameManager), typeof(SoundManager), typeof(CurrencyManager),
-                     typeof(WaveManager), typeof(VillageController), typeof(SkillSystem),
-                 })
-            ClearStaticInstance(type);
-
-        Time.timeScale = 1f;
-        yield return null;
-    }
-
-    static void ClearStaticInstance(System.Type type)
-    {
-        const BindingFlags S = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
-        foreach (string name in new[] { "<Instance>k__BackingField", "_instance", "instance" })
-        {
-            FieldInfo f = type.GetField(name, S);
-            if (f != null) { f.SetValue(null, null); return; }
-        }
-    }
-
     /// <summary>
     /// AC 2·3 (#121): 타이틀 → 진행(밤 2, 금고 300G) → 런 종료 → 타이틀 → 새 시작이
     /// 이전 런을 물려받지 않는다. "런 종료 → 타이틀"은 #12 가 밟게 될 경로 그대로 —
@@ -163,14 +127,11 @@ public class RunBoundaryTests
     IEnumerator ChooseFromReveal(MoonRevealUI.Choice pick)
     {
         MoonRevealUI reveal = null;
-        float t = 0f;
-        while (t < Timeout)
+        yield return WaitUntil(() =>
         {
             if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
-            if (reveal != null && Get<bool>(reveal, "choosing")) break;
-            t += Time.unscaledDeltaTime;
-            yield return null;
-        }
+            return reveal != null && Get<bool>(reveal, "choosing");
+        });
 
         Assert.NotNull(reveal, "마을에 MoonRevealUI 가 없다 — 달 공개가 시작되지 않았다 (#103)");
         Assert.IsTrue(Get<bool>(reveal, "choosing"),
@@ -179,25 +140,4 @@ public class RunBoundaryTests
         reveal.Choose(pick);
         yield return null; // VillageController 가 선택을 집어가는 프레임
     }
-
-    static IEnumerator WaitForScene(string name)
-    {
-        float t = 0f;
-        while (SceneManager.GetActiveScene().name != name && t < Timeout)
-        {
-            t += Time.unscaledDeltaTime;
-            yield return null;
-        }
-        Assert.AreEqual(name, SceneManager.GetActiveScene().name,
-            $"{Timeout}초 안에 {name} 으로 넘어가지 않았다 (timeScale={Time.timeScale})");
-        yield return null; // Awake 뒤 Start 가 도는 프레임을 하나 준다
-    }
-
-    const BindingFlags Any = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-
-    static T Get<T>(object target, string field)
-        => (T)target.GetType().GetField(field, Any).GetValue(target);
-
-    static void Call(object target, string method)
-        => target.GetType().GetMethod(method, Any).Invoke(target, null);
 }
