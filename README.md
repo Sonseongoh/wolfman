@@ -85,7 +85,12 @@ UI는 전부 `OnGUI` 임시 구현이다. Canvas 전환은 아직이다.
 | 위치 | 대상 | 실행 |
 |---|---|---|
 | `Tests/Wolfman.Domain.Tests/` | 순수 C# 로직 (NUnit) | WSL에서 `dotnet test` |
-| `Assets/Tests/PlayMode/` | 씬이 필요한 흐름 | 유니티 Test Runner |
+| `Tests/PlayMode/` | 씬이 필요한 흐름 | 버리는 사본으로 복사해 배치모드 (#108) |
+
+PlayMode 테스트 소스는 `Assets/` 안에 두면 안 된다 — 저장소는 `playModeTestRunnerEnabled` 를
+꺼두므로 `Assets/` 안의 `[UnityTest]` 는 Assembly-CSharp 컴파일을 통째로 깨뜨린다.
+돌릴 때만 버리는 사본의 `Assets/Tests/PlayMode/` 로 복사하고 그 사본에서만 플래그를 켠다.
+자세한 절차는 `Tests/PlayMode/MoonRevealFlowTests.cs` 머리 주석에 있다.
 
 ## 로드맵
 

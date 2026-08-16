@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyCountMultiplier: 1
   transformAllowed: 1
   playerPowerMultiplier: 1
+  wildRisePerSecond: 0.5
   rewardTier: 2
   description: 변신 가능 기본 밤. 적도 활발
   dropMultiplier: 1

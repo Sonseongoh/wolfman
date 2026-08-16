@@ -47,6 +47,9 @@ public class AssetsFolderHygieneTests
             "Assets/ 안에 PlayMode 테스트 코드가 있다:\n  " + string.Join("\n  ", offenders) + "\n\n" +
             "저장소는 playModeTestRunnerEnabled 를 꺼두므로 UnityEngine.TestRunner.dll 이 참조되지 않는다. " +
             "이 파일들은 Assembly-CSharp 컴파일을 통째로 실패시켜 프로젝트가 열리지 않게 만든다. " +
-            "PlayMode 테스트는 Tests/PlayMode/ 에 두고, 돌릴 때만 버리는 사본으로 복사해 넣을 것.");
+            "PlayMode 테스트는 Tests/PlayMode/ 에 두고, 돌릴 때만 버리는 사본으로 복사해 넣을 것.\n\n" +
+            "코드가 아니라 주석·문자열에 저 낱말이 들어간 것이라면 문구를 바꿔라. " +
+            "이 검사는 파일을 텍스트로만 보므로 주석과 코드를 구별하지 못한다 — " +
+            "구별하게 만들면 `/* ... */` 안에 숨긴 진짜 위반을 놓치게 되어, 일부러 이대로 둔다.");
     }
 }
