@@ -25,7 +25,13 @@ public class WildAxisManager : MonoBehaviour
             {
                 var go = new GameObject("WildAxisManager");
                 _instance = go.AddComponent<WildAxisManager>();
-                DontDestroyOnLoad(go);
+
+                // 플레이 모드 밖에서는 DontDestroyOnLoad 가 예외를 던진다. 그냥 두면
+                // 에디터에서 AttackPower.ForHit 이나 PlayerHealth.EffectiveMaxHp 를 읽는 것만으로
+                // 터져서, 이 저장소가 기대는 MCP 검증이 통째로 막힌다 (실제로 막혔다).
+                // 에디터에서는 대신 씬에 저장되지 않는 임시 오브젝트로 만든다.
+                if (Application.isPlaying) DontDestroyOnLoad(go);
+                else go.hideFlags = HideFlags.HideAndDontSave;
             }
             return _instance;
         }
@@ -54,7 +60,7 @@ public class WildAxisManager : MonoBehaviour
     {
         if (_instance != null && _instance != this) { Destroy(gameObject); return; }
         _instance = this;
-        DontDestroyOnLoad(gameObject);
+        if (Application.isPlaying) DontDestroyOnLoad(gameObject);
     }
 
     /// <summary>
