@@ -44,6 +44,10 @@ public class HealthPickup : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        // 몸통 트리거로만 먹는다 (#143) — 플레이어 콜라이더가 둘(발밑 솔리드+몸통 트리거)이라
+        // 가드가 없으면 같은 물리 스텝에 두 번 들어와 회복이 이중 발동할 수 있다.
+        if (!other.isTrigger) return;
+
         if (other.CompareTag("Player"))
         {
             PlayerHealth hp = other.GetComponent<PlayerHealth>();

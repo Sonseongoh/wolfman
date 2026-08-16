@@ -27,10 +27,14 @@ public class EnemyChase : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
 
-        // 몸 크기를 콜라이더에서 계산 (탱커처럼 큰 적은 더 두껍게 감지)
-        Collider2D col = GetComponent<Collider2D>();
-        if (col != null)
-            bodyRadius = Mathf.Max(col.bounds.extents.x, col.bounds.extents.y) * 0.9f;
+        // 몸 크기를 발밑 콜라이더에서 계산 (탱커처럼 큰 적은 더 두껍게 감지).
+        // 콜라이더가 둘로 나뉜 뒤로(#143) 반드시 솔리드 쪽을 골라야 한다 — 장애물 회피는
+        // "실제로 막히는 폭이 얼마인가"의 문제라서, 피격용 몸통 트리거를 재면 과하게 피한다.
+        Collider2D foot = null;
+        foreach (Collider2D c in GetComponents<Collider2D>())
+            if (!c.isTrigger) { foot = c; break; }
+        if (foot != null)
+            bodyRadius = Mathf.Max(foot.bounds.extents.x, foot.bounds.extents.y) * 0.9f;
 
         // 걷기 흔들림 연출·Y 정렬 자동 장착
         if (GetComponent<WalkWobble>() == null) gameObject.AddComponent<WalkWobble>();

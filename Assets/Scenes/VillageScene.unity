@@ -444,6 +444,7 @@ GameObject:
   - component: {fileID: 939903672}
   - component: {fileID: 939903671}
   - component: {fileID: 939903670}
+  - component: {fileID: 939903676}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -481,7 +482,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -626,6 +627,43 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerTransform
   humanSprite: {fileID: 21300000, guid: 3a7c1f92b45d48e2a91c0d3e5f6a7b81, type: 3}
   wolfSprite: {fileID: 21300000, guid: ee88ff99aabbccddeeff001122334a00, type: 3}
+--- !u!70 &939903676
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 939903669}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: -0.47}
+  m_Size: {x: 0.35, y: 0.35}
+  m_Direction: 1
 --- !u!1 &1448195648
 GameObject:
   m_ObjectHideFlags: 0

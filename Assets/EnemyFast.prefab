@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1535741304277993082}
   - component: {fileID: 1227528646064292774}
   - component: {fileID: 417152115743531459}
+  - component: {fileID: 6151131344685968105}
   m_Layer: 0
   m_Name: EnemyFast
   m_TagString: Untagged
@@ -136,6 +137,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChase
   moveSpeed: 4.5
+  keepDistance: 0
+  knockbackImmunity: 0.5
+  obstacleProbe: 0.9
 --- !u!114 &1227528646064292774
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,6 +154,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHp: 5
   gemPrefab: {fileID: 1867112256589320435, guid: 333c0695553130c4a96fd3c1a572f92b, type: 3}
+  goldDrop: 1
   healthDropPrefab: {fileID: 1867112256589320435, guid: f6e5d4c3b2a1908877665544332211a2, type: 3}
   healthDropChance: 0.03
   knockbackForce: 9
@@ -184,7 +189,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -200,3 +205,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.765625, y: 1.109375}
   m_EdgeRadius: 0
+--- !u!70 &6151131344685968105
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5769649458394515389}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: -0.35}
+  m_Size: {x: 0.97, y: 0.41}
+  m_Direction: 1

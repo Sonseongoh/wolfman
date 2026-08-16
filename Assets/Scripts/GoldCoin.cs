@@ -65,6 +65,10 @@ public class GoldCoin : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        // 몸통 트리거로만 줍는다 (#143) — 플레이어 콜라이더가 둘(발밑 솔리드+몸통 트리거)이라
+        // 가드가 없으면 같은 물리 스텝에 두 번 들어와 골드가 이중 적립될 수 있다.
+        if (!other.isTrigger) return;
+
         if (!other.CompareTag("Player")) return;
 
         CurrencyManager.Instance?.AddTempGold(value);

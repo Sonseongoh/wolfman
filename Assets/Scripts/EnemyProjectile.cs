@@ -30,6 +30,9 @@ public class EnemyProjectile : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        // 피격은 몸통 트리거로만 (#143) — Projectile 과 같은 규칙이다
+        if (!other.isTrigger) return;
+
         PlayerHealth player = other.GetComponent<PlayerHealth>();
         if (player != null)
         {
