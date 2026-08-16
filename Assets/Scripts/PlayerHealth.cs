@@ -51,9 +51,15 @@ public class PlayerHealth : MonoBehaviour
         // 굶주림이 최대치를 누르면 현재 체력도 따라 내려가고, 풀리면 눌렸던 만큼 돌아온다 (#117).
         // 안 깎으면 페널티가 다음 피격까지 체감되지 않고, 안 돌려주면 단계가 오르내릴 때마다
         // 맞지도 않은 체력이 계단식으로 사라진다. 판정은 HungerHealthRule 이 한다.
-        HungerHealthRule.Settled settled = HungerHealthRule.Settle(hp, hungerHeld, EffectiveMaxHp);
-        hp = settled.Hp;
-        hungerHeld = settled.Held;
+        //
+        // 죽은 뒤에는 정산하지 않는다. Update 는 isDead 와 무관하게 계속 돌기 때문에,
+        // 굶주려 죽으면 눌러둔 체력이 그대로 돌아와 게임오버 화면에 "HP: 2 / 3" 이 뜬다.
+        if (!isDead)
+        {
+            HungerHealthRule.Settled settled = HungerHealthRule.Settle(hp, hungerHeld, EffectiveMaxHp);
+            hp = settled.Hp;
+            hungerHeld = settled.Held;
+        }
 
         // 무적 시간 동안 깜빡여서 시각적으로 표시
         if (invincibleTimer > 0f)
