@@ -20,6 +20,15 @@ public class PlayerHealth : MonoBehaviour
     public bool IsDead => isDead;
 
     /// <summary>
+    /// 지금 체력. 읽기 전용이다 — 깎고 채우는 길은 <see cref="TakeEnemyHit"/> 와 <see cref="Heal"/> 뿐이어야
+    /// 무적 시간·사망 판정·굶주림 정산을 건너뛰는 경로가 생기지 않는다.
+    ///
+    /// #117 을 검증할 때 이게 없어서 리플렉션으로 사설 필드를 읽어야 했다. 폭주(#12)도
+    /// "지금 얼마나 남았나"를 물을 것이다.
+    /// </summary>
+    public int CurrentHp => hp;
+
+    /// <summary>
     /// 굶주림 페널티까지 반영한 지금의 최대 체력 (#117).
     ///
     /// <c>maxHp</c> 자체는 건드리지 않는다 — 스킬 <c>IncreaseMaxHp</c> 가 같은 필드를 올리고 있어서
