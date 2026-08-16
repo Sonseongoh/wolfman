@@ -80,13 +80,8 @@ public class MeleeAttack : MonoBehaviour
         Vector2 dir = ((Vector2)(targetPos - transform.position)).normalized;
         Vector2 hitCenter = (Vector2)transform.position + dir * 1.1f;
 
-        // 데미지 = 기본 × (1 + 스킬 공격력 %합) × 달의 플레이어 강화 배율
-        float power = 1f;
-        if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
-            power = GameManager.Instance.CurrentMoon.playerPowerMultiplier;
-
-        float skillMult = 1f + (SkillSystem.Instance != null ? SkillSystem.Instance.damageBonus : 0f);
-        int damage = Mathf.Max(1, Mathf.RoundToInt(baseDamage * skillMult * power));
+        // 데미지 계산은 달빛 참격과 공유한다 — 둘은 배타적 모드라 식이 갈리면 한쪽만 새 배율을 놓친다
+        int damage = AttackPower.ForHit(baseDamage);
 
         // 원형 판정 광역 — 닿은 적 전부 타격 + 넉백
         Collider2D[] hits = Physics2D.OverlapCircleAll(hitCenter, hitRadius);

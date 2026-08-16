@@ -20,6 +20,7 @@
     <Compile Include="../../Assets/Scripts/Core/RoundPhase.cs" Link="Domain/RoundPhase.cs" />
     <Compile Include="../../Assets/Scripts/Core/PlayerFormRule.cs" Link="Domain/PlayerFormRule.cs" />
     <Compile Include="../../Assets/Scripts/Core/RoundFlowRule.cs" Link="Domain/RoundFlowRule.cs" />
+    <Compile Include="../../Assets/Scripts/Core/AttackPowerRule.cs" Link="Domain/AttackPowerRule.cs" />
   </ItemGroup>
 
   <ItemGroup>
