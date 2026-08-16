@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2201000000000000006}
   - component: {fileID: 2201000000000000007}
   - component: {fileID: 2201000000000000008}
+  - component: {fileID: 5233444871895540687}
   m_Layer: 0
   m_Name: MiniBossWolf
   m_TagString: Untagged
@@ -134,11 +135,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1feb337cda7ed7542a762a9714c1e85c, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChase
   moveSpeed: 2
   keepDistance: 0
   knockbackImmunity: 999
+  obstacleProbe: 0.9
 --- !u!114 &2201000000000000006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -149,7 +151,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e22399162b7f1b745903c557ff45fb05, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHp: 100
   gemPrefab: {fileID: 1867112256589320435, guid: 333c0695553130c4a96fd3c1a572f92b, type: 3}
@@ -168,9 +170,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aa22bb22cc22dd22ee22ff2200000001, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MiniBoss
-  bossName: "무리의 우두머리"
+  bossName: "\uBB34\uB9AC\uC758 \uC6B0\uB450\uBA38\uB9AC"
   patternInterval: 5
   windupTime: 0.7
   chargeSpeed: 12
@@ -207,7 +209,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -223,3 +225,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 1.5, y: 1.6}
   m_EdgeRadius: 0
+--- !u!70 &5233444871895540687
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2201000000000000001}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: -0.76}
+  m_Size: {x: 1.4, y: 0.19}
+  m_Direction: 1

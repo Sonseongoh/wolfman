@@ -92,6 +92,10 @@ public class MeleeAttack : MonoBehaviour
         Collider2D[] hits = Physics2D.OverlapCircleAll(hitCenter, hitRadius);
         foreach (Collider2D h in hits)
         {
+            // 피격은 몸통 트리거로만 (#143). 캐릭터는 콜라이더가 둘이라
+            // 발밑까지 세면 한 번 휘두르고 두 번 때린다.
+            if (!h.isTrigger) continue;
+
             EnemyHealth enemy = h.GetComponent<EnemyHealth>();
             if (enemy != null) enemy.TakeDamage(damage, dir);
         }

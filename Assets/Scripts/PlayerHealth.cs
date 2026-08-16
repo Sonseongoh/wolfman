@@ -41,8 +41,20 @@ public class PlayerHealth : MonoBehaviour
 
     void OnCollisionStay2D(Collision2D collision)
     {
-        // 적과 닿아 있으면 데미지
+        // 발밑끼리 부딪힌 경우 — 적과 닿아 있으면 데미지
         if (collision.gameObject.GetComponent<EnemyChase>() != null)
+            TakeEnemyHit(1);
+    }
+
+    /// <summary>
+    /// 몸통이 닿았을 때의 접촉 데미지 (#143). 콜라이더를 발밑(솔리드)과 몸통(트리거)으로
+    /// 쪼갠 뒤로 적의 몸통은 트리거라 OnCollisionStay2D 가 잡지 못한다 — 그것만 두면
+    /// 발이 겹칠 때만 아파서 난이도가 조용히 내려간다. 보이는 대로 아프게 하려면 여기가 필요하다.
+    /// 발밑 충돌과 겹쳐 두 번 불려도 TakeEnemyHit 의 무적 시간이 중복을 막는다.
+    /// </summary>
+    void OnTriggerStay2D(Collider2D other)
+    {
+        if (other.GetComponent<EnemyChase>() != null)
             TakeEnemyHit(1);
     }
 

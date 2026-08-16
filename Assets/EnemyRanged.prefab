@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 2802000000000000006}
   - component: {fileID: 2802000000000000007}
   - component: {fileID: 2802000000000000008}
+  - component: {fileID: 3091106569560748619}
   m_Layer: 0
   m_Name: EnemyRanged
   m_TagString: Untagged
@@ -134,10 +135,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1feb337cda7ed7542a762a9714c1e85c, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyChase
   moveSpeed: 2.2
   keepDistance: 7
+  knockbackImmunity: 0.5
+  obstacleProbe: 0.9
 --- !u!114 &2802000000000000006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -148,7 +151,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e22399162b7f1b745903c557ff45fb05, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
   maxHp: 10
   gemPrefab: {fileID: 1867112256589320435, guid: 333c0695553130c4a96fd3c1a572f92b, type: 3}
@@ -167,7 +170,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aa28bb28cc28dd28ee28ff2800000001, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyRangedAttack
   projectilePrefab: {fileID: 2801000000000000001, guid: aa28bb28cc28dd28ee28ff2800000006, type: 3}
   fireInterval: 2.2
@@ -203,7 +206,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -219,3 +222,40 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.859375, y: 1.078125}
   m_EdgeRadius: 0
+--- !u!70 &3091106569560748619
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2802000000000000001}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: -0.36}
+  m_Size: {x: 0.47, y: 0.35}
+  m_Direction: 1

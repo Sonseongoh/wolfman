@@ -38,6 +38,10 @@ public class Projectile : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        // 피격은 몸통 트리거로만 받는다 (#143). 캐릭터는 콜라이더가 둘이다 —
+        // 발밑(솔리드, 이동 차단)과 몸통(트리거, 피격). 발밑까지 세면 한 발이 두 번 맞힌다.
+        if (!other.isTrigger) return;
+
         EnemyHealth enemy = other.GetComponent<EnemyHealth>();
         if (enemy != null)
         {
