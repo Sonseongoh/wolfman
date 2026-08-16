@@ -33,6 +33,9 @@ public class MoonData : ScriptableObject
     [Tooltip("true면 웨이브 스킬 3택에 희귀 이상 스킬 1장 확정 등장 (블루문 효과)")]
     public bool guaranteeRareSkill = false;
 
+    [Tooltip("이 달이 뜬 밤, 사냥 중 야성이 차오르는 속도 (축 단위/초). 보름달은 빠르게, 초승달은 천천히 — 개별 조정은 밸런싱에서")]
+    public float wildRisePerSecond = WildAxisCore.DefaultWildRisePerSecond;
+
     [Header("보상 (모듈 C가 정산에 사용)")]
     [Tooltip("1=일반, 2=고급, 3=희귀, 4=영웅, 5=전설")]
     [Range(1, 5)] public int rewardTier = 1;

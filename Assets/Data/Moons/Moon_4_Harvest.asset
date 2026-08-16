@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyCountMultiplier: 1
   transformAllowed: 1
   playerPowerMultiplier: 1
+  wildRisePerSecond: 0.5
   rewardTier: 2
   description: 수확의 달 — 재화·경험치 드랍 2배, 난이도 표준
   dropMultiplier: 2

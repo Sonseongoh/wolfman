@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyCountMultiplier: 0.9
   transformAllowed: 0
   playerPowerMultiplier: 0.8
+  wildRisePerSecond: 0
   rewardTier: 4
   description: 달 없는 밤 — 변신 불가, 시야 제한(조명 최저), 은신·회피 생존
   dropMultiplier: 1

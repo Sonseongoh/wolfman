@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyCountMultiplier: 1.4
   transformAllowed: 1
   playerPowerMultiplier: 1.2
+  wildRisePerSecond: 1
   rewardTier: 3
   description: 동족의 밤 — 적 대량 등장, 야수 본능 강화
   dropMultiplier: 1

@@ -74,6 +74,7 @@ public class WaveManager : MonoBehaviour
     public int bossEveryWaves = 5;
 
     Transform player;
+    PlayerHealth playerHealth; // 먹은 만큼 회복시켜 줄 대상 (#117)
     bool spawning;    // 이번 웨이브 스폰이 아직 진행 중인가
     bool resting;     // 웨이브 사이 휴식 중인가
     float restTimer;
@@ -102,7 +103,11 @@ public class WaveManager : MonoBehaviour
     void Start()
     {
         GameObject p = GameObject.FindWithTag("Player");
-        if (p != null) player = p.transform;
+        if (p != null)
+        {
+            player = p.transform;
+            playerHealth = p.GetComponent<PlayerHealth>();
+        }
 
         resting = true;
         restTimer = 2f; // 게임 시작 후 첫 웨이브까지 잠깐 여유
@@ -112,6 +117,11 @@ public class WaveManager : MonoBehaviour
 
     void Update()
     {
+        // 야성은 사냥하는 동안 그 밤의 달이 정한 속도로 찬다 (#117).
+        // 축은 스스로 돌지 않는 셸이라 그 씬의 흐름 소유자가 굴린다 — 사냥에서는 여기다.
+        // Time.deltaTime 이라 일시정지·스킬 3택(timeScale 0)에서는 자동으로 멈춘다.
+        WildAxisManager.Instance.Advance(Time.deltaTime);
+
         if (portalBannerTimer > 0f) portalBannerTimer -= Time.deltaTime;
         if (portalLostTimer > 0f) portalLostTimer -= Time.deltaTime;
         if (bossBannerTimer > 0f) bossBannerTimer -= Time.deltaTime;
@@ -187,7 +197,7 @@ public class WaveManager : MonoBehaviour
 
     IEnumerator SpawnWave(int count)
     {
-        // 무리 단위 습격: 2~4마리가 같은 방향에서 한꺼번에 밀려온다.
+        // 무리 단위 스폰: 2~4마리가 같은 방향에서 한꺼번에 밀려온다.
         // 웨이브 정원을 무리 수로 나눠 시간 전체에 분산 — 총량은 같지만 "팍팍" 온다
         spawning = true;
         const float avgPack = 3f;
@@ -271,6 +281,11 @@ public class WaveManager : MonoBehaviour
     {
         KillCount++;
         AliveCount = Mathf.Max(0, AliveCount - 1);
+
+        // 처치 = 먹기 (#117) — 굶주림이 내려가고, 굶주릴수록 한 입이 크다.
+        // 처치가 지나는 깔때기가 여기 하나뿐이라 미니보스도 같은 길로 들어온다.
+        int bite = WildAxisManager.Instance.NotifyKill();
+        if (bite > 0 && playerHealth != null) playerHealth.Heal(bite);
     }
 
     /// <summary>웨이브 시작 시 확률 판정 — 성공하면 플레이어 주변에 탈출 포탈이 열린다 (#46).
@@ -455,6 +470,9 @@ public class WaveManager : MonoBehaviour
 
         // 재화 HUD (#8)
         GoldPanelUI.Draw();
+
+        // 야성·굶주림 축 게이지 (#117)
+        WildAxisGaugeUI.Draw();
 
         // 현재 달 표시 — 우측 상단 골드 패널 아래에 아이콘 + 이름
         MoonData moon = CurrentMoon;

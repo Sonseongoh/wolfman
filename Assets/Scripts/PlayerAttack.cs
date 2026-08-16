@@ -75,13 +75,8 @@ public class PlayerAttack : MonoBehaviour
             Projectile proj = go.GetComponent<Projectile>();
             proj.SetDirection(dir);
 
-            // 달의 플레이어 강화 배율 + 스킬 공격력 %보너스 적용 (근접과 같은 공식)
-            float power = 1f;
-            if (GameManager.Instance != null && GameManager.Instance.CurrentMoon != null)
-                power = GameManager.Instance.CurrentMoon.playerPowerMultiplier;
-
-            float skillMult = 1f + (SkillSystem.Instance != null ? SkillSystem.Instance.damageBonus : 0f);
-            proj.damage = Mathf.Max(1, Mathf.RoundToInt((proj.damage + bonusDamage) * skillMult * power));
+            // 발톱과 같은 식을 지난다 (AttackPower). 여기만 고치면 발톱 쪽이 새므로 손대지 말 것
+            proj.damage = AttackPower.ForHit(proj.damage + bonusDamage);
         }
     }
 }

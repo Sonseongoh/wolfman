@@ -22,6 +22,7 @@ MonoBehaviour:
   enemyCountMultiplier: 1.3
   transformAllowed: 1
   playerPowerMultiplier: 1.5
+  wildRisePerSecond: 1.5
   rewardTier: 5
   description: 150년의 달 — 특수 보스 / 변칙 스테이지 (TODO)
   dropMultiplier: 1.5

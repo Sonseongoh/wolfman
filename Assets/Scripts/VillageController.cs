@@ -42,6 +42,11 @@ public class VillageController : MonoBehaviour
 
     void Update()
     {
+        // 마을에 머무는 시간만큼 야성이 식고 굶주림이 오른다 (#117).
+        // 축은 스스로 돌지 않는 셸이라 그 씬의 흐름 소유자가 굴린다 — 마을에서는 여기다.
+        // 달 공개 연출 중에도 마을에 머무는 것이므로 흐른다 (MoonRevealUI 는 시간을 멈추지 않는다).
+        WildAxisManager.Instance.Advance(Time.deltaTime);
+
         if (messageTimer > 0f) messageTimer -= Time.deltaTime;
 
         // 달 공개가 끝나고 선택이 내려오면 처리 (#103)
@@ -91,6 +96,9 @@ public class VillageController : MonoBehaviour
 
         // 수리 재원인 금고 잔액이 항상 보여야 한다 (#11)
         GoldPanelUI.Draw();
+
+        // 야성·굶주림 축 게이지 (#117) — 마을에 얼마나 더 머물 수 있는지가 여기 보인다
+        WildAxisGaugeUI.Draw();
 
         // 라운드 종료 → MainScene. Phase는 Village 그대로 둔다 —
         // RoundController(#6)가 그걸 보고 "마을에서 무사히 라운드를 마쳤다"로 인식해

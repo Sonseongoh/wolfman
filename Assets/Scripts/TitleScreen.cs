@@ -69,6 +69,7 @@ public class TitleScreen : MonoBehaviour
     void StartGame()
     {
         starting = true;
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.StartRun(); // 런 경계 (#121): 이전 런의 금고·라운드를 지우고 밤 1부터

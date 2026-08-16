@@ -19,6 +19,27 @@ public class PlayerHealth : MonoBehaviour
     /// <summary>게임오버 상태인지 (HitStop 등이 시간 정지 유지 판단에 사용)</summary>
     public bool IsDead => isDead;
 
+    /// <summary>
+    /// 지금 체력. 읽기 전용이다 — 깎고 채우는 길은 <see cref="TakeEnemyHit"/> 와 <see cref="Heal"/> 뿐이어야
+    /// 무적 시간·사망 판정·굶주림 정산을 건너뛰는 경로가 생기지 않는다.
+    ///
+    /// #117 을 검증할 때 이게 없어서 리플렉션으로 사설 필드를 읽어야 했다. 폭주(#12)도
+    /// "지금 얼마나 남았나"를 물을 것이다.
+    /// </summary>
+    public int CurrentHp => hp;
+
+    /// <summary>
+    /// 굶주림 페널티까지 반영한 지금의 최대 체력 (#117).
+    ///
+    /// <c>maxHp</c> 자체는 건드리지 않는다 — 스킬 <c>IncreaseMaxHp</c> 가 같은 필드를 올리고 있어서
+    /// 거기서 빼면 굶주림이 풀렸을 때 무엇을 얼마나 돌려줘야 하는지 알 수 없게 된다.
+    /// 뺄셈을 여기서 하면 단계가 풀리는 순간 페널티도 저절로 걷힌다.
+    /// </summary>
+    public int EffectiveMaxHp => Mathf.Max(1, maxHp - WildAxisManager.Instance.MaxHpPenalty);
+
+    /// <summary>굶주림이 눌러둔 체력 (#117). 페널티가 걷히면 이만큼 돌려준다 — 맡아둔 것이지 잃은 게 아니다.</summary>
+    int hungerHeld;
+
     void Awake()
     {
         hp = maxHp;
@@ -27,6 +48,19 @@ public class PlayerHealth : MonoBehaviour
 
     void Update()
     {
+        // 굶주림이 최대치를 누르면 현재 체력도 따라 내려가고, 풀리면 눌렸던 만큼 돌아온다 (#117).
+        // 안 깎으면 페널티가 다음 피격까지 체감되지 않고, 안 돌려주면 단계가 오르내릴 때마다
+        // 맞지도 않은 체력이 계단식으로 사라진다. 판정은 HungerHealthRule 이 한다.
+        //
+        // 죽은 뒤에는 정산하지 않는다. Update 는 isDead 와 무관하게 계속 돌기 때문에,
+        // 굶주려 죽으면 눌러둔 체력이 그대로 돌아와 게임오버 화면에 "HP: 2 / 3" 이 뜬다.
+        if (!isDead)
+        {
+            HungerHealthRule.Settled settled = HungerHealthRule.Settle(hp, hungerHeld, EffectiveMaxHp);
+            hp = settled.Hp;
+            hungerHeld = settled.Held;
+        }
+
         // 무적 시간 동안 깜빡여서 시각적으로 표시
         if (invincibleTimer > 0f)
         {
@@ -68,7 +102,7 @@ public class PlayerHealth : MonoBehaviour
     public void FullHeal()
     {
         if (isDead) return;
-        int missing = maxHp - hp;
+        int missing = EffectiveMaxHp - hp;
         if (missing > 0) Heal(missing);
     }
 
@@ -77,7 +111,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (isDead) return;
 
-        hp = Mathf.Min(maxHp, hp + amount);
+        hp = Mathf.Min(EffectiveMaxHp, hp + amount);
         DamageNumber.Spawn(transform.position, $"+{amount}", new Color(0.4f, 1f, 0.5f), 1.1f);
     }
 
@@ -128,7 +162,7 @@ public class PlayerHealth : MonoBehaviour
     void OnGUI()
     {
         GUIStyle hpStyle = new GUIStyle { fontSize = 28, normal = { textColor = Color.white } };
-        GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {maxHp}", hpStyle);
+        GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {EffectiveMaxHp}", hpStyle);
 
         // 일시정지 버튼·오버레이는 전역 PauseSystem(#33)이 모든 씬에서 그린다
 
