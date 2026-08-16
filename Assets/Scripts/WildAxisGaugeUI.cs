@@ -29,10 +29,11 @@ public static class WildAxisGaugeUI
         GUI.color = new Color(0.06f, 0.05f, 0.12f, 0.85f);
         GUI.DrawTexture(new Rect(x - 1, y - 1, w + 2, h + 2), Texture2D.whiteTexture);
 
-        // 안전 쪽에서 멀어질수록 그 방향 색이 진해진다
-        float t = Mathf.InverseLerp(WildAxisCore.StarveLimit, WildAxisCore.WildLimit, axis.Value);
-        bool starving = axis.Value < 0f;
-        float away = Mathf.Abs(axis.Value) / WildAxisCore.WildLimit;
+        // 무엇을 보여줄지는 WildAxisGaugeText 가 정한다 — 여기 두면 검사할 수 없기 때문이다
+        // (배치모드 유니티에서는 OnGUI 가 아예 돌지 않는다). 여기 남은 건 좌표와 색뿐이다.
+        float t = WildAxisGaugeText.MarkerPosition(axis.Value);
+        bool starving = WildAxisGaugeText.LeansStarving(axis.Value);
+        float away = WildAxisGaugeText.DistanceFromSafe(axis.Value);
         Color tint = Color.Lerp(new Color(0.5f, 0.5f, 0.55f), starving ? StarveColor : WildColor, away);
 
         // 채움: 중앙 눈금에서 지금 위치까지 — 어느 쪽으로 얼마나 밀렸는지가 길이로 보인다
@@ -53,12 +54,10 @@ public static class WildAxisGaugeUI
 
         // 단계 라벨 — 포식이면 적지 않는다 (아무 일도 없을 때 화면을 채우지 않는다)
         HungerStage stage = axis.Stage;
-        if (stage == HungerStage.Sated) return;
+        if (!WildAxisGaugeText.ShowsLabel(stage)) return;
 
-        bool severe = stage == HungerStage.Starving || stage == HungerStage.Limit;
-        string text = $"{StageName(stage)} — 공격 ×{axis.AttackMultiplier:0.##}";
-        if (axis.MaxHpPenalty > 0) text += $", 최대 체력 −{axis.MaxHpPenalty}";
-        if (severe) text += "   ◈ 주민이 피한다";
+        bool severe = WildAxisGaugeText.IsSevere(stage);
+        string text = WildAxisGaugeText.Label(stage, axis.AttackMultiplier, axis.MaxHpPenalty);
 
         GUIStyle label = new GUIStyle
         {
@@ -67,18 +66,5 @@ public static class WildAxisGaugeUI
             normal = { textColor = severe ? StarveColor : new Color(0.85f, 0.8f, 0.8f) }
         };
         GUI.Label(new Rect(x, y + h + 2, 360f, 18f), text, label);
-    }
-
-    /// <summary>단계의 한국어 이름 (CONTEXT.md 용어집).</summary>
-    static string StageName(HungerStage stage)
-    {
-        switch (stage)
-        {
-            case HungerStage.Hungry: return "허기";
-            case HungerStage.Famished: return "주림";
-            case HungerStage.Starving: return "아사";
-            case HungerStage.Limit: return "한계";
-            default: return "포식";
-        }
     }
 }
