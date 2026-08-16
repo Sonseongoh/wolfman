@@ -13,28 +13,20 @@ using System.Globalization;
 /// </summary>
 public static class WildAxisGaugeText
 {
-    /// <summary>단계의 한국어 이름 (CONTEXT.md 용어집).</summary>
-    public static string StageName(HungerStage stage)
-    {
-        switch (stage)
-        {
-            case HungerStage.Hungry: return "허기";
-            case HungerStage.Famished: return "주림";
-            case HungerStage.Starving: return "아사";
-            case HungerStage.Limit: return "한계";
-            default: return "포식";
-        }
-    }
+    /// <summary>단계의 한국어 이름 (CONTEXT.md 용어집). 출처는 <see cref="HungerRule"/> 의 표 하나다.</summary>
+    public static string StageName(HungerStage stage) => HungerRule.Name(stage);
 
     /// <summary>라벨을 적을 때인가. 포식이면 아무 일도 없으므로 화면을 채우지 않는다.</summary>
     public static bool ShowsLabel(HungerStage stage) => stage != HungerStage.Sated;
 
     /// <summary>
-    /// 붉게 경고할 때인가. 아사부터는 주민이 피한다 —
-    /// 상점(#13)이 아직 없어서 이 경고가 그 단계에 들어섰다는 유일한 가시 신호다.
+    /// 붉게 경고할 때인가.
+    ///
+    /// 상점이 닫히는 문턱과 **같은 문턱**이다 — "아사부터 주민이 피한다"가 두 결과를 한꺼번에
+    /// 만들기 때문이다. 조건을 따로 적으면 한쪽 수치를 옮길 때 갈라져서, 상점은 닫혔는데
+    /// 화면은 아무 경고도 안 하는 상태가 된다. 그래서 표를 되묻는다.
     /// </summary>
-    public static bool IsSevere(HungerStage stage)
-        => stage == HungerStage.Starving || stage == HungerStage.Limit;
+    public static bool IsSevere(HungerStage stage) => !HungerRule.ShopOpen(stage);
 
     /// <summary>
     /// 게이지 아래에 적는 한 줄. 포식이면 빈 문자열이다.

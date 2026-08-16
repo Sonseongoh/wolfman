@@ -17,6 +17,67 @@ public enum HungerStage
     Limit,
 }
 
+/// <summary>
+/// 굶주림 단계 하나가 거는 것 전부 (#117). **한 줄이 한 단계다.**
+///
+/// 원래 이 값들은 <c>switch</c> 다섯 군데에 흩어져 있었다 — 공격 배율, 최대 체력, 한 입,
+/// 상점, 이름. 단계를 하나 늘리려면 다섯 곳을 고쳐야 했고, 그중 하나를 빠뜨려도
+/// 컴파일은 통과한다. 표로 모으면 빠뜨릴 곳이 없다.
+///
+/// 단계 이름을 여기 둔 것은 UI 문구여서가 아니라 <c>CONTEXT.md</c> 용어집의 낱말이기 때문이다 —
+/// 화면과 문서와 코드가 같은 단어를 쓰게 하려면 출처가 하나여야 한다.
+/// </summary>
+public static class HungerRule
+{
+    readonly struct Effect
+    {
+        public readonly string Name;
+        public readonly float Attack;
+        public readonly int MaxHpPenalty;
+        public readonly int Bite;
+        public readonly bool ShopOpen;
+
+        public Effect(string name, float attack, int maxHpPenalty, int bite, bool shopOpen)
+        {
+            Name = name;
+            Attack = attack;
+            MaxHpPenalty = maxHpPenalty;
+            Bite = bite;
+            ShopOpen = shopOpen;
+        }
+    }
+
+    // 순서가 HungerStage 와 같아야 한다 — 인덱스로 찾는다.
+    // (표와 enum 이 어긋나지 않는지는 WildAxisCoreTests 가 단계마다 확인한다.)
+    static readonly Effect[] Table =
+    {
+        //          이름     공격배율  최대체력  한 입  상점
+        new Effect("포식", 1.00f, 0, 0, true),
+        new Effect("허기", 0.85f, 0, 1, true),
+        new Effect("주림", 0.70f, 1, 2, true),
+        new Effect("아사", 0.50f, 2, 3, false),
+        new Effect("한계", 0.50f, 2, 3, false),
+    };
+
+    /// <summary>단계 수 — 표와 enum 이 같은 크기인지 확인하는 데 쓴다.</summary>
+    public static int Count => Table.Length;
+
+    /// <summary>단계의 한국어 이름 (CONTEXT.md 용어집).</summary>
+    public static string Name(HungerStage stage) => Table[(int)stage].Name;
+
+    /// <summary>이 단계가 공격에 거는 배율.</summary>
+    public static float AttackMultiplier(HungerStage stage) => Table[(int)stage].Attack;
+
+    /// <summary>이 단계가 깎는 최대 체력. 빼는 양이지 새 최대치가 아니다.</summary>
+    public static int MaxHpPenalty(HungerStage stage) => Table[(int)stage].MaxHpPenalty;
+
+    /// <summary>이 단계에서 처치 한 번이 돌려주는 체력. 굶주릴수록 한 입이 크다.</summary>
+    public static int Bite(HungerStage stage) => Table[(int)stage].Bite;
+
+    /// <summary>상점을 열 수 있는가. 아사부터는 주민이 피해서 닫힌다 (#13 이 소비).</summary>
+    public static bool ShopOpen(HungerStage stage) => Table[(int)stage].ShopOpen;
+}
+
 /// <summary>어느 끝을 넘어 폭주했는가 (#117). 양끝 모두 폭주지만 원인이 반대다.</summary>
 public enum BreakoutSide
 {
@@ -94,35 +155,10 @@ public class WildAxisCore
     /// 달빛 참격(base 5)에서는 0.85 와 0.70 이 같은 4 로 붙는다
     /// (<c>AttackPowerRuleTests.기본_데미지가_작으면_배율이_계단으로_뭉갠다</c>). 버그가 아니다.
     /// </summary>
-    public float AttackMultiplier
-    {
-        get
-        {
-            switch (Stage)
-            {
-                case HungerStage.Hungry: return 0.85f;
-                case HungerStage.Famished: return 0.70f;
-                case HungerStage.Starving:
-                case HungerStage.Limit: return 0.50f;
-                default: return 1f;
-            }
-        }
-    }
+    public float AttackMultiplier => HungerRule.AttackMultiplier(Stage);
 
     /// <summary>굶주림이 깎는 최대 체력. 빼는 양이지 새 최대치가 아니다 — 단계가 풀리면 걷힌다.</summary>
-    public int MaxHpPenalty
-    {
-        get
-        {
-            switch (Stage)
-            {
-                case HungerStage.Famished: return 1;
-                case HungerStage.Starving:
-                case HungerStage.Limit: return 2;
-                default: return 0;
-            }
-        }
-    }
+    public int MaxHpPenalty => HungerRule.MaxHpPenalty(Stage);
 
     /// <summary>
     /// 상점을 열 수 있는가 (#13 이 소비). 아사부터는 주민이 피해서 닫힌다.
@@ -130,7 +166,7 @@ public class WildAxisCore
     /// 마을에 남는 유일한 이유가 상점인데 굶주릴수록 그게 닫히므로,
     /// **머물 이유를 하나씩 없애는 방식으로** 등을 떠민다. 규칙으로 "나가라"고 하지 않는다.
     /// </summary>
-    public bool ShopOpen => Stage != HungerStage.Starving && Stage != HungerStage.Limit;
+    public bool ShopOpen => HungerRule.ShopOpen(Stage);
 
     // 폭주 신호 래치. bool 둘이 아니라 "무장됐는가 + 어느 쪽인가"로 들고 있다.
     bool breakoutArmed;
@@ -174,7 +210,7 @@ public class WildAxisCore
     /// <returns>이번 한 입의 회복량. 0 이면 회복 없음(포식 상태라 배가 부르다).</returns>
     public int OnKill()
     {
-        int bite = BiteFor(Stage);
+        int bite = HungerRule.Bite(Stage);
         Move(EatNudgePerKill);
         return bite;
     }
@@ -228,18 +264,5 @@ public class WildAxisCore
             breakoutSide = Value >= WildLimit ? BreakoutSide.Wild : BreakoutSide.Starve;
         }
         atLimit = nowAtLimit;
-    }
-
-    /// <summary>이 단계에서 한 입이 얼마나 큰가.</summary>
-    static int BiteFor(HungerStage stage)
-    {
-        switch (stage)
-        {
-            case HungerStage.Hungry: return 1;
-            case HungerStage.Famished: return 2;
-            case HungerStage.Starving:
-            case HungerStage.Limit: return 3;
-            default: return 0;
-        }
     }
 }

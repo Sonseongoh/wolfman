@@ -285,4 +285,63 @@ public class WildAxisCoreTests
 
         Assert.That(core.TryConsumeBreakout(out _), Is.True);
     }
+
+    // --- 단계 표가 enum 과 어긋나지 않는가 ---
+    //
+    // HungerRule 은 단계를 배열 인덱스로 찾는다. enum 에 단계를 하나 더 넣고 표를 안 늘리면
+    // 컴파일은 통과하고 실행할 때 IndexOutOfRange 로 죽는다 — 그것도 그 단계에 도달해야만.
+    // 여기서 미리 걸리게 한다.
+
+    [Test]
+    public void 단계_표와_enum_의_크기가_같다()
+    {
+        Assert.That(HungerRule.Count, Is.EqualTo(System.Enum.GetValues(typeof(HungerStage)).Length),
+            "HungerStage 에 단계를 추가했으면 HungerRule.Table 에도 한 줄을 추가해야 한다");
+    }
+
+    [Test]
+    public void 모든_단계가_표에서_답을_찾는다()
+    {
+        foreach (HungerStage stage in System.Enum.GetValues(typeof(HungerStage)))
+        {
+            Assert.That(HungerRule.Name(stage), Is.Not.Empty, $"{stage} 의 이름이 비어 있다");
+            Assert.That(HungerRule.AttackMultiplier(stage), Is.GreaterThan(0f), $"{stage} 의 공격 배율이 0 이하다");
+            Assert.That(HungerRule.MaxHpPenalty(stage), Is.GreaterThanOrEqualTo(0), $"{stage} 의 최대 체력 페널티가 음수다");
+            Assert.That(HungerRule.Bite(stage), Is.GreaterThanOrEqualTo(0), $"{stage} 의 한 입이 음수다");
+        }
+    }
+
+    [Test]
+    public void 깊어질수록_나빠지기만_한다()
+    {
+        // enum 순서가 곧 깊이다. 표의 한 줄을 잘못 끼워 넣으면 여기서 걸린다.
+        float previousAttack = float.MaxValue;
+        int previousPenalty = -1;
+        int previousBite = -1;
+
+        foreach (HungerStage stage in System.Enum.GetValues(typeof(HungerStage)))
+        {
+            Assert.That(HungerRule.AttackMultiplier(stage), Is.LessThanOrEqualTo(previousAttack),
+                $"{stage} 에서 공격 배율이 되레 올랐다");
+            Assert.That(HungerRule.MaxHpPenalty(stage), Is.GreaterThanOrEqualTo(previousPenalty),
+                $"{stage} 에서 최대 체력 페널티가 되레 줄었다");
+            Assert.That(HungerRule.Bite(stage), Is.GreaterThanOrEqualTo(previousBite),
+                $"{stage} 에서 한 입이 되레 작아졌다");
+
+            previousAttack = HungerRule.AttackMultiplier(stage);
+            previousPenalty = HungerRule.MaxHpPenalty(stage);
+            previousBite = HungerRule.Bite(stage);
+        }
+    }
+
+    [Test]
+    public void 상점이_닫히는_문턱과_붉게_경고하는_문턱은_같다()
+    {
+        // 두 곳에 따로 적으면 수치를 옮길 때 갈라진다 — 상점은 닫혔는데 화면은 조용한 상태.
+        foreach (HungerStage stage in System.Enum.GetValues(typeof(HungerStage)))
+        {
+            Assert.That(WildAxisGaugeText.IsSevere(stage), Is.EqualTo(!HungerRule.ShopOpen(stage)),
+                $"{stage} 에서 경고와 상점 상태가 어긋난다");
+        }
+    }
 }
