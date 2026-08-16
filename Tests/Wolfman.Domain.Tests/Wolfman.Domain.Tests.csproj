@@ -23,6 +23,7 @@
     <Compile Include="../../Assets/Scripts/Core/AttackPowerRule.cs" Link="Domain/AttackPowerRule.cs" />
     <Compile Include="../../Assets/Scripts/Core/WildAxisCore.cs" Link="Domain/WildAxisCore.cs" />
     <Compile Include="../../Assets/Scripts/Core/WildAxisGaugeText.cs" Link="Domain/WildAxisGaugeText.cs" />
+    <Compile Include="../../Assets/Scripts/Core/HungerHealthRule.cs" Link="Domain/HungerHealthRule.cs" />
   </ItemGroup>
 
   <ItemGroup>

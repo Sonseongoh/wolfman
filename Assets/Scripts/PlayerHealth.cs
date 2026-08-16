@@ -28,6 +28,9 @@ public class PlayerHealth : MonoBehaviour
     /// </summary>
     public int EffectiveMaxHp => Mathf.Max(1, maxHp - WildAxisManager.Instance.MaxHpPenalty);
 
+    /// <summary>굶주림이 눌러둔 체력 (#117). 페널티가 걷히면 이만큼 돌려준다 — 맡아둔 것이지 잃은 게 아니다.</summary>
+    int hungerHeld;
+
     void Awake()
     {
         hp = maxHp;
@@ -36,9 +39,12 @@ public class PlayerHealth : MonoBehaviour
 
     void Update()
     {
-        // 굶주림 단계가 깊어지는 순간, 현재 체력도 줄어든 최대치를 따라 내려간다 (#117).
-        // 안 깎으면 "최대 3인데 체력 5" 같은 상태로 남아 페널티가 다음 피격까지 체감되지 않는다.
-        if (hp > EffectiveMaxHp) hp = EffectiveMaxHp;
+        // 굶주림이 최대치를 누르면 현재 체력도 따라 내려가고, 풀리면 눌렸던 만큼 돌아온다 (#117).
+        // 안 깎으면 페널티가 다음 피격까지 체감되지 않고, 안 돌려주면 단계가 오르내릴 때마다
+        // 맞지도 않은 체력이 계단식으로 사라진다. 판정은 HungerHealthRule 이 한다.
+        HungerHealthRule.Settled settled = HungerHealthRule.Settle(hp, hungerHeld, EffectiveMaxHp);
+        hp = settled.Hp;
+        hungerHeld = settled.Held;
 
         // 무적 시간 동안 깜빡여서 시각적으로 표시
         if (invincibleTimer > 0f)
