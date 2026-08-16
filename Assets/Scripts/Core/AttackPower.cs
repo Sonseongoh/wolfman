@@ -4,7 +4,7 @@ using UnityEngine;
 /// 지금 이 순간의 배율들을 모아 <see cref="AttackPowerRule"/> 에 넘긴다 (#38).
 ///
 /// 규칙은 순수하게 두고 "누가 배율을 쥐고 있는가"만 여기서 안다.
-/// 새 배율을 붙일 자리도 여기 한 곳이다 — 굶주림 페널티(#117)가 들어올 곳.
+/// 새 배율을 붙일 자리도 여기 한 곳이다 — 굶주림 페널티(#117)가 들어온 곳.
 ///
 /// 공격 컴포넌트가 직접 <c>GameManager</c>·<c>SkillSystem</c> 을 뒤지지 않게 하는 게 핵심이다.
 /// 발톱과 달빛 참격은 스킬이 바꾸는 배타적 모드라, 뒤지는 코드가 둘로 나뉘어 있으면
@@ -23,6 +23,8 @@ public static class AttackPower
 
         float skillBonus = SkillSystem.Instance != null ? SkillSystem.Instance.damageBonus : 0f;
 
-        return AttackPowerRule.Damage(baseDamage, skillBonus, moonPower);
+        // 굶주림은 축이 쥐고 있다 (#117). 축은 지연 생성 싱글턴이라 항상 답할 수 있다 —
+        // 굶지 않았으면 1 이라 이 곱셈이 아무것도 바꾸지 않는다.
+        return AttackPowerRule.Damage(baseDamage, skillBonus, moonPower, WildAxisManager.Instance.AttackMultiplier);
     }
 }

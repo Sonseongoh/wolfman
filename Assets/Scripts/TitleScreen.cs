@@ -69,6 +69,13 @@ public class TitleScreen : MonoBehaviour
     void StartGame()
     {
         starting = true;
+
+        // 새 런은 안전한 중앙에서 시작한다 (#117). 지금은 앱을 새로 켰을 때만 여기 오므로
+        // 축도 갓 만들어져 0 이지만, 시설 전멸로 타이틀에 돌아오는 길이 생기면 이 줄이 그 리셋이다.
+        // 죽음 귀환(ReturnToVillage)에는 넣지 않는다 — 죽음은 밤을 소모할 뿐 런은 계속되고(ADR 0004),
+        // 축은 밤을 넘어 누적된다.
+        WildAxisManager.Instance.ResetRun();
+
         if (GameManager.Instance != null)
         {
             GameManager.Instance.StartNextRound();

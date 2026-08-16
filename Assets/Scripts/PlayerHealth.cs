@@ -19,6 +19,15 @@ public class PlayerHealth : MonoBehaviour
     /// <summary>게임오버 상태인지 (HitStop 등이 시간 정지 유지 판단에 사용)</summary>
     public bool IsDead => isDead;
 
+    /// <summary>
+    /// 굶주림 페널티까지 반영한 지금의 최대 체력 (#117).
+    ///
+    /// <c>maxHp</c> 자체는 건드리지 않는다 — 스킬 <c>IncreaseMaxHp</c> 가 같은 필드를 올리고 있어서
+    /// 거기서 빼면 굶주림이 풀렸을 때 무엇을 얼마나 돌려줘야 하는지 알 수 없게 된다.
+    /// 뺄셈을 여기서 하면 단계가 풀리는 순간 페널티도 저절로 걷힌다.
+    /// </summary>
+    public int EffectiveMaxHp => Mathf.Max(1, maxHp - WildAxisManager.Instance.MaxHpPenalty);
+
     void Awake()
     {
         hp = maxHp;
@@ -27,6 +36,10 @@ public class PlayerHealth : MonoBehaviour
 
     void Update()
     {
+        // 굶주림 단계가 깊어지는 순간, 현재 체력도 줄어든 최대치를 따라 내려간다 (#117).
+        // 안 깎으면 "최대 3인데 체력 5" 같은 상태로 남아 페널티가 다음 피격까지 체감되지 않는다.
+        if (hp > EffectiveMaxHp) hp = EffectiveMaxHp;
+
         // 무적 시간 동안 깜빡여서 시각적으로 표시
         if (invincibleTimer > 0f)
         {
@@ -68,7 +81,7 @@ public class PlayerHealth : MonoBehaviour
     public void FullHeal()
     {
         if (isDead) return;
-        int missing = maxHp - hp;
+        int missing = EffectiveMaxHp - hp;
         if (missing > 0) Heal(missing);
     }
 
@@ -77,7 +90,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (isDead) return;
 
-        hp = Mathf.Min(maxHp, hp + amount);
+        hp = Mathf.Min(EffectiveMaxHp, hp + amount);
         DamageNumber.Spawn(transform.position, $"+{amount}", new Color(0.4f, 1f, 0.5f), 1.1f);
     }
 
@@ -127,7 +140,7 @@ public class PlayerHealth : MonoBehaviour
     void OnGUI()
     {
         GUIStyle hpStyle = new GUIStyle { fontSize = 28, normal = { textColor = Color.white } };
-        GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {maxHp}", hpStyle);
+        GUI.Label(new Rect(20, 20, 300, 40), $"HP: {hp} / {EffectiveMaxHp}", hpStyle);
 
         // 일시정지 버튼·오버레이는 전역 PauseSystem(#33)이 모든 씬에서 그린다
 
