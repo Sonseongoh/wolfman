@@ -16,7 +16,12 @@ public class CurrencyManager : MonoBehaviour, IGoldVault
             {
                 var go = new GameObject("CurrencyManager");
                 _instance = go.AddComponent<CurrencyManager>();
-                DontDestroyOnLoad(go);
+
+                // 플레이 모드 밖에서는 DontDestroyOnLoad 가 예외를 던진다 — 에디터에서
+                // 잔액을 읽어보는 것만으로 터지면 검증할 방법이 없어진다 (WildAxisManager 와 같은 이유).
+                // 에디터에서는 씬에 저장되지 않는 임시 오브젝트로 만든다.
+                if (Application.isPlaying) DontDestroyOnLoad(go);
+                else go.hideFlags = HideFlags.HideAndDontSave;
             }
             return _instance;
         }
@@ -34,7 +39,7 @@ public class CurrencyManager : MonoBehaviour, IGoldVault
     {
         if (_instance != null && _instance != this) { Destroy(gameObject); return; }
         _instance = this;
-        DontDestroyOnLoad(gameObject);
+        if (Application.isPlaying) DontDestroyOnLoad(gameObject);
     }
 
     public void AddTempGold(int amount)
