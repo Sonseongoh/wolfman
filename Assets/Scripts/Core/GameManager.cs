@@ -30,6 +30,12 @@ public class GameManager : MonoBehaviour
     /// <summary>페이즈가 바뀔 때마다 (씬 전환, 모드 시작/종료 등)</summary>
     public event System.Action<RoundPhase> OnPhaseChanged;
 
+    /// <summary>
+    /// 새 런이 시작될 때 (#121). 런 경계에서 지워야 할 상태를 가진 쪽이 구독한다 —
+    /// 재화(#11)가 구독하고 있고, 야성·굶주림(#117)도 여기에 붙는다.
+    /// </summary>
+    public event System.Action OnRunStarted;
+
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -50,9 +56,8 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void StartRun()
     {
-        RoundNumber = 0; // StartNextRound 가 1로 올린다 — 새 런은 밤 1부터
-        if (CurrencyManager.Instance != null) CurrencyManager.Instance.ResetRun();
-        // 야성·굶주림(#117)이 들어오면 여기서 함께 리셋한다 (#121 AC 5)
+        RoundNumber = 0;        // StartNextRound 가 1로 올린다 — 새 런은 밤 1부터
+        OnRunStarted?.Invoke(); // 각 모듈이 자기 런 상태를 스스로 지운다 (재화, 추후 야성·굶주림 #117)
         StartNextRound();
     }
 

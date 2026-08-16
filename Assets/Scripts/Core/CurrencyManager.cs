@@ -35,6 +35,19 @@ public class CurrencyManager : MonoBehaviour, IGoldVault
         if (_instance != null && _instance != this) { Destroy(gameObject); return; }
         _instance = this;
         DontDestroyOnLoad(gameObject);
+
+        // 런 경계 (#121): 새 런이 열리면 스스로 비운다. GameManager 가 이쪽을 직접 부르지 않고
+        // 구독으로 잇는 건 그쪽 규약이다 — "모듈 간 통신은 이벤트 구독으로 (직접 참조 금지)".
+        // 이 매니저는 씬·프리팹 어디에도 박혀 있지 않고 첫 .Instance 접근에 만들어지므로,
+        // 그때 GameManager 는 이미 있다 (타이틀에서 만들어져 씬을 넘어 산다).
+        // 예외는 GameManager 가 없는 VillageScene 을 단독 재생하는 개발용 경로뿐인데,
+        // 그때는 StartRun 을 부를 GameManager 자체가 없어 지울 런 경계도 없다.
+        if (GameManager.Instance != null) GameManager.Instance.OnRunStarted += ResetRun;
+    }
+
+    void OnDestroy()
+    {
+        if (GameManager.Instance != null) GameManager.Instance.OnRunStarted -= ResetRun;
     }
 
     public void AddTempGold(int amount)
@@ -60,7 +73,7 @@ public class CurrencyManager : MonoBehaviour, IGoldVault
     /// </summary>
     public bool TrySpendConfirmed(int cost) => wallet.TrySpendConfirmed(cost);
 
-    /// <summary>런 경계 (#121): 이전 런의 재화를 전부 지운다 — GameManager.StartRun 만 부른다.</summary>
+    /// <summary>런 경계 (#121): 이전 런의 재화를 전부 지운다 — GameManager.OnRunStarted 가 부른다.</summary>
     public void ResetRun() => wallet.ResetRun();
 
     /// <summary>달 rewardTier(1~5) 기준 클리어 보너스 골드</summary>
