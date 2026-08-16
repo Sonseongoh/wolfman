@@ -30,6 +30,12 @@ public class GameManager : MonoBehaviour
     /// <summary>페이즈가 바뀔 때마다 (씬 전환, 모드 시작/종료 등)</summary>
     public event System.Action<RoundPhase> OnPhaseChanged;
 
+    /// <summary>
+    /// 새 런이 시작될 때 (#121). 런 경계에서 지워야 할 상태를 가진 쪽이 구독한다 —
+    /// 재화(#11)가 구독하고 있고, 야성·굶주림(#117)도 여기에 붙는다.
+    /// </summary>
+    public event System.Action OnRunStarted;
+
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -40,6 +46,19 @@ public class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
         Phase = RoundPhase.Title;
+    }
+
+    /// <summary>
+    /// 새 런 시작 (#121): 이전 런의 상태를 지우고 밤 1부터 다시 센다.
+    /// 런 경계의 유일한 진입점 — 타이틀 새 시작이 부르고, 런을 끝내는 쪽(#12 시설 전멸)은
+    /// Phase 를 Title 로 되돌려 타이틀로 보내기만 하면 다음 시작이 여기를 지난다.
+    /// 죽음(#113)은 런의 끝이 아니므로 이 함수를 부르지 않는다 — StartNextRound 만 부른다.
+    /// </summary>
+    public void StartRun()
+    {
+        RoundNumber = 0;        // StartNextRound 가 1로 올린다 — 새 런은 밤 1부터
+        OnRunStarted?.Invoke(); // 각 모듈이 자기 런 상태를 스스로 지운다 (재화, 추후 야성·굶주림 #117)
+        StartNextRound();
     }
 
     /// <summary>다음 라운드 시작: 달 추첨 → MoonReveal 페이즈로</summary>

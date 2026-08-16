@@ -50,4 +50,14 @@ public class GoldWallet : IGoldVault
         ConfirmedGold -= cost;
         return true;
     }
+
+    /// <summary>
+    /// 런 경계 (#121): 런이 끝나면 금고까지 전부 비운다. LoseTemp(죽음)와 다르다 —
+    /// 죽음은 밤 하나의 끝이라 주머니만 잃지만, 런의 끝은 지갑 전부를 지운다.
+    /// </summary>
+    public void ResetRun()
+    {
+        TempGold = 0;
+        ConfirmedGold = 0;
+    }
 }
