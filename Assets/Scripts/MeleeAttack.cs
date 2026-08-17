@@ -59,7 +59,7 @@ public class MeleeAttack : MonoBehaviour
 
     EnemyHealth FindNearest()
     {
-        EnemyHealth[] enemies = Object.FindObjectsByType<EnemyHealth>(FindObjectsSortMode.None);
+        EnemyHealth[] enemies = Object.FindObjectsByType<EnemyHealth>();
         EnemyHealth nearest = null;
         float best = triggerRange;
 

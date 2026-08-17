@@ -135,7 +135,7 @@ public class ColliderSplitTests : PlayModeTestBase
         Assert.NotNull(melee, "플레이어에 MeleeAttack 이 없다");
 
         EnemyHealth enemy = null;
-        yield return WaitUntil(() => (enemy = Object.FindFirstObjectByType<EnemyHealth>()) != null);
+        yield return WaitUntil(() => (enemy = Object.FindAnyObjectByType<EnemyHealth>()) != null);
         Assert.NotNull(enemy, $"{Timeout}초 안에 적이 스폰되지 않았다");
 
         // 사거리 안으로 끌어다 놓는다
@@ -227,7 +227,7 @@ public class ColliderSplitTests : PlayModeTestBase
         SceneManager.LoadScene("TitleScene");
         yield return WaitForScene("TitleScene");
 
-        var title = Object.FindFirstObjectByType<TitleScreen>();
+        var title = Object.FindAnyObjectByType<TitleScreen>();
         Assert.NotNull(title, "TitleScene 에 TitleScreen 이 없다");
         Call(title, "StartGame");
         yield return WaitForScene("VillageScene");
@@ -235,7 +235,7 @@ public class ColliderSplitTests : PlayModeTestBase
         MoonRevealUI reveal = null;
         yield return WaitUntil(() =>
         {
-            if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
+            if (reveal == null) reveal = Object.FindAnyObjectByType<MoonRevealUI>();
             return reveal != null && Get<bool>(reveal, "choosing");
         });
         Assert.NotNull(reveal, "마을에 MoonRevealUI 가 없다 — 달 공개가 시작되지 않았다 (#103)");

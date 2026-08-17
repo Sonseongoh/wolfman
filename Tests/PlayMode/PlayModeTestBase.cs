@@ -33,7 +33,7 @@ public abstract class PlayModeTestBase
     public IEnumerator SetUp()
     {
         foreach (Transform t in Object.FindObjectsByType<Transform>(
-                     FindObjectsInactive.Include, FindObjectsSortMode.None))
+                     FindObjectsInactive.Include))
         {
             if (t == null || t.parent != null) continue;
             if (t.gameObject.scene.name == "DontDestroyOnLoad")

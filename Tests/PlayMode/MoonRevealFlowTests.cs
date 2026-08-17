@@ -97,7 +97,7 @@ public class MoonRevealFlowTests : PlayModeTestBase
         // 연출은 지나가면 사라지니 프레임마다 봐 둔다 — 선택 단계에 이르면 대기가 끝난다.
         yield return WaitUntil(() =>
         {
-            if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
+            if (reveal == null) reveal = Object.FindAnyObjectByType<MoonRevealUI>();
             if (reveal == null) return false;
 
             if (Get<bool>(reveal, "spinning")) sawSpinning = true;
@@ -158,7 +158,7 @@ public class MoonRevealFlowTests : PlayModeTestBase
     {
         yield return StartRunAndReachHunt();
 
-        MoonEffects fx = Object.FindFirstObjectByType<MoonEffects>();
+        MoonEffects fx = Object.FindAnyObjectByType<MoonEffects>();
         Assert.IsTrue(fx != null,
             "사냥 씬에 MoonEffects 가 살아있지 않다 — 중복 GameManager 오브젝트에 얹혀 있다가 함께 파괴됐다");
         Assert.IsTrue(fx.globalLight != null,
@@ -205,7 +205,7 @@ public class MoonRevealFlowTests : PlayModeTestBase
         SceneManager.LoadScene("TitleScene");
         yield return WaitForScene("TitleScene");
 
-        var title = Object.FindFirstObjectByType<TitleScreen>();
+        var title = Object.FindAnyObjectByType<TitleScreen>();
         Assert.NotNull(title, "TitleScene 에 TitleScreen 이 없다");
 
         // 아무 입력에나 불리는 진입점 — 배치모드엔 입력이 없으니 같은 함수를 직접 부른다
@@ -251,7 +251,7 @@ public class MoonRevealFlowTests : PlayModeTestBase
         MoonRevealUI reveal = null;
         yield return WaitUntil(() =>
         {
-            if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
+            if (reveal == null) reveal = Object.FindAnyObjectByType<MoonRevealUI>();
             return reveal != null && Get<bool>(reveal, "choosing");
         });
 

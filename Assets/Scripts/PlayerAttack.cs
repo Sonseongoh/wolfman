@@ -42,7 +42,7 @@ public class PlayerAttack : MonoBehaviour
 
     EnemyHealth FindNearestEnemy()
     {
-        EnemyHealth[] enemies = Object.FindObjectsByType<EnemyHealth>(FindObjectsSortMode.None);
+        EnemyHealth[] enemies = Object.FindObjectsByType<EnemyHealth>();
         EnemyHealth nearest = null;
         float best = range;
 

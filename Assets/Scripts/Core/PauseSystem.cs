@@ -17,7 +17,7 @@ public class PauseSystem : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoSpawn()
     {
-        if (FindFirstObjectByType<PauseSystem>() != null) return;
+        if (FindAnyObjectByType<PauseSystem>() != null) return;
 
         GameObject go = new GameObject("PauseSystem");
         DontDestroyOnLoad(go);

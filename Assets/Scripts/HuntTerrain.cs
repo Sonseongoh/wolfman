@@ -38,7 +38,7 @@ public class HuntTerrain : MonoBehaviour
         GameObject p = GameObject.FindWithTag("Player");
         if (p != null) player = p.transform;
 
-        foreach (Tilemap tm in FindObjectsByType<Tilemap>(FindObjectsSortMode.None))
+        foreach (Tilemap tm in FindObjectsByType<Tilemap>())
         {
             if (tm.gameObject.name == "Ground") ground = tm;
             else if (tm.gameObject.name == "Obstacles") obstacles = tm;
