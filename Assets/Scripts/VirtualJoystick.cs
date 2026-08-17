@@ -27,7 +27,7 @@ public class VirtualJoystick : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void AutoSpawn()
     {
-        if (FindFirstObjectByType<VirtualJoystick>() != null) return;
+        if (FindAnyObjectByType<VirtualJoystick>() != null) return;
 
         GameObject go = new GameObject("VirtualJoystick");
         DontDestroyOnLoad(go);
