@@ -76,7 +76,7 @@ public class RunBoundaryTests : PlayModeTestBase
         yield return ChooseFromReveal(MoonRevealUI.Choice.Hunt);
         yield return WaitForScene("HuntScene");
 
-        PlayerHealth player = Object.FindFirstObjectByType<PlayerHealth>();
+        PlayerHealth player = Object.FindAnyObjectByType<PlayerHealth>();
         Assert.NotNull(player, "사냥 씬에 PlayerHealth 가 없다");
 
         // 실제 죽음: 무적 프레임에 막힌 히트는 무시되므로 죽을 때까지 프레임마다 때린다
@@ -113,7 +113,7 @@ public class RunBoundaryTests : PlayModeTestBase
         SceneManager.LoadScene("TitleScene");
         yield return WaitForScene("TitleScene");
 
-        var title = Object.FindFirstObjectByType<TitleScreen>();
+        var title = Object.FindAnyObjectByType<TitleScreen>();
         Assert.NotNull(title, "TitleScene 에 TitleScreen 이 없다");
 
         Call(title, "StartGame");
@@ -129,7 +129,7 @@ public class RunBoundaryTests : PlayModeTestBase
         MoonRevealUI reveal = null;
         yield return WaitUntil(() =>
         {
-            if (reveal == null) reveal = Object.FindFirstObjectByType<MoonRevealUI>();
+            if (reveal == null) reveal = Object.FindAnyObjectByType<MoonRevealUI>();
             return reveal != null && Get<bool>(reveal, "choosing");
         });
 
