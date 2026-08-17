@@ -118,6 +118,24 @@ public class UnitySceneFile
     }
 
     /// <summary>
+    /// 씬 전체에서 이 이름으로 직렬화된 문자열 필드의 값들.
+    /// 유니티는 비 ASCII 를 "\uXXXX" 로 이스케이프해 기록하므로 되돌려서 준다.
+    /// </summary>
+    public IReadOnlyCollection<string> StringFieldValues(string fieldName)
+    {
+        var values = new List<string>();
+        foreach (Match m in Regex.Matches(
+            text, @"^\s+" + Regex.Escape(fieldName) + @": (.*)$", RegexOptions.Multiline))
+        {
+            string raw = m.Groups[1].Value.Trim(); // CRLF 대비 — 꼬리 \r 제거
+            if (raw.Length >= 2 && raw.StartsWith("\"") && raw.EndsWith("\""))
+                raw = raw.Substring(1, raw.Length - 2);
+            values.Add(Regex.Unescape(raw)); // \uXXXX 복원
+        }
+        return values;
+    }
+
+    /// <summary>
     /// 부모가 없는데 씬의 `SceneRoots` 목록에는 빠져 있는 트랜스폼들. 정상이면 비어 있다.
     ///
     /// 씬 YAML 을 손으로 편집해 오브젝트를 새로 만들면 딱 여기가 어긋난다 — 오브젝트는 존재하고

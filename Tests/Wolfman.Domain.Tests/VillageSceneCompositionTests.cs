@@ -71,10 +71,19 @@ public class VillageSceneCompositionTests
     }
 
     [Test]
-    public void 마을에_시설이_두_채_이상_있다()
+    public void 마을에_시설이_세_채_있다()
     {
-        Assert.That(scene.ComponentCount("FacilityHealth"), Is.GreaterThanOrEqualTo(2),
-            "인수 기준: 시설이 2채 이상이어야 한다.");
+        Assert.That(scene.ComponentCount("FacilityHealth"), Is.EqualTo(3),
+            "#102 로 시설 셋(대장간·창고·망루탑)이 확정됐다 — 셋보다 적으면 축 하나가 비고, " +
+            "많으면 확정된 설계를 벗어난다 (#118).");
+    }
+
+    [Test]
+    public void 시설_이름은_확정된_셋이다()
+    {
+        Assert.That(scene.StringFieldValues("facilityName"),
+            Is.EquivalentTo(new[] { "창고", "대장간", "망루탑" }),
+            "시설 이름이 확정된 셋(#102)과 다르다 — 이름은 HUD 와 파괴 연출에 그대로 찍힌다 (#118).");
     }
 
     [Test]
