@@ -26,5 +26,5 @@ MonoBehaviour:
   rewardTier: 4
   description: 달 없는 밤 — 변신 불가, 시야 제한(조명 최저), 은신·회피 생존
   dropMultiplier: 1
-  ambientColor: {r: 0.55, g: 0.6, b: 0.9, a: 1}
+  ambientColor: {r: 0.4, g: 0.05, b: 0.65, a: 1}
   ambientIntensity: 0.3

@@ -41,6 +41,7 @@ public class SoundManager : MonoBehaviour
     public AudioClip sfxSlot;                  // 달 슬롯머신 플립
     public AudioClip sfxMoonReveal;            // 달 최종 확정
     public AudioClip sfxMoonRevealLegendary;   // 전설 달 최종 확정
+    public AudioClip sfxPromoStep;             // 전설 승급 단계마다 쿵!
     public AudioClip sfxGameOver;              // 게임오버
 
     [Header("BGM")]
@@ -88,6 +89,7 @@ public class SoundManager : MonoBehaviour
     public void PlayDamaged()  => Play(sfxDamaged, 0.9f);
     public void PlayPickup()   => Play(sfxPickup, 0.6f);
     public void PlayLevelUp()  => Play(sfxLevelUp);
-    public void PlaySlot()     => Play(sfxSlot, 0.5f);
+    public void PlaySlot()      => Play(sfxSlot, 0.5f);
+    public void PlayPromoStep() => Play(sfxPromoStep, 1f);
     public void PlayGameOver() => Play(sfxGameOver);
 }
